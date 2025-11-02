@@ -1,0 +1,565 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "a3dda77ec86bb0c892a4fba87d0e03a7",
+    "packages": [
+        {
+            "name": "bcosca/fatfree-core",
+            "version": "3.9.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/f3-factory/fatfree-core.git",
+                "reference": "15167bf8377c262a5354e2c419c383aaa4d41280"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/f3-factory/fatfree-core/zipball/15167bf8377c262a5354e2c419c383aaa4d41280",
+                "reference": "15167bf8377c262a5354e2c419c383aaa4d41280",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "."
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0"
+            ],
+            "description": "A powerful yet easy-to-use PHP micro-framework designed to help you build dynamic and robust Web applications - fast!",
+            "homepage": "http://fatfreeframework.com/",
+            "support": {
+                "issues": "https://github.com/f3-factory/fatfree-core/issues",
+                "source": "https://github.com/f3-factory/fatfree-core/tree/3.9.1"
+            },
+            "funding": [
+                {
+                    "url": "https://www.buymeacoffee.com/ikkez",
+                    "type": "buy_me_a_coffee"
+                },
+                {
+                    "url": "https://github.com/ikkez",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-08-09T10:27:39+00:00"
+        },
+        {
+            "name": "components/jquery",
+            "version": "v3.7.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/components/jquery.git",
+                "reference": "8edc7785239bb8c2ad2b83302b856a1d61de60e7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/components/jquery/zipball/8edc7785239bb8c2ad2b83302b856a1d61de60e7",
+                "reference": "8edc7785239bb8c2ad2b83302b856a1d61de60e7",
+                "shasum": ""
+            },
+            "type": "component",
+            "extra": {
+                "component": {
+                    "files": [
+                        "jquery.min.js",
+                        "jquery.min.map",
+                        "jquery.slim.js",
+                        "jquery.slim.min.js",
+                        "jquery.slim.min.map"
+                    ],
+                    "scripts": [
+                        "jquery.js"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "JS Foundation and other contributors"
+                }
+            ],
+            "description": "jQuery JavaScript Library",
+            "homepage": "http://jquery.com",
+            "support": {
+                "forum": "http://forum.jquery.com",
+                "irc": "irc://irc.freenode.org/jquery",
+                "issues": "https://github.com/jquery/jquery/issues",
+                "source": "https://github.com/jquery/jquery",
+                "wiki": "http://docs.jquery.com/"
+            },
+            "time": "2023-09-22T01:43:46+00:00"
+        },
+        {
+            "name": "components/jqueryui",
+            "version": "1.12.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/components/jqueryui.git",
+                "reference": "44ecf3794cc56b65954cc19737234a3119d036cc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/components/jqueryui/zipball/44ecf3794cc56b65954cc19737234a3119d036cc",
+                "reference": "44ecf3794cc56b65954cc19737234a3119d036cc",
+                "shasum": ""
+            },
+            "require": {
+                "components/jquery": ">=1.6"
+            },
+            "type": "component",
+            "extra": {
+                "component": {
+                    "name": "jquery-ui",
+                    "shim": {
+                        "deps": [
+                            "jquery"
+                        ],
+                        "exports": "jQuery"
+                    },
+                    "files": [
+                        "ui/**",
+                        "themes/**",
+                        "jquery-ui.min.js"
+                    ],
+                    "scripts": [
+                        "jquery-ui.js"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "jQuery UI Team",
+                    "homepage": "http://jqueryui.com/about"
+                },
+                {
+                    "name": "Joern Zaefferer",
+                    "email": "joern.zaefferer@gmail.com",
+                    "homepage": "http://bassistance.de"
+                },
+                {
+                    "name": "Scott Gonzalez",
+                    "email": "scott.gonzalez@gmail.com",
+                    "homepage": "http://scottgonzalez.com"
+                },
+                {
+                    "name": "Kris Borchers",
+                    "email": "kris.borchers@gmail.com",
+                    "homepage": "http://krisborchers.com"
+                },
+                {
+                    "name": "Mike Sherov",
+                    "email": "mike.sherov@gmail.com",
+                    "homepage": "http://mike.sherov.com"
+                },
+                {
+                    "name": "TJ VanToll",
+                    "email": "tj.vantoll@gmail.com",
+                    "homepage": "http://tjvantoll.com"
+                },
+                {
+                    "name": "Corey Frang",
+                    "email": "gnarf37@gmail.com",
+                    "homepage": "http://gnarf.net"
+                },
+                {
+                    "name": "Felix Nagel",
+                    "email": "info@felixnagel.com",
+                    "homepage": "http://www.felixnagel.com"
+                }
+            ],
+            "description": "jQuery UI is a curated set of user interface interactions, effects, widgets, and themes built on top of the jQuery JavaScript Library. Whether you're building highly interactive web applications or you just need to add a date picker to a form control, jQuery UI is the perfect choice.",
+            "support": {
+                "issues": "https://github.com/components/jqueryui/issues",
+                "source": "https://github.com/components/jqueryui/tree/master"
+            },
+            "time": "2016-09-16T05:47:55+00:00"
+        },
+        {
+            "name": "fortawesome/font-awesome",
+            "version": "6.7.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FortAwesome/Font-Awesome.git",
+                "reference": "af620534bfc3c2d4cbefcfeec29603bbe7809e64"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FortAwesome/Font-Awesome/zipball/af620534bfc3c2d4cbefcfeec29603bbe7809e64",
+                "reference": "af620534bfc3c2d4cbefcfeec29603bbe7809e64",
+                "shasum": ""
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "CC-BY-4.0",
+                "OFL-1.1",
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "The Font Awesome Team",
+                    "homepage": "https://github.com/orgs/FortAwesome/people"
+                }
+            ],
+            "description": "The iconic font, CSS, and SVG framework",
+            "homepage": "https://fontawesome.com",
+            "keywords": [
+                "FontAwesome",
+                "awesome",
+                "bootstrap",
+                "font",
+                "icon",
+                "svg"
+            ],
+            "support": {
+                "docs": "http://fontawesome.com/docs",
+                "email": "hello@fontawesome.com",
+                "issues": "https://github.com/FortAwesome/Font-Awesome/issues",
+                "source": "https://github.com/FortAwesome/Font-Awesome"
+            },
+            "time": "2024-12-16T21:31:56+00:00"
+        },
+        {
+            "name": "ikkez/f3-cortex",
+            "version": "v1.7.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ikkez/f3-cortex.git",
+                "reference": "79468b7a04695ad343b2f4d7dbdbe575a6b08a35"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ikkez/f3-cortex/zipball/79468b7a04695ad343b2f4d7dbdbe575a6b08a35",
+                "reference": "79468b7a04695ad343b2f4d7dbdbe575a6b08a35",
+                "shasum": ""
+            },
+            "require": {
+                "ikkez/f3-schema-builder": "2.*"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "lib/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0"
+            ],
+            "description": "A multi-engine ORM / ODM for the PHP Fat-Free Framework",
+            "homepage": "https://github.com/ikkez/f3-cortex",
+            "keywords": [
+                "F3",
+                "fatfree",
+                "mongo",
+                "orm",
+                "sql"
+            ],
+            "support": {
+                "issues": "https://github.com/ikkez/f3-cortex/issues",
+                "source": "https://github.com/ikkez/f3-cortex/tree/v1.7.8"
+            },
+            "funding": [
+                {
+                    "url": "https://www.buymeacoffee.com/ikkez",
+                    "type": "buy_me_a_coffee"
+                },
+                {
+                    "url": "https://github.com/ikkez",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-02-25T00:25:02+00:00"
+        },
+        {
+            "name": "ikkez/f3-falsum",
+            "version": "v2.8.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ikkez/f3-falsum.git",
+                "reference": "cf2a855b41ab69349527b631adb844e761506ece"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ikkez/f3-falsum/zipball/cf2a855b41ab69349527b631adb844e761506ece",
+                "reference": "cf2a855b41ab69349527b631adb844e761506ece",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.9"
+            },
+            "suggest": {
+                "symfony/var-dumper": "Pretty print complex values better with var-dumper available"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Falsum\\": "src/Falsum/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Rafael Morais dos Santos",
+                    "homepage": "https://ra.fael.ml",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Christian Knuth",
+                    "homepage": "https://ikkez.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Pretty error handling for Fat-Free Framework",
+            "homepage": "https://github.com/ikkez/f3-falsum",
+            "keywords": [
+                "F3",
+                "error",
+                "exception",
+                "falsum",
+                "fat-free framework",
+                "handling",
+                "library"
+            ],
+            "support": {
+                "issues": "https://github.com/ikkez/f3-falsum/issues",
+                "source": "https://github.com/ikkez/f3-falsum/tree/v2.8.1"
+            },
+            "time": "2020-12-06T18:29:00+00:00"
+        },
+        {
+            "name": "ikkez/f3-schema-builder",
+            "version": "v2.2.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ikkez/f3-schema-builder.git",
+                "reference": "1fc4cf37e4683037d35a8536232bcacbf7f4dd0b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ikkez/f3-schema-builder/zipball/1fc4cf37e4683037d35a8536232bcacbf7f4dd0b",
+                "reference": "1fc4cf37e4683037d35a8536232bcacbf7f4dd0b",
+                "shasum": ""
+            },
+            "require": {
+                "bcosca/fatfree-core": "^3.6"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "lib/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0"
+            ],
+            "description": "SQL Schema Builder Plugin for PHP Fat-Free Framework",
+            "homepage": "https://github.com/ikkez/f3-schema-builder",
+            "keywords": [
+                "F3",
+                "fatfree",
+                "sql"
+            ],
+            "support": {
+                "issues": "https://github.com/ikkez/f3-schema-builder/issues",
+                "source": "https://github.com/ikkez/f3-schema-builder/tree/v2.2.6"
+            },
+            "time": "2023-02-13T19:12:50+00:00"
+        },
+        {
+            "name": "ikkez/f3-validation-engine",
+            "version": "v1.7.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ikkez/f3-validation-engine.git",
+                "reference": "2338f8ad05bf80af7b4b699981c04b30d461d918"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ikkez/f3-validation-engine/zipball/2338f8ad05bf80af7b4b699981c04b30d461d918",
+                "reference": "2338f8ad05bf80af7b4b699981c04b30d461d918",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0"
+            ],
+            "description": "Validation engine for Cortex and the PHP Fat-Free Framework",
+            "homepage": "https://github.com/ikkez/f3-validation-engine",
+            "keywords": [
+                "F3",
+                "GUMP",
+                "cortex",
+                "fatfree",
+                "model",
+                "validation"
+            ],
+            "support": {
+                "issues": "https://github.com/ikkez/f3-validation-engine/issues",
+                "source": "https://github.com/ikkez/f3-validation-engine/tree/v1.7.3"
+            },
+            "time": "2023-01-23T22:06:35+00:00"
+        },
+        {
+            "name": "olaulau/htmlskel",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/olaulau/HtmlSkel.git",
+                "reference": "33f44fedf3da544d02b609bc923726ccf3c7af14"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/olaulau/HtmlSkel/zipball/33f44fedf3da544d02b609bc923726ccf3c7af14",
+                "reference": "33f44fedf3da544d02b609bc923726ccf3c7af14",
+                "shasum": ""
+            },
+            "require": {
+                "bcosca/fatfree-core": "^3.8",
+                "components/jquery": "^3",
+                "components/jqueryui": "^1",
+                "fortawesome/font-awesome": "^6",
+                "ikkez/f3-cortex": "1.*",
+                "ikkez/f3-falsum": "^2.8",
+                "ikkez/f3-validation-engine": "^1.7",
+                "select2/select2": "^4.0",
+                "twbs/bootstrap": "^5"
+            },
+            "default-branch": true,
+            "type": "library",
+            "support": {
+                "source": "https://github.com/olaulau/HtmlSkel/tree/master",
+                "issues": "https://github.com/olaulau/HtmlSkel/issues"
+            },
+            "time": "2025-03-18T16:09:39+00:00"
+        },
+        {
+            "name": "select2/select2",
+            "version": "4.0.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/select2/select2.git",
+                "reference": "45f2b83ceed5231afa7b3d5b12b58ad335edd82e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/select2/select2/zipball/45f2b83ceed5231afa7b3d5b12b58ad335edd82e",
+                "reference": "45f2b83ceed5231afa7b3d5b12b58ad335edd82e",
+                "shasum": ""
+            },
+            "type": "component",
+            "extra": {
+                "component": {
+                    "files": [
+                        "dist/js/select2.js",
+                        "dist/js/i18n/*.js",
+                        "dist/css/select2.css"
+                    ],
+                    "styles": [
+                        "dist/css/select2.css"
+                    ],
+                    "scripts": [
+                        "dist/js/select2.js"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Select2 is a jQuery based replacement for select boxes.",
+            "homepage": "https://select2.org/",
+            "support": {
+                "issues": "https://github.com/select2/select2/issues",
+                "source": "https://github.com/select2/select2/tree/4.0.13"
+            },
+            "time": "2020-01-28T05:01:22+00:00"
+        },
+        {
+            "name": "twbs/bootstrap",
+            "version": "v5.3.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/twbs/bootstrap.git",
+                "reference": "25aa8cc0b32f0d1a54be575347e6d84b70b1acd7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/twbs/bootstrap/zipball/25aa8cc0b32f0d1a54be575347e6d84b70b1acd7",
+                "reference": "25aa8cc0b32f0d1a54be575347e6d84b70b1acd7",
+                "shasum": ""
+            },
+            "replace": {
+                "twitter/bootstrap": "self.version"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mark Otto",
+                    "email": "markdotto@gmail.com"
+                },
+                {
+                    "name": "Jacob Thornton",
+                    "email": "jacobthornton@gmail.com"
+                }
+            ],
+            "description": "The most popular front-end framework for developing responsive, mobile first projects on the web.",
+            "homepage": "https://getbootstrap.com/",
+            "keywords": [
+                "JS",
+                "css",
+                "framework",
+                "front-end",
+                "mobile-first",
+                "responsive",
+                "sass",
+                "web"
+            ],
+            "support": {
+                "issues": "https://github.com/twbs/bootstrap/issues",
+                "source": "https://github.com/twbs/bootstrap/tree/v5.3.8"
+            },
+            "time": "2025-08-26T02:01:02+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "olaulau/htmlskel": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
+}
