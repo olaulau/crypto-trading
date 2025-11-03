@@ -41,17 +41,35 @@ class IndexCtrl extends Ctrl
 	public static function testGET (\Base $f3, $url, $controler)
 	{
 		# connect to sqlite data file
-		$data_filename = "ExchangeHistoryDataCollector_1762037021.737952.data";
+		// $data_filename = "data/binance_ETH-EUR_1m_2025-10-01_2025-10-31.sqlite"; # 2025-10-01 - 2025-10-31
+		$data_filename = "data/binance_ETH-EUR_1m_2025-01-01_2025-11-03.sqlite"; # 2025-01-01 - 2025-11-03
 		$data_full_path = __DIR__ . "/../../.." . "/" . $data_filename;
 		$db = new \DB\SQL("sqlite:" . $data_full_path);
 		
 		# read ohlcv data
-		$sql = "SELECT * FROM ohlcv";
-		$data = $db->exec($sql);
+		$ohlcv_wrapper = new \DB\SQL\Mapper($db, 'ohlcv');
+		$limit  = 1000;
+		$offset = 0;
+
+		while ($ohlcv_wrapper->load(NULL, ["limit" => $limit, "offset" => $offset])) {
+			do {
+				// var_dump($ohlcv_wrapper->cast());
+			}
+			while ($ohlcv_wrapper->next());
+			$offset += $limit;
+			$ohlcv_wrapper->reset();
+		}
+		var_dump($offset);
+		die; ///////////////
+		#TODO extract and store in mysql once, before permit backtest of big file such as yearly spot
 		
 		# extract infos
-		foreach ($data as &$row) {
-			$candle = $row ["candle"];
+		$ohlcv_wrapper->load(NULL, ["LIMIT {$offset}, {$limit}"]); # Loads the first record
+		die;
+		while (!$ohlcv_wrapper->dry()) {
+			var_dump($ohlcv_wrapper); die; ////////////////////////////////
+
+			$candle = $ohlcv_wrapper ["candle"];
 			$candle = json_decode($candle);
 			$candle = [
 				"timestamp"	=> $candle [0],
@@ -61,7 +79,8 @@ class IndexCtrl extends Ctrl
 				"close"		=> $candle [4],
 				"volume"	=> $candle [5],
 			];
-			$row ["candle"] = $candle;
+			$ohlcv_wrapper ["candle"] = $candle;
+			$ohlcv_wrapper->next();
 		}
 		// var_dump($data);
 		
