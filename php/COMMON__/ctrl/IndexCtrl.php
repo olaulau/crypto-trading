@@ -66,8 +66,10 @@ class IndexCtrl extends Ctrl
 		// var_dump($data);
 		
 		# config
-		$up_pct = 3;
-		$down_pct = 2;
+		$sell_min_margin = 4;
+		$sell_floor_margin = 2;
+		$buy_min_margin = 4;
+		$buy_floor_margin = 2;
 		$start_ETH = 1;
 		$start_EUR = 0;
 		
@@ -78,14 +80,21 @@ class IndexCtrl extends Ctrl
 		$timestamp = $row ["timestamp"];
 		$timestamp_formated = DateTimeImmutable::createFromTimestamp($timestamp)->format("Y-m-d H:i:s");
 		$value = $data [0] ["candle"] ["close"];
-		$reference_value = $value; # value of my last crypto movement
 		$value_formated = number_format($value, 6, ",", " ");
+		$reference_value = $value; # value of my last crypto movement
+		$high = $value; # highest value since last action
+		$low = $value; # lowest value since last action
 		$start_total = $start_ETH * $value + $start_EUR;
 		$converted = $ETH * $value;
 		$converted_formated = number_format($converted, 6, ",", " ");
+		
 		echo "[{$timestamp_formated}] {$value_formated} simulation start <br/>" . PHP_EOL;
 		echo "{$ETH} ETH => {$converted_formated} € <br/>" . PHP_EOL;
 		echo " --- <br/>" . PHP_EOL;
+		
+		# Simple Moving Average
+		$SMA_window_size = 50;
+		$SMA_window = [];
 		
 		# simulation
 		# rules : sell 100% when it raises by 4%, buy 100% when it drops 2%
@@ -95,23 +104,38 @@ class IndexCtrl extends Ctrl
 			$value = $row ["candle"] ["close"];
 			$value_formated = number_format($value, 6, ",", " ");
 			
+			if (count($SMA_window) >= $SMA_window_size) { # window is full
+				array_shift($SMA_window);
+			}
+			array_push($SMA_window, $value);
+			$SMA_value = array_sum($SMA_window) / count($SMA_window);
+			$value_ = $SMA_value;
+			
+			$high = max($value_, $high);
+			$low = min($value_, $low);
+			// echo "({$timestamp_formated}) : {$value} ~ {$value_} [ {$low} - {$high} ] <br/>" . PHP_EOL;
+			
 			if($ETH > 0) { # I own crypto
-				if ($value > ($reference_value * (1 + $up_pct/100))) { # value raised a lot => sell
-					$EUR = $ETH * $value;
-					$EUR_formated = number_format($EUR, 2, ",", " ");
-					$ETH = 0;
-					$reference_value = $value;
-					echo "[{$timestamp_formated}] {$value_formated} : +{$up_pct}%, vente => {$EUR_formated} € <br/>" . PHP_EOL;
+				if ($value_ > ($reference_value * (1 + $sell_min_margin/100))) { # value raised a lot
+					if ($value_ < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
+						$EUR = $ETH * $value;
+						$EUR_formated = number_format($EUR, 2, ",", " ");
+						$ETH = 0;
+						$low = $high = $reference_value = $value;
+						echo "[{$timestamp_formated}] {$value_formated} : selling => {$EUR_formated} € <br/>" . PHP_EOL;
+					}
 				}
 			}
 			
 			if($EUR > 0) { # I don't own crypto
-				if ($value < ($reference_value * (1 - $down_pct/100))) { # value dropped a lot => buy
-					$ETH = $EUR / $value;
-					$ETH_formated = number_format($ETH, 6, ",", " ");
-					$EUR = 0;
-					$reference_value = $value;
-					echo "[{$timestamp_formated}] {$value_formated} : -{$down_pct}%, achat => {$ETH_formated} ETH <br/>" . PHP_EOL;
+				if ($value_ < ($reference_value * (1 - $buy_min_margin/100))) { # value dropped a lot
+					if ($value_ > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
+						$ETH = $EUR / $value;
+						$ETH_formated = number_format($ETH, 6, ",", " ");
+						$EUR = 0;
+						$low = $high = $reference_value = $value;
+						echo "[{$timestamp_formated}] {$value_formated} : buying => {$ETH_formated} ETH <br/>" . PHP_EOL;
+					}
 				}
 			}
 		}
@@ -129,9 +153,10 @@ class IndexCtrl extends Ctrl
 		echo "{$EUR_formated} € <br/>" . PHP_EOL;
 		
 		$end_total = $ETH * $value + $EUR;
-		$ROI = ($end_total - $start_total) / $start_total; # Return On Investment
+		$PandL = ($end_total - $start_total); # Profit and Loss
+		$ROI = $PandL / $start_total; # Return On Investment
 		$ROI_formated = number_format($ROI * 100, 2, ",", " ");
-		echo " => ROI = {$ROI_formated} % <br/>" . PHP_EOL;
+		echo " => ROI = {$ROI_formated} % ({$PandL} €) <br/>" . PHP_EOL;
 		
 		
 		
