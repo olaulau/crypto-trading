@@ -43,17 +43,18 @@ class IndexCtrl extends Ctrl
 	{
 		# config
 		$sell_min_margin = 4;
-		$sell_floor_margin = 2;
-		$buy_min_margin = 4;
+		$sell_floor_margin = 1;
+		$buy_min_margin = 3;
 		$buy_floor_margin = 2;
 		$start_ETH = 1;
 		$start_EUR = 0;
-		$SMA_window_size = 50;
+		$SMA_window_size = 100;
 		$sqlite_read_limit = 10000;
 		
 		# connect to sqlite data file
 		// $data_filename = "data/binance_ETH-EUR_1m_2025-10-01_2025-10-31.sqlite"; # 2025-10-01 - 2025-10-31
-		$data_filename = "data/binance_ETH-EUR_1m_2025-01-01_2025-11-03.sqlite"; # 2025-01-01 - 2025-11-03
+		// $data_filename = "data/binance_ETH-EUR_1m_2025-01-01_2025-11-03.sqlite"; # 2025-01-01 - 2025-11-03
+		$data_filename = "data/binance_ETH-EUR_15m_2024-11-01_2025-111-01.sqlite"; # 2024-11-01 - 2025-11-01
 		$data_full_path = __DIR__ . "/../../.." . "/" . $data_filename;
 		$db = new \DB\SQL("sqlite:" . $data_full_path);
 		
