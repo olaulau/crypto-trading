@@ -1,11 +1,17 @@
 <?php
 namespace COMMON__\svc;
 
+use DateTimeImmutable;
 use DB\SQL\Mapper;
 
 
 class Stuff
 {
+	
+	public static function timestamp_to_date_formated (int $timestamp) : string
+	{
+		return DateTimeImmutable::createFromTimestamp($timestamp)->format("Y-m-d H:i:s");
+	}
 	
 	public static function extract_candle_infos (Mapper $ohlcv) : array
 	{
@@ -23,7 +29,8 @@ class Stuff
 	}
 	
 	
-	public static function float_parts (float $num): array {
+	public static function float_parts (float $num): array
+	{
 		// Formatage en notation scientifique (ex: "1.234000e+03")
 		$sci = sprintf('%.15e', $num);
 	
@@ -54,7 +61,7 @@ class Stuff
 	
 	public static function percent_format ($value)
 	{
-		return self::number_format_french ($value, 2, true);
+		return self::number_format_french ($value, 2, true) . " %";
 	}
 	
 }
