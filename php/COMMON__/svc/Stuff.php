@@ -22,4 +22,27 @@ class Stuff
 		return $candle;
 	}
 	
+	
+	public static function float_parts (float $num): array {
+		// Formatage en notation scientifique (ex: "1.234000e+03")
+		$sci = sprintf('%.15e', $num);
+	
+		// Extraction par regex : mantisse et exposant
+		if (preg_match('/^([+-]?[0-9]*\.?[0-9]+)e([+-]?[0-9]+)$/i', $sci, $m)) {
+			return [
+				'mantisse' => (float)$m[1],
+				'exposant' => (int)$m[2],
+			];
+		}
+		return [ 'mantisse' => null, 'exposant' => null ];
+	}
+	
+	
+	public static function format_float (float $value, int $significative_numbers)
+	{
+		list("exposant" => $exposant) = self::float_parts($value);
+		$decimals = $significative_numbers - $exposant - 1;
+		return number_format($value, $decimals, ",", " ");
+	}
+	
 }

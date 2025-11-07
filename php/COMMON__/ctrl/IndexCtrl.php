@@ -71,13 +71,13 @@ class IndexCtrl extends Ctrl
 				$timestamp_formated = DateTimeImmutable::createFromTimestamp($timestamp)->format("Y-m-d H:i:s");
 				$candle = Stuff::extract_candle_infos($ohlcv_wrapper);
 				$value = $candle ["close"];
-				$value_formated = number_format($value, 6, ",", " ");
+				$value_formated = Stuff::format_float($value, 6);
 				$reference_value = $value; # value of my last crypto movement
 				$high = $value; # highest value since last action
 				$low = $value; # lowest value since last action
 				$start_total = $start_ETH * $value + $start_EUR;
 				$converted = $ETH * $value;
-				$converted_formated = number_format($converted, 6, ",", " ");
+				$converted_formated = Stuff::format_float($converted, 6);
 				
 				echo "[{$timestamp_formated}] {$value_formated} simulation start <br/>" . PHP_EOL;
 				echo "{$ETH} ETH => {$converted_formated} € <br/>" . PHP_EOL;
@@ -91,7 +91,7 @@ class IndexCtrl extends Ctrl
 				$timestamp_formated = DateTimeImmutable::createFromTimestamp($timestamp)->format("Y-m-d H:i:s");
 				$candle = Stuff::extract_candle_infos($ohlcv_wrapper);
 				$value = $candle ["close"];
-				$value_formated = number_format($value, 6, ",", " ");
+				$value_formated = Stuff::format_float($value, 6);
 				
 				if (count($SMA_window) >= $SMA_window_size) { # window is full
 					array_shift($SMA_window);
@@ -108,10 +108,10 @@ class IndexCtrl extends Ctrl
 					if ($value_ > ($reference_value * (1 + $sell_min_margin/100))) { # value raised a lot
 						if ($value_ < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
 							$EUR = $ETH * $value;
-							$EUR_formated = number_format($EUR, 2, ",", " ");
+							$EUR_formated = Stuff::format_float($EUR, 6);
 							$ETH = 0;
 							$low = $high = $reference_value = $value;
-							echo "[{$timestamp_formated}] {$value_formated} : selling => {$EUR_formated} € <br/>" . PHP_EOL;
+							echo "[{$timestamp_formated}] 1 ETH = {$value_formated} € : selling => {$EUR_formated} € <br/>" . PHP_EOL;
 						}
 					}
 				}
@@ -120,10 +120,10 @@ class IndexCtrl extends Ctrl
 					if ($value_ < ($reference_value * (1 - $buy_min_margin/100))) { # value dropped a lot
 						if ($value_ > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
 							$ETH = $EUR / $value;
-							$ETH_formated = number_format($ETH, 6, ",", " ");
+							$ETH_formated = Stuff::format_float($ETH, 6);
 							$EUR = 0;
 							$low = $high = $reference_value = $value;
-							echo "[{$timestamp_formated}] {$value_formated} : buying => {$ETH_formated} ETH <br/>" . PHP_EOL;
+							echo "[{$timestamp_formated}] 1 ETH = {$value_formated} € : buying => {$ETH_formated} ETH <br/>" . PHP_EOL;
 						}
 					}
 				}
@@ -142,18 +142,19 @@ class IndexCtrl extends Ctrl
 		$timestamp = $last_ohlcv ["timestamp"];
 		$timestamp_formated = DateTimeImmutable::createFromTimestamp($timestamp)->format("Y-m-d H:i:s");
 		echo "[{$timestamp_formated}] simulation end <br/>" . PHP_EOL;
-		$ETH_formated = number_format($ETH, 6, ",", " ");
+		$ETH_formated = Stuff::format_float($ETH, 6);
 		$converted = $ETH * $value;
-		$converted_formated = number_format($converted, 6, ",", " ");
-		echo "{$ETH_formated} ETH @ {$value_formated} => {$converted_formated}  <br/>" . PHP_EOL;
-		$EUR_formated = number_format($EUR, 2, ",", " ");
+		$converted_formated = Stuff::format_float($converted, 6);
+		echo "{$ETH_formated} ETH @ {$value_formated} => {$converted_formated} € <br/>" . PHP_EOL;
+		$EUR_formated = Stuff::format_float($EUR, 6);
 		echo "{$EUR_formated} € <br/>" . PHP_EOL;
 		
 		$end_total = $ETH * $value + $EUR;
 		$PandL = ($end_total - $start_total); # Profit and Loss
+		$PandL_formated = Stuff::format_float($PandL, 6);
 		$ROI = $PandL / $start_total; # Return On Investment
 		$ROI_formated = number_format($ROI * 100, 2, ",", " ");
-		echo " => ROI = {$ROI_formated} % ({$PandL} €) <br/>" . PHP_EOL;
+		echo " => ROI = {$ROI_formated} % ({$PandL_formated} €) <br/>" . PHP_EOL;
 		
 		
 		die;
