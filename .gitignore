@@ -3,3 +3,6 @@
 
 /conf/user.ini
 /tmp/
+
+/data/binance/*
+!/data/binance/.gitkeep

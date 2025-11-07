@@ -1,8 +1,11 @@
 <?php
 namespace COMMON__\ctrl;
 
+use Base;
 use COMMON__\svc\Stuff;
+use DateTime;
 use DateTimeImmutable;
+use DateTimeZone;
 
 class IndexCtrl extends Ctrl
 {
@@ -25,7 +28,7 @@ class IndexCtrl extends Ctrl
 		return $res;
 	}
 	
-	public static function indexGET (\Base $f3, $url, $controler)
+	public static function indexGET (Base $f3, $url, $controler)
 	{
 		$page = [
 			"module"	=>	"COMMON__",
@@ -39,7 +42,42 @@ class IndexCtrl extends Ctrl
 	}
 	
 	
-	public static function simulateGET (\Base $f3, $url, $controler)
+	public static function downloadGET (Base $f3, $url, $controler)
+	{
+		$base_path = "https://data.binance.vision/data/spot/monthly/klines/ETHEUR/15m/";
+		$start_year = 2020;
+		$tick = "15m";
+		$pair_str = "ETHEUR";
+		$date = new DateTime("first day of January {$start_year}", new DateTimeZone("Europe/Paris"));
+		$now = new DateTimeImmutable();
+		while (!$date->diff($now)->invert) {
+			$month = $date->format("Y-m");
+			$filename = "{$pair_str}-{$tick}-{$month}.zip";
+			$url = $base_path . $filename;
+			$directory = __DIR__ . "/../../../data/binance/";
+			$dest = $directory . $filename;
+			
+			Stuff::download_to_disk ($url, $dest);
+			exec("cd " . escapeshellarg($directory) . "; unzip " . escapeshellarg($dest) . " 2>&1", $output, $result_code);
+			// var_dump($result_code, $output); die;
+			
+			$date->modify("+1 month");
+		}
+		die;
+		
+		
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"default",
+			"name"		=>	"download",
+			"title"		=>	"Download",
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		self::renderPage($page);
+	}
+	
+	
+	public static function simulateGET (Base $f3, $url, $controler)
 	{
 		$page = [
 			"module"	=>	"COMMON__",
@@ -65,7 +103,7 @@ class IndexCtrl extends Ctrl
 		$sqlite_read_limit = 10000;
 		
 		# connect to sqlite data file
-		$data_filename = "data/binance_ETH-EUR_15m_2024-11-01_2025-111-01.sqlite"; # 2024-11-01 - 2025-11-01
+		$data_filename = "data/octobot/binance_ETH-EUR_15m_2024-11-01_2025-111-01.sqlite"; # 2024-11-01 - 2025-11-01
 		$data_full_path = __DIR__ . "/../../.." . "/" . $data_filename;
 		$db = new \DB\SQL("sqlite:" . $data_full_path);
 		

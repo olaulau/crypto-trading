@@ -64,4 +64,28 @@ class Stuff
 		return self::number_format_french ($value, 2, true) . " %";
 	}
 	
+	
+	public static function download_to_disk ($url, $destination)
+	{
+		$ch = curl_init($url);
+		$fp = fopen($destination, 'w+');
+
+		curl_setopt($ch, CURLOPT_FILE, $fp);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // follow redirects
+		curl_setopt($ch, CURLOPT_TIMEOUT, 0);           // no timeout
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // verify SSL
+		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+
+		curl_exec($ch);
+
+		if (curl_errno($ch)) {
+			echo 'Error: ' . curl_error($ch) . " <br/>" . PHP_EOL;
+		}
+		else {
+			echo "Downloaded successfully to: $destination <br/>" . PHP_EOL;
+		}
+
+		curl_close($ch);
+		fclose($fp);
+	}
 }
