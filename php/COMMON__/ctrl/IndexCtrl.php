@@ -130,25 +130,35 @@ class IndexCtrl extends Ctrl
 				
 				$high = max($value_, $high);
 				$low = min($value_, $low);
-				// echo "({$timestamp_formated}) : {$value} ~ {$value_} [ {$low} - {$high} ] <br/>" . PHP_EOL;
 				
-				if($ETH > 0) { # I own crypto
+				if ($ETH > 0) { # I own crypto
 					if ($value_ > ($reference_value * (1 + $sell_min_margin/100))) { # value raised a lot
 						if ($value_ < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
-							$EUR = $ETH * $value;
-							$EUR_formated = Stuff::format_float_significative($EUR, 6);
-							$ETH = 0;
-							$low = $high = $reference_value = $value;
-							$last_sell_assets = $sell_assets_history [array_key_last($sell_assets_history)];
-							$delta_pct = ($EUR - $last_sell_assets) / $last_sell_assets * 100;
-							$delta_pct_formated = stuff::percent_format($delta_pct);
-							$sell_assets_history [] = $EUR;
-							echo '<div class="text-end">' . "[{$timestamp_formated}] ({$value_formated}) : selling --> {$EUR_formated} € ({$delta_pct_formated}) </div>" . PHP_EOL;
+							// if ($value > ($reference_value * (1 + $sell_min_margin/100))) { # also check current value
+								?>
+								<div class="text-end">
+								<?php
+								// echo "reference = $reference_value <br/>" . PHP_EOL;
+								// echo "value_ = $value_ <br/>" . PHP_EOL;
+								// echo "value = $value <br/>" . PHP_EOL;
+								$EUR = $ETH * $value;
+								$EUR_formated = Stuff::format_float_significative($EUR, 6);
+								$ETH = 0;
+								$low = $high = $reference_value = $value;
+								$last_sell_assets = $sell_assets_history [array_key_last($sell_assets_history)];
+								$delta_pct = ($EUR - $last_sell_assets) / $last_sell_assets * 100;
+								$delta_pct_formated = stuff::percent_format($delta_pct);
+								$sell_assets_history [] = $EUR;
+								echo "[{$timestamp_formated}] ({$value_formated}) : selling --> {$EUR_formated} € ({$delta_pct_formated})" . PHP_EOL;
+								?>
+								</div>
+								<?php
+							// }
 						}
 					}
 				}
 				
-				if($EUR > 0) { # I own euros
+				if ($EUR > 0) { # I own euros
 					if ($value_ < ($reference_value * (1 - $buy_min_margin/100))) { # value dropped a lot
 						if ($value_ > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
 							$ETH = $EUR / $value;
