@@ -38,11 +38,23 @@ class Stuff
 	}
 	
 	
-	public static function format_float (float $value, int $significative_numbers)
+	public static function number_format_french ($value, $decimals, bool $force_sign=false)
 	{
-		list("exposant" => $exposant) = self::float_parts($value);
+		return (($force_sign && $value > 0) ? "+ " : "") . number_format($value, $decimals, ",", " ");
+	}
+	
+	
+	public static function format_float_significative (float $value, int $significative_numbers, bool $force_sign=false)
+	{
+		list("exposant" => $exposant) = self::float_parts ($value);
 		$decimals = $significative_numbers - $exposant - 1;
-		return number_format($value, $decimals, ",", " ");
+		return self::number_format_french ($value, $decimals, $force_sign);
+	}
+	
+	
+	public static function percent_format ($value)
+	{
+		return self::number_format_french ($value, 2, true);
 	}
 	
 }
