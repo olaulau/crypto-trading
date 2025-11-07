@@ -39,15 +39,13 @@ class IndexCtrl extends Ctrl
 	}
 	
 	
-	public static function testGET (\Base $f3, $url, $controler)
+	public static function simulateGET (\Base $f3, $url, $controler)
 	{
-		
-		
 		$page = [
 			"module"	=>	"COMMON__",
 			"layout"	=>	"default",
-			"name"		=>	"test",
-			"title"		=>	"Test",
+			"name"		=>	"simulate",
+			"title"		=>	"Simulate",
 			"breadcrumbs" => static::breadcrumbs(),
 		];
 		self::renderPage($page);
