@@ -65,6 +65,12 @@ class Stuff
 	}
 	
 	
+	public static function EUR_format ($value)
+	{
+		return self::number_format_french ($value, 2, true) . " €";
+	}
+	
+	
 	public static function download_to_disk ($url, $destination)
 	{
 		$ch = curl_init($url);

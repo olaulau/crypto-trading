@@ -4,8 +4,6 @@
 	- SMA
 	- buyings & sellings
 
-- download binance CSV file
-- import into MySQL DB
 - store simulation results
 
 - manual simulation

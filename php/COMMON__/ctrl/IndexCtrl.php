@@ -170,48 +170,47 @@ class IndexCtrl extends Ctrl
 		# config
 		$sell_min_margin = 4;
 		$sell_floor_margin = 1;
+		
 		$buy_min_margin = 3;
 		$buy_floor_margin = 2;
-		$start_ETH = 0;
-		$start_EUR = 2322.99;
-		$SMA_window_size = 100;
-		$sqlite_read_limit = 10000;
 		
-		# connect to sqlite data file
-		$data_filename = "data/octobot/binance_ETH-EUR_15m_2024-11-01_2025-111-01.sqlite"; # 2024-11-01 - 2025-11-01
-		$data_full_path = __DIR__ . "/../../.." . "/" . $data_filename;
-		$db = new \DB\SQL("sqlite:" . $data_full_path);
+		$start_ETH = 1;
+		$start_EUR = 0;
+		
+		$price_window_size = 100;
+		$sql_read_limit = 10000;
+		
+		$date_start = "2020-01-01 00:00:00";
+		$date_end = "2025-10-31 23:59:59";
 		
 		# start reading data
 		$offset = 0;
-		$SMA_window = [];
-		$ohlcv_wrapper = new \DB\SQL\Mapper($db, 'ohlcv');
-		while ($ohlcv_wrapper->load(NULL, ["limit" => $sqlite_read_limit, "offset" => $offset])) {
+		$price_window = [];
+		$kline_wrapper = new Kline;
+		while ($kline_wrapper->load(["? <= open_date AND open_date <= ?", $date_start, $date_end], ["limit" => $sql_read_limit, "offset" => $offset])) {
 			if ($offset === 0) {
 				# start variables
 				$ETH = $start_ETH;
 				$EUR = $start_EUR;
-				$timestamp = $ohlcv_wrapper ["timestamp"];
-				$timestamp_formated = Stuff::timestamp_to_date_formated($timestamp);
-				$candle = Stuff::extract_candle_infos($ohlcv_wrapper);
-				$value = $candle ["close"];
-				$value_formated = Stuff::format_float_significative($value, 6);
-				$reference_value = $value; # value of my last crypto movement #TODO remove and use $sell_assets_history & $buy_assets_history
-				$high = $value; # highest value since last action
-				$low = $value; # lowest value since last action
-				$start_total = $start_ETH * $value + $start_EUR;
+				$timestamp_formated = $kline_wrapper ["open_date"];
+				$price = $kline_wrapper ["price"];
+				$price_formated = Stuff::format_float_significative($price, 6);
+				$reference_price = $price; # value of my last crypto movement #TODO remove and use $sell_assets_history & $buy_assets_history
+				$high = $price; # highest value since last action
+				$low = $price; # lowest value since last action
+				$start_total = $start_ETH * $price + $start_EUR;
 				
-				echo "[{$timestamp_formated}] ({$value_formated}) simulation start <br/>" . PHP_EOL;
+				echo "[{$timestamp_formated}] ({$price_formated}) simulation start <br/>" . PHP_EOL;
 				echo "<ul>" . PHP_EOL;
 				if($ETH > 0) {
-					$ETH_converted = $ETH * $value;
+					$ETH_converted = $ETH * $price;
 					$sell_assets_history = [$ETH_converted];
 					$buy_assets_history = [$ETH];
 					$ETH_converted_formated = Stuff::format_float_significative($ETH_converted, 6);
 					echo "<li>{$ETH} ETH = {$ETH_converted_formated} € </li>" . PHP_EOL;
 				}
 				if($EUR > 0) {
-					$EUR_converted = $EUR / $value;
+					$EUR_converted = $EUR / $price;
 					$sell_assets_history = [$EUR];
 					$buy_assets_history = [$EUR_converted];
 					$EUR_converted_formated = Stuff::format_float_significative($EUR_converted, 6);
@@ -221,46 +220,44 @@ class IndexCtrl extends Ctrl
 				echo " <br/>" . PHP_EOL;
 				echo " <hr>" . PHP_EOL;
 				echo " <br/>" . PHP_EOL;
-				$ohlcv_wrapper->next();
+				$kline_wrapper->next();
 			}
 			
 			do {
 				# simulation
-				$timestamp = $ohlcv_wrapper ["timestamp"];
-				$timestamp_formated = Stuff::timestamp_to_date_formated($timestamp);
-				$candle = Stuff::extract_candle_infos($ohlcv_wrapper);
-				$value = $candle ["close"];
-				$value_formated = Stuff::format_float_significative($value, 6);
+				$timestamp_formated = $kline_wrapper ["open_date"];
+				$price = $kline_wrapper ["price"];
+				$price_formated = Stuff::format_float_significative($price, 6);
 				
-				if (count($SMA_window) >= $SMA_window_size) { # window is full
-					array_shift($SMA_window);
+				if (count($price_window) >= $price_window_size) { # window is full
+					array_shift($price_window);
 				}
-				array_push($SMA_window, $value);
-				$SMA_value = array_sum($SMA_window) / count($SMA_window);
-				$value_ = $SMA_value;
+				array_push($price_window, $price);
+				$SMA_price = array_sum($price_window) / count($price_window);
+				$price_ = $SMA_price; # we use SMA as smoothed price
 				
-				$high = max($value_, $high);
-				$low = min($value_, $low);
+				$high = max($price_, $high);
+				$low = min($price_, $low);
 				
 				if ($ETH > 0) { # I own crypto
-					if ($value_ > ($reference_value * (1 + $sell_min_margin/100))) { # value raised a lot
-						if ($value_ < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
-							// if ($value > ($reference_value * (1 + $sell_min_margin/100))) { # also check current value
+					if ($price_ > ($reference_price * (1 + $sell_min_margin/100))) { # price raised a lot
+						if ($price_ < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
+							// if ($price > ($reference_price * (1 + $sell_min_margin/100))) { # also check current price
 								?>
 								<div class="text-end">
 								<?php
-								// echo "reference = $reference_value <br/>" . PHP_EOL;
+								// echo "reference = $reference_price <br/>" . PHP_EOL;
 								// echo "value_ = $value_ <br/>" . PHP_EOL;
 								// echo "value = $value <br/>" . PHP_EOL;
-								$EUR = $ETH * $value;
+								$EUR = $ETH * $price;
 								$EUR_formated = Stuff::format_float_significative($EUR, 6);
 								$ETH = 0;
-								$low = $high = $reference_value = $value;
+								$low = $high = $reference_price = $price;
 								$last_sell_assets = $sell_assets_history [array_key_last($sell_assets_history)];
 								$delta_pct = ($EUR - $last_sell_assets) / $last_sell_assets * 100;
 								$delta_pct_formated = stuff::percent_format($delta_pct);
 								$sell_assets_history [] = $EUR;
-								echo "[{$timestamp_formated}] ({$value_formated}) : selling --> {$EUR_formated} € ({$delta_pct_formated})" . PHP_EOL;
+								echo "[{$timestamp_formated}] ({$price_formated}) : selling --> {$EUR_formated} € ({$delta_pct_formated})" . PHP_EOL;
 								?>
 								</div>
 								<?php
@@ -270,26 +267,26 @@ class IndexCtrl extends Ctrl
 				}
 				
 				if ($EUR > 0) { # I own euros
-					if ($value_ < ($reference_value * (1 - $buy_min_margin/100))) { # value dropped a lot
-						if ($value_ > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
-							$ETH = $EUR / $value;
+					if ($price_ < ($reference_price * (1 - $buy_min_margin/100))) { # value dropped a lot
+						if ($price_ > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
+							$ETH = $EUR / $price;
 							$ETH_formated = Stuff::format_float_significative($ETH, 6);
 							$EUR = 0;
-							$low = $high = $reference_value = $value;
+							$low = $high = $reference_price = $price;
 							$last_buy_assets = $buy_assets_history [array_key_last($buy_assets_history)];
 							$delta_pct = ($ETH - $last_buy_assets) / $last_buy_assets * 100;
 							$delta_pct_formated = stuff::percent_format($delta_pct);
 							$buy_assets_history [] = $ETH;
-							echo "[{$timestamp_formated}] ({$value_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated}) <br/>" . PHP_EOL;
+							echo "[{$timestamp_formated}] ({$price_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated}) <br/>" . PHP_EOL;
 						}
 					}
 				}
-				$last_ohlcv = clone $ohlcv_wrapper;
+				$last_kline = clone $kline_wrapper;
 			}
-			while ($ohlcv_wrapper->next());
+			while ($kline_wrapper->next());
 			
-			$offset += $sqlite_read_limit;
-			$ohlcv_wrapper->reset();
+			$offset += $sql_read_limit;
+			$kline_wrapper->reset();
 		}
 		#TODO extract and store in mysql once, before permit backtest of big file such as yearly spot
 		
@@ -298,15 +295,14 @@ class IndexCtrl extends Ctrl
 		echo " <br/>" . PHP_EOL;
 		echo " <hr/>" . PHP_EOL;
 		echo " <br/>" . PHP_EOL;
-		$timestamp = $last_ohlcv ["timestamp"];
-		$timestamp_formated = Stuff::timestamp_to_date_formated($timestamp);
-		echo "[{$timestamp_formated}] ({$value_formated}) simulation end <br/>" . PHP_EOL;
+		$timestamp_formated = $last_kline ["open_date"];
+		echo "[{$timestamp_formated}] ({$price_formated}) simulation end <br/>" . PHP_EOL;
 		echo "<ul>" . PHP_EOL;
 		if ($ETH > 0) {
 			$ETH_formated = Stuff::format_float_significative($ETH, 6);
-			$ETH_converted = $ETH * $value;
+			$ETH_converted = $ETH * $price;
 			$ETH_converted_formated = Stuff::format_float_significative($ETH_converted, 6);
-			echo "<li>{$ETH_formated} ETH @ {$value_formated} => {$ETH_converted_formated} € </li/>" . PHP_EOL;
+			echo "<li>{$ETH_formated} ETH @ {$price_formated} => {$ETH_converted_formated} € </li/>" . PHP_EOL;
 		}
 		if ($EUR > 0) {
 			$EUR_formated = Stuff::format_float_significative($EUR, 6);
@@ -314,12 +310,12 @@ class IndexCtrl extends Ctrl
 		}
 		echo "</ul>" . PHP_EOL;
 		
-		$end_total = $ETH * $value + $EUR;
+		$end_total = $ETH * $price + $EUR;
 		$PandL = ($end_total - $start_total); # Profit and Loss
-		$PandL_formated = Stuff::format_float_significative($PandL, 6, true);
+		$PandL_formated = Stuff::EUR_format($PandL);
 		$ROI = $PandL / $start_total; # Return On Investment
 		$ROI_formated = Stuff::percent_format($ROI * 100, 2);
-		echo "<b>==> ROI = {$ROI_formated} ({$PandL_formated} €)</b> <br/>" . PHP_EOL;
+		echo "<b>==> ROI = {$ROI_formated} ({$PandL_formated})</b> <br/>" . PHP_EOL;
 	}
 	
 }
