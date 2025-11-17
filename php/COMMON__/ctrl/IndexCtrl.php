@@ -2,13 +2,34 @@
 namespace COMMON__\ctrl;
 
 use Base;
+use COMMON__\mdl\Kline;
 use COMMON__\svc\Stuff;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
+use DB\SQL;
+use ErrorException;
 
 class IndexCtrl extends Ctrl
 {
+	
+	public final static $binance_data_directory = __DIR__ . "/../../../data/binance/";
+	
+	public final static $kline_format = [
+		"open_time",
+		"open",
+		"high",
+		"low",
+		"close",
+		"volume",
+		"close_time",
+		"quote_asset_volume",
+		"number_of_trades",
+		"taker_buy_base_asset_volume",
+		"taker_buy_quote_asset_volume",
+		"ignore",
+	];
+	
 
 	public static function beforeRoute ()
 	{
@@ -45,7 +66,7 @@ class IndexCtrl extends Ctrl
 	public static function downloadGET (Base $f3, $url, $controler)
 	{
 		$base_path = "https://data.binance.vision/data/spot/monthly/klines/ETHEUR/15m/";
-		$start_year = 2020;
+		$start_year = 2020; #TODO list file on server and detect a valid start period ?
 		$tick = "15m";
 		$pair_str = "ETHEUR";
 		$date = new DateTime("first day of January {$start_year}", new DateTimeZone("Europe/Paris"));
@@ -54,16 +75,17 @@ class IndexCtrl extends Ctrl
 			$month = $date->format("Y-m");
 			$filename = "{$pair_str}-{$tick}-{$month}.zip";
 			$url = $base_path . $filename;
-			$directory = __DIR__ . "/../../../data/binance/";
-			$dest = $directory . $filename;
 			
+			$dest = static::$binance_data_directory . $filename; #TODO test var refacto
+			
+			# download and extract
 			Stuff::download_to_disk ($url, $dest);
-			exec("cd " . escapeshellarg($directory) . "; unzip " . escapeshellarg($dest) . " 2>&1", $output, $result_code);
+			exec("cd " . escapeshellarg(static::$binance_data_directory) . "; unzip " . escapeshellarg($dest) . " 2>&1", $output, $result_code);
 			// var_dump($result_code, $output); die;
 			
 			$date->modify("+1 month");
 		}
-		die;
+		die; #TODO display result
 		
 		
 		$page = [
@@ -74,6 +96,59 @@ class IndexCtrl extends Ctrl
 			"breadcrumbs" => static::breadcrumbs(),
 		];
 		self::renderPage($page);
+	}
+	
+	
+	public static function importGET (Base $f3, $url, $controler)
+	{
+		# init
+		$db = $f3->get("db"); /** @var SQL $db */
+		set_time_limit(0);
+		
+		# cleanup
+		$sql = "DELETE FROM kline";
+		$db->exec($sql);
+		
+		# lookup for CSV files
+		$files = glob(static::$binance_data_directory . "/*.csv");
+		asort($files);
+		
+		foreach ($files as $file) {
+			# open CSV file
+			echo basename($file) . "<br/>" . PHP_EOL;
+			$fh = fopen($file, "r");
+			
+			# read CSV rows
+			$db->begin();
+			while (false !== ($row = fgetcsv($fh, null, ",", '"', '\\'))) {
+				$row = array_combine(static::$kline_format, $row);
+				
+				# convert timestamp
+				$timestamp = $row ["open_time"];
+				if(strlen($timestamp) === 16) {
+					$timestamp = $timestamp / 1000000;
+				}
+				elseif(strlen($timestamp) === 13) {
+					$timestamp = $timestamp / 1000;
+				}
+				elseif(strlen($timestamp) === 0) {
+					# do nothing
+				}
+				else {
+					throw new ErrorException("unknown timestamp format : {$timestamp}");
+				}
+				$d = DateTime::createFromFormat("U", $timestamp);
+				
+				# write into DB
+				$kline = new Kline;
+				$kline->open_date = $d->format("Y-m-d h:i:s");
+				$kline->price = $row ["open"];
+				$kline->save();
+			}
+			$db->commit();
+		}
+		
+		exit;
 	}
 	
 	
