@@ -3,7 +3,7 @@ namespace COMMON__\svc;
 
 use DateTimeImmutable;
 use DB\SQL\Mapper;
-
+use ErrorException;
 
 class Stuff
 {
@@ -81,17 +81,28 @@ class Stuff
 		curl_setopt($ch, CURLOPT_TIMEOUT, 0);           // no timeout
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // verify SSL
 		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+		
+		curl_setopt($ch, CURLOPT_HEADER, false); // ne pas inclure dans le corps
+		curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header_line) use (&$headers) {
+			$len = strlen($header_line);
+			$header_line = trim($header_line);
+			if ($header_line) {
+				$headers[] = $header_line;
+			}
+			return $len;
+		});
 
 		curl_exec($ch);
-
 		if (curl_errno($ch)) {
-			echo 'Error: ' . curl_error($ch) . " <br/>" . PHP_EOL;
+			throw new ErrorException("download : curl error #" . curl_errno($ch) . " " . curl_error($ch));
 		}
-		else {
-			echo "Downloaded successfully to: $destination <br/>" . PHP_EOL;
+		// var_dump($headers); die;
+		if (str_starts_with (explode(" ", $headers[0]) [1], "4")) {
+			throw new ErrorException("download : 4xx HTTP status");
 		}
 
 		curl_close($ch);
 		fclose($fp);
 	}
+	
 }

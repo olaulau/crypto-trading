@@ -9,7 +9,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use DB\SQL;
 use ErrorException;
-
+use Exception;
 
 class IndexCtrl extends Ctrl
 {
@@ -66,27 +66,53 @@ class IndexCtrl extends Ctrl
 	
 	public static function downloadGET (Base $f3, $url, $controler)
 	{
+		// https://data.binance.vision/?prefix=data/spot/monthly/klines/ETHEUR/15m/
 		$base_path = "https://data.binance.vision/data/spot/monthly/klines/ETHEUR/15m/";
 		$start_year = 2020; #TODO list file on server and detect a valid start period ?
 		$tick = "15m";
 		$pair_str = "ETHEUR";
 		$date = new DateTime("first day of January {$start_year}", new DateTimeZone("Europe/Paris"));
-		$now = new DateTimeImmutable();
-		while (!$date->diff($now)->invert) {
+		$max = new DateTime("last day of previous month", new DateTimeZone("Europe/Paris"));
+		
+		while (!$date->diff($max)->invert) {
 			$month = $date->format("Y-m");
-			$filename = "{$pair_str}-{$tick}-{$month}.zip";
-			$url = $base_path . $filename;
-			
+			$filename = "{$pair_str}-{$tick}-{$month}";
+			$url = "$base_path$filename.zip";
 			$dest = static::$binance_data_directory . $filename; #TODO test var refacto
 			
-			# download and extract
-			Stuff::download_to_disk ($url, $dest);
-			exec("cd " . escapeshellarg(static::$binance_data_directory) . "; unzip " . escapeshellarg($dest) . " 2>&1", $output, $result_code);
-			// var_dump($result_code, $output); die;
+			if (!file_exists("$dest.csv")) {
+				if (!file_exists("$dest.zip")) {
+					try {
+						echo "downloading $url <br/>" . PHP_EOL;
+						Stuff::download_to_disk ($url, "$dest.zip");
+					}
+					catch (Exception $ex) {
+						echo "download failed : " . $ex->getMessage() . " <br/>" . PHP_EOL;
+						# clean near zero byte badly downloaded files
+						@unlink("$dest.zip");
+					}
+				}
+				
+				if (file_exists("$dest.zip")) {
+					#TODO verify CHECKSUM
+					echo "extracting $filename <br/>" . PHP_EOL;
+					exec("cd " . escapeshellarg(static::$binance_data_directory) . "; unzip " . escapeshellarg("$dest.zip") . " 2>&1", $output, $result_code);
+					// var_dump($result_code, $output); die;
+					if ($result_code !== 0) {
+						echo "extract failed : <br/>" . PHP_EOL;
+						var_dump($output);
+						@unlink("$dest.csv");
+					}
+					else {
+						# remove zip file
+						@unlink("$dest.zip");
+					}
+				}
+			}
 			
 			$date->modify("+1 month");
 		}
-		die; #TODO display result
+		die;
 		
 		
 		$page = [
