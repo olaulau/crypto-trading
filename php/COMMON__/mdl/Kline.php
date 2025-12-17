@@ -5,6 +5,17 @@ namespace COMMON__\mdl;
 class Kline extends Mdl
 {
 	
-	const TABLE_NAME = "kline"; // @extends
+	public const table = "kline";
+	
+	protected $fieldConf = [
+		'open_date' => [
+			'type' => 'DATETIME',
+			'nullable' => false,
+		],
+		'price' => [
+			'type' => 'FLOAT',
+			'nullable' => false,
+		],
+	];
 	
 }

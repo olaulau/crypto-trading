@@ -10,6 +10,7 @@ use DateTimeZone;
 use DB\SQL;
 use ErrorException;
 
+
 class IndexCtrl extends Ctrl
 {
 	
@@ -102,12 +103,15 @@ class IndexCtrl extends Ctrl
 	public static function importGET (Base $f3, $url, $controler)
 	{
 		# init
-		$db = $f3->get("db"); /** @var SQL $db */
 		set_time_limit(0);
+		$db = $f3->get("db"); /** @var SQL $db */
 		
 		# cleanup
-		$sql = "DELETE FROM kline";
+		$sql = "DROP TABLE IF EXISTS " . Kline::table;
 		$db->exec($sql);
+		
+		# create DB struct
+		Kline::setup();
 		
 		# lookup for CSV files
 		$files = glob(static::$binance_data_directory . "/*.csv");

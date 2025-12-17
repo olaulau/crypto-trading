@@ -6,8 +6,7 @@ use ErrorException;
 
 abstract class Mdl extends \DB\Cortex
 {
-	
-	const TABLE_NAME = null; // each subclass must fill-in this var
+	public const table = null; // each subclass must fill-in this var
 	
 	const BOOLEAN_ENUM =
 	[
@@ -41,11 +40,11 @@ abstract class Mdl extends \DB\Cortex
 	{
 		$f3 = \Base::instance();
 		$db = $f3->get("db"); /* @var $db \DB\SQL */
-		parent::__construct($db, static::TABLE_NAME);
+		parent::__construct($db, static::table);
 	}
 	
 	
-	public function find($filter = NULL, array $options = NULL, $ttl = 0) : \DB\CortexCollection
+	public function find($filter = NULL, ?array $options = NULL, $ttl = 0) : \DB\CortexCollection
 	{
 		$res = parent::find($filter, $options, $ttl);
 		if(empty($res)) {
