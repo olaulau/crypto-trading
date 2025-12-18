@@ -3,33 +3,20 @@ namespace COMMON__\ctrl;
 
 use Base;
 use COMMON__\mdl\Kline;
+use COMMON__\svc\Binance;
 use COMMON__\svc\Stuff;
 use DateTime;
-use DateTimeImmutable;
 use DateTimeZone;
 use DB\SQL;
-use ErrorException;
 use Exception;
+
 
 class IndexCtrl extends Ctrl
 {
 	
 	public final static $binance_data_directory = __DIR__ . "/../../../data/binance/";
-	
-	public final static $kline_format = [
-		"open_time",
-		"open",
-		"high",
-		"low",
-		"close",
-		"volume",
-		"close_time",
-		"quote_asset_volume",
-		"number_of_trades",
-		"taker_buy_base_asset_volume",
-		"taker_buy_quote_asset_volume",
-		"ignore",
-	];
+	public final static $crypto_pair = "ETHEUR";
+	public final static $candle_size = "15m";
 	
 
 	public static function beforeRoute ()
@@ -69,14 +56,12 @@ class IndexCtrl extends Ctrl
 		// https://data.binance.vision/?prefix=data/spot/monthly/klines/ETHEUR/15m/
 		$base_path = "https://data.binance.vision/data/spot/monthly/klines/ETHEUR/15m/";
 		$start_year = 2020; #TODO list file on server and detect a valid start period ?
-		$tick = "15m";
-		$pair_str = "ETHEUR";
 		$date = new DateTime("first day of January {$start_year}", new DateTimeZone("Europe/Paris"));
 		$max = new DateTime("last day of previous month", new DateTimeZone("Europe/Paris"));
 		
 		while (!$date->diff($max)->invert) {
 			$month = $date->format("Y-m");
-			$filename = "{$pair_str}-{$tick}-{$month}";
+			$filename = static::$crypto_pair."-".static::$candle_size."-{$month}";
 			$url = "$base_path$filename.zip";
 			$dest = static::$binance_data_directory . $filename; #TODO test var refacto
 			
@@ -144,7 +129,7 @@ class IndexCtrl extends Ctrl
 		asort($files);
 		
 		foreach ($files as $file) {
-			$start_time = microtime(true);
+			// $start_time = microtime(true);
 			# open CSV file
 			echo basename($file) . "<br/>" . PHP_EOL;
 			$fh = fopen($file, "r");
@@ -152,34 +137,20 @@ class IndexCtrl extends Ctrl
 			# read CSV rows
 			$db->begin();
 			while (false !== ($row = fgetcsv($fh, null, ",", '"', '\\'))) {
-				$row = array_combine(static::$kline_format, $row);
-				
-				# convert timestamp
-				$timestamp = $row ["open_time"];
-				if(strlen($timestamp) === 16) {
-					$timestamp = $timestamp / 1000000;
-				}
-				elseif(strlen($timestamp) === 13) {
-					$timestamp = $timestamp / 1000;
-				}
-				elseif(strlen($timestamp) === 0) {
-					# do nothing
-				}
-				else {
-					throw new ErrorException("unknown timestamp format : {$timestamp}");
-				}
-				$d = DateTime::createFromFormat("U", $timestamp);
+				$row = array_combine(Binance::$kline_format, $row);
 				
 				# write into DB
 				$kline = new Kline;
-				$kline->open_date = $d->format("Y-m-d h:i:s");
-				$kline->price = $row ["open"];
+				$kline->copyfrom($row);
+				$kline->crypto_pair = static::$crypto_pair;
+				$kline->candle_size = static::$candle_size;
+				$kline->open_time = Binance::timestamp_to_datetime($row ["open_time"])->format("Y-m-d H:i:s");
+				$kline->close_time = Binance::timestamp_to_datetime($row ["close_time"])->format("Y-m-d H:i:s");
 				$kline->save();
 			}
 			$db->commit();
-			
-			$end_time = microtime(true);
-			$duration = ($end_time - $start_time) * 1000;
+			// $end_time = microtime(true);
+			// $duration = ($end_time - $start_time) * 1000;
 			// echo number_format($duration, 2, ",", " ") . " ms <br/>" . PHP_EOL;
 		}
 		
@@ -198,7 +169,6 @@ class IndexCtrl extends Ctrl
 		];
 		self::renderPage($page);
 	}
-	
 	
 	public static function trading_simulate () : void
 	{
@@ -222,13 +192,13 @@ class IndexCtrl extends Ctrl
 		$offset = 0;
 		$price_window = [];
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load(["? <= open_date AND open_date <= ?", $date_start, $date_end], ["limit" => $sql_read_limit, "offset" => $offset])) {
+		while ($kline_wrapper->load(["? <= open_time AND open_time <= ?", $date_start, $date_end], ["limit" => $sql_read_limit, "offset" => $offset])) {
 			if ($offset === 0) {
 				# start variables
 				$ETH = $start_ETH;
 				$EUR = $start_EUR;
-				$timestamp_formated = $kline_wrapper ["open_date"];
-				$price = $kline_wrapper ["price"];
+				$timestamp_formated = $kline_wrapper ["open_time"];
+				$price = $kline_wrapper ["open"];
 				$price_formated = Stuff::format_float_significative($price, 6);
 				$reference_price = $price; # value of my last crypto movement #TODO remove and use $sell_assets_history & $buy_assets_history
 				$high = $price; # highest value since last action
@@ -260,8 +230,8 @@ class IndexCtrl extends Ctrl
 			
 			do {
 				# simulation
-				$timestamp_formated = $kline_wrapper ["open_date"];
-				$price = $kline_wrapper ["price"];
+				$timestamp_formated = $kline_wrapper ["open_time"];
+				$price = $kline_wrapper ["open"];
 				$price_formated = Stuff::format_float_significative($price, 6);
 				
 				if (count($price_window) >= $price_window_size) { # window is full
@@ -327,10 +297,14 @@ class IndexCtrl extends Ctrl
 		
 		
 		# stats
+		if(empty($last_kline)) {
+			echo "no data loaded. </br>" . PHP_EOL;
+			exit;
+		}
 		echo " <br/>" . PHP_EOL;
 		echo " <hr/>" . PHP_EOL;
 		echo " <br/>" . PHP_EOL;
-		$timestamp_formated = $last_kline ["open_date"];
+		$timestamp_formated = $last_kline ["open_time"];
 		echo "[{$timestamp_formated}] ({$price_formated}) simulation end <br/>" . PHP_EOL;
 		echo "<ul>" . PHP_EOL;
 		if ($ETH > 0) {
