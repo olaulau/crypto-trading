@@ -144,6 +144,7 @@ class IndexCtrl extends Ctrl
 		asort($files);
 		
 		foreach ($files as $file) {
+			$start_time = microtime(true);
 			# open CSV file
 			echo basename($file) . "<br/>" . PHP_EOL;
 			$fh = fopen($file, "r");
@@ -176,6 +177,10 @@ class IndexCtrl extends Ctrl
 				$kline->save();
 			}
 			$db->commit();
+			
+			$end_time = microtime(true);
+			$duration = ($end_time - $start_time) * 1000;
+			// echo number_format($duration, 2, ",", " ") . " ms <br/>" . PHP_EOL;
 		}
 		
 		exit;
