@@ -185,14 +185,15 @@ class IndexCtrl extends Ctrl
 		$price_window_size = 100;
 		$sql_read_limit = 10000;
 		
-		$date_start = "2020-01-01 00:00:00";
-		$date_end = "2025-10-31 23:59:59";
+		$date_start = "2024-01-01 00:00:00";
+		$date_end = "2024-12-31 23:59:59";
 		
 		# start reading data
 		$offset = 0;
 		$price_window = [];
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load(["? <= open_time AND open_time <= ?", $date_start, $date_end], ["limit" => $sql_read_limit, "offset" => $offset])) {
+		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$crypto_pair, static::$candle_size, $date_start, $date_end],
+		["limit" => $sql_read_limit, "offset" => $offset])) {
 			if ($offset === 0) {
 				# start variables
 				$ETH = $start_ETH;

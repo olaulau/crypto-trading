@@ -11,20 +11,25 @@ class Kline extends Mdl
 		'crypto_pair' => [
 			'type' => 'VARCHAR128',
 			'nullable' => false,
+			'index' => true,
 		],
 		'candle_size' => [
 			'type' => 'VARCHAR128',
 			'nullable' => false,
+			'index' => true,
 		],
 		
 		'open_time' => [
 			'type' => 'DATETIME',
 			'nullable' => false,
+			'index' => true,
 		],
 		'open' => [
 			'type' => 'FLOAT',
 			'nullable' => false,
+			'index' => true,
 		],
+		
 		'high' => [
 			'type' => 'FLOAT',
 			'nullable' => false,
