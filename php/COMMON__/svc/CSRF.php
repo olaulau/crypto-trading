@@ -1,5 +1,4 @@
 <?php
-
 namespace COMMON__\svc;
 
 class CSRF

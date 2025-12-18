@@ -4,6 +4,7 @@ namespace COMMON__\ctrl;
 use Base;
 use COMMON__\mdl\Kline;
 use COMMON__\svc\Binance;
+use COMMON__\svc\Buffer;
 use COMMON__\svc\Stuff;
 use DateTime;
 use DateTimeZone;
@@ -17,6 +18,7 @@ class IndexCtrl extends Ctrl
 	public final static $binance_data_directory = __DIR__ . "/../../../data/binance/";
 	public final static $crypto_pair = "ETHEUR";
 	public final static $candle_size = "15m";
+	public final static $sql_read_limit = 10000;
 	
 
 	public static function beforeRoute ()
@@ -97,17 +99,8 @@ class IndexCtrl extends Ctrl
 			
 			$date->modify("+1 month");
 		}
-		die;
 		
-		
-		$page = [
-			"module"	=>	"COMMON__",
-			"layout"	=>	"default",
-			"name"		=>	"download",
-			"title"		=>	"Download",
-			"breadcrumbs" => static::breadcrumbs(),
-		];
-		self::renderPage($page);
+		exit;
 	}
 	
 	
@@ -183,7 +176,6 @@ class IndexCtrl extends Ctrl
 		$start_EUR = 0;
 		
 		$price_window_size = 100;
-		$sql_read_limit = 10000;
 		
 		$date_start = "2024-01-01 00:00:00";
 		$date_end = "2024-12-31 23:59:59";
@@ -193,7 +185,7 @@ class IndexCtrl extends Ctrl
 		$price_window = [];
 		$kline_wrapper = new Kline;
 		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$crypto_pair, static::$candle_size, $date_start, $date_end],
-		["limit" => $sql_read_limit, "offset" => $offset])) {
+		["limit" => static::$sql_read_limit, "offset" => $offset])) {
 			if ($offset === 0) {
 				# start variables
 				$ETH = $start_ETH;
@@ -291,10 +283,9 @@ class IndexCtrl extends Ctrl
 			}
 			while ($kline_wrapper->next());
 			
-			$offset += $sql_read_limit;
+			$offset += static::$sql_read_limit;
 			$kline_wrapper->reset();
 		}
-		#TODO extract and store in mysql once, before permit backtest of big file such as yearly spot
 		
 		
 		# stats
@@ -326,6 +317,75 @@ class IndexCtrl extends Ctrl
 		$ROI = $PandL / $start_total; # Return On Investment
 		$ROI_formated = Stuff::percent_format($ROI * 100, 2);
 		echo "<b>==> ROI = {$ROI_formated} ({$PandL_formated})</b> <br/>" . PHP_EOL;
+	}
+	
+	
+	
+	public static function candlesGET (Base $f3, $url, $controler)
+	{
+		# config
+		$date_start = "2020-01-01 00:00:00";
+		$date_end = "2025-12-31 23:59:59";
+		$candle_size = "4h";
+		
+		# start reading data
+		$candle_seconds = Binance::$candles [$candle_size];
+		$buffer_size = $candle_seconds / Binance::$candles [static::$candle_size];
+		$buffer = new Buffer ($buffer_size);
+		$offset = 0;
+		$kline_wrapper = new Kline;
+		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$crypto_pair, static::$candle_size, $date_start, $date_end],
+		["limit" => static::$sql_read_limit, "offset" => $offset])) {
+			do {
+				$open_time = $kline_wrapper->open_time; /** @var DateTime $open_time */
+				$timestamp = $open_time->getTimestamp();
+				if (($timestamp % $candle_seconds) === 0) {
+					# create big candle
+					$big_candle = static::candles_aggregate($buffer, $candle_size);
+					$big_candle->save();
+					$buffer->clear();
+				}
+				$buffer->push($kline_wrapper);
+			}
+			while ($kline_wrapper->next());
+			
+			$offset += static::$sql_read_limit;
+			$kline_wrapper->reset();
+		}
+	}
+	
+	private static function candles_aggregate (Buffer $candles, string $big_candle_size) : Kline
+	{
+		$res = new Kline;
+		$res->crypto_pair = static::$crypto_pair;
+		$res->candle_size = $big_candle_size;
+		
+		$first_candle = $candles->first();
+		$last_candle = $candles->last();
+		$res->open_time = $first_candle -> open_time;
+		$res->open = $first_candle -> open;
+		$res->close = $last_candle -> close;
+		$res->close_time = $last_candle -> close_time;
+		$res->ignore = 0;
+		
+		$res->high = $first_candle->high;
+		$res->low = $first_candle->low;
+		$res->volume = 0;
+		$res->quote_asset_volume = 0;
+		$res->number_of_trades = 0;
+		$res->taker_buy_base_asset_volume = 0;
+		$res->taker_buy_quote_asset_volume = 0;
+		foreach ($candles->get_data() as $candle) {
+			$res->high = max ($candle->high, $res->high);
+			$res->low = min ($candle->low, $res->low);
+			$res->volume += $candle->volume;
+			$res->quote_asset_volume += $candle->quote_asset_volume;
+			$res->number_of_trades += $candle->number_of_trades;
+			$res->taker_buy_base_asset_volume += $candle->taker_buy_base_asset_volume;
+			$res->taker_buy_quote_asset_volume += $candle->taker_buy_quote_asset_volume;
+		}
+		
+		return $res;
 	}
 	
 }

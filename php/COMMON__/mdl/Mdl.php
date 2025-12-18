@@ -228,4 +228,121 @@ abstract class Mdl extends \DB\Cortex
 		$db->commit();
 	}
 	
+	
+	
+    /**
+     * __get : retourne la valeur typée
+     */
+    public function &__get($key)
+    {
+        $value = parent::__get($key);
+        if (!isset($this->fieldConf[$key])) return $value;
+
+        return $this->castTheField($value, $this->fieldConf[$key]['type']);
+    }
+
+    /**
+     * __set : accepte des objets / types natifs et convertit pour DB
+     */
+    public function __set($key, $value)
+    {
+        if (!isset($this->fieldConf[$key])) {
+            parent::__set($key, $value);
+            return;
+        }
+
+        $type = $this->fieldConf[$key]['type'] ?? '';
+        switch (strtoupper($type)) {
+            case 'DATETIME':
+            case 'TIMESTAMP':
+            case 'DATE':
+                if ($value instanceof \DateTimeInterface) {
+                    $value = $value->format('Y-m-d H:i:s');
+                }
+                break;
+
+            case 'INT':
+            case 'INTEGER':
+            case 'BIGINT':
+                if ($value !== null) $value = (int)$value;
+                break;
+
+            case 'FLOAT':
+            case 'DOUBLE':
+            case 'DECIMAL':
+                if ($value !== null) $value = (float)$value;
+                break;
+
+            case 'BOOL':
+            case 'BOOLEAN':
+                $value = (bool)$value;
+                break;
+
+            case 'JSON':
+            case 'JSONB':
+                if (is_array($value) || is_object($value)) {
+                    $value = json_encode($value);
+                }
+                break;
+        }
+
+        parent::__set($key, $value);
+    }
+
+    /**
+     * cast : retourne toutes les valeurs typées
+     */
+    public function cast($obj = null, $rel_depths = 1)
+    {
+        $data = parent::cast($obj, $rel_depths);
+
+        foreach ($this->fieldConf as $field => $conf) {
+            if (!isset($data[$field])) continue;
+            $data[$field] = $this->castTheField($data[$field], $conf['type']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Conversion d'une valeur selon son type DB
+     */
+    protected function castTheField($value, $type)
+    {
+        if ($value === null) return null;
+
+        switch (strtoupper($type)) {
+            case 'DATETIME':
+            case 'TIMESTAMP':
+            case 'DATE':
+                return new \DateTime($value);
+
+            case 'INT':
+            case 'INTEGER':
+            case 'BIGINT':
+                return (int)$value;
+
+            case 'FLOAT':
+            case 'DOUBLE':
+            case 'DECIMAL':
+                return (float)$value;
+
+            case 'BOOL':
+            case 'BOOLEAN':
+                return (bool)$value;
+
+            case 'JSON':
+            case 'JSONB':
+                $decoded = json_decode($value, true);
+                return $decoded === null ? [] : $decoded;
+
+            case 'VARCHAR':
+            case 'TEXT':
+            case 'ENUM':
+            default:
+                return $value;
+        }
+    }
+
+	
 }

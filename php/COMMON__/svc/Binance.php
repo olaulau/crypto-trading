@@ -38,9 +38,9 @@ class Binance
 		"8h"	 => 8 * 60 * 60,
 		"12h"	 => 12 * 60 * 60,
 		"1d"	 => 24 * 60 * 60,
-		"3d"	 => 3 * 24 * 60 * 60,
-		"1w"	 => 7 * 24 * 60 * 60,
-		"1mo"	 => 30 * 24 * 60 * 60,
+		// "3d"	 => 3 * 24 * 60 * 60,
+		// "1w"	 => 7 * 24 * 60 * 60,
+		// "1mo"	 => 30 * 24 * 60 * 60,
 	];
 	
 	
@@ -65,7 +65,7 @@ class Binance
 	public static function timestamp_to_datetime (int $timestamp) : DateTimeInterface
 	{
 		$timestamp = static::to_real_timestamp($timestamp);
-		$res = DateTime::createFromFormat("U", $timestamp);
+		$res = DateTime::createFromFormat("U", $timestamp); #TODO timezone europe/paris ?
 		return $res;
 	}
 	
