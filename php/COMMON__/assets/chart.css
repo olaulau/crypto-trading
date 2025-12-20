@@ -1,0 +1,21 @@
+#chartContainer {
+	display: inline-block;
+	position: relative;
+	width: 800px;
+	height: 400px;
+}
+
+#overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none; /* le canvas n’intercepte pas la souris */
+}
+
+#stats {
+	display: inline-block;
+	border: 1px solid grey;
+	border-radius: 5px;
+	margin: 0.5rem;
+	padding: 0.5rem;
+}

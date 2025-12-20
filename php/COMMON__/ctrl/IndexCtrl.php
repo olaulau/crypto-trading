@@ -388,4 +388,18 @@ class IndexCtrl extends Ctrl
 		return $res;
 	}
 	
+	
+	public static function chartGET (Base $f3, $url, $controler)
+	{
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"direct",
+			"name"		=>	"chart",
+			"title"		=>	"Chart",
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		
+		self::renderPage($page);
+	}
+	
 }
