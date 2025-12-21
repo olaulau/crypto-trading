@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	// set up the chart
 	chartCanvas = document.getElementById('chart');
-	chart = new Chart(chartCanvas, {
+	chart = new Chart (chartCanvas, {
 		type: 'line',
 		data: {
 			datasets: [{
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		},
 		options: {
 			animation: {
-				duration: 100
+				duration: 200
 			},
 			scales: {
 				x: {
@@ -103,10 +103,12 @@ document.addEventListener('DOMContentLoaded', () => {
 							enabled: true
 						},
 						mode: 'x',
-						onZoomComplete: ({ chart }) => {
+						onZoomStart: ({ chart, event, point }) => {
 							statsMode = 'viewport';
+							drawSelectionRect();
+						},
+						onZoomComplete: ({ chart }) => {
 							updateStats(chart);
-							overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 						}
 					}
 				}
@@ -125,28 +127,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 	////// zoom & pan & select /////
-	let isZooming = false;
 	let startX = 0;
+	let isZooming = false;
 	let isPanning = false;
 	let isSelecting = false;
 	let selectionStart = null;
 	let selectionRange = null;
 
-	chartCanvas.addEventListener('mousedown', e => {
+	chartCanvas.addEventListener ('mousedown', e => {
 		if (e.shiftKey) {
 			isSelecting = true;
 			selectionStart = {
 				x: e.offsetX,
 				y: e.offsetY
 			};
-			overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-		} else {
+			overlayCtx.clearRect(0, 0, overlay.width, overlay.height); /////////////
+		}
+		else {
 			isPanning = true;
 			startX = e.clientX;
 		}
 	});
 
-	chartCanvas.addEventListener('mousemove', e => {
+	chartCanvas.addEventListener ('mousemove', e => {
 		/* --- SÉLECTION --- */
 		if (isSelecting) {
 			// Position actuelle de la souris
@@ -168,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			// Dessin du rectangle
 			overlayCtx.fillRect(x, y, w, h);
-			overlayCtx.strokeRect(x, y, w, h);
+			overlayCtx.strokeRect(x, y, w, h); /////////////////
 
 			// On ne continue pas vers le pan
 			return;
@@ -183,153 +186,121 @@ document.addEventListener('DOMContentLoaded', () => {
 			chart.pan({ x: deltaX, y: 0 });
 
 			statsMode = 'viewport';
-			updateStats(chart);
+			updateStats (chart);
 			overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 		}
 	});
 
-	chartCanvas.addEventListener('mouseup', e => {
+	chartCanvas.addEventListener ('mouseup', e => {
 		if (isSelecting) {
 			// Fin de la sélection
 			const x1 = selectionStart.x;
-			const x2 = e.offsetX;
 			const y1 = selectionStart.y;
+			const x2 = e.offsetX;
 			const y2 = e.offsetY;
 
 			selectionRange = {
 				xMin: Math.min(x1, x2),
-				xMax: Math.max(x1, x2),
 				yMin: Math.min(y1, y2),
+				xMax: Math.max(x1, x2),
 				yMax: Math.max(y1, y2)
 			};
-
-			isSelecting = false;
 			statsMode = 'selection';
-			drawSelectionRect();
+			isSelecting = false;
+			drawSelectionRect ();
+			updateStats (chart);
 		}
-
-		// FIN DU PAN
-		if (isPanning) {
-			isPanning = false;
+		else {
+			// fin pan
+			goViewport ();
 		}
-
-		// facultatif : on peut aussi stopper le zoom
-		isZooming = false;
-	});
-
-	chartCanvas.addEventListener('mouseleave', () => {
+		
 		isPanning = false;
-		isSelecting = false;
 		isZooming = false;
-		overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 	});
 
 	chartCanvas.addEventListener('dblclick', () => {
-		statsMode = 'viewport';
-		updateStats(chart);
+		goViewport ();
 	});
-
-
-	// stats & selection
+	
+	
+	
+	///// stats & selection /////
 	let statsMode = 'viewport'; // 'viewport' | 'selection'
+	updateStats(chart);
 
-	function getViewportRange(chart) {
+	
+	function getViewportRange (chart) {
 		const scale = chart.scales.x;
 		return {
 			min: scale.min,
 			max: scale.max
 		};
 	}
+	
+	function getSelectionRange (chart) {
+		return {
+			min: chart.scales.x.getValueForPixel(selectionRange.xMin),
+			max: chart.scales.x.getValueForPixel(selectionRange.xMax),
+		};
+	}
 
-	function computeStats(chart, range) {
+	function computeStats (chart, range) {
 		const data = chart.data.datasets[0].data;
-
 		const slice = data.filter(p =>
 			p.x >= range.min && p.x <= range.max
 		);
-
 		if (slice.length < 2) return null;
 
 		const values = slice.map(p => p.y);
-		const min = Math.min(...values);
-		const max = Math.max(...values);
-		const first = slice[0].y;
-		const last = slice[slice.length - 1].y;
-
+		const min = Math.min (...values);
+		const max = Math.max (...values);
+		const first = slice [0].y;
+		const last = slice [slice.length - 1].y;
 		return {
 			min,
 			max,
 			amplitude: max - min,
 			amplitudePct: ((max - min) / min) * 100,
+			start: first,
+			end: last,
 			pct: ((last - first) / first) * 100,
 			points: slice.length
 		};
 	}
-
-	function updateStats(chart) {
+	
+	function updateStats (chart) {
 		const range = (statsMode === 'selection') ?
-			selectionRange :
-			getViewportRange(chart);
-
+			getSelectionRange (chart) :
+			getViewportRange (chart);
 		const stats = computeStats(chart, range);
-		if (!stats) return;
-
+		if (!stats) {
+			goViewport ();
+			return;
+		}
 		renderStats(stats, statsMode);
 	}
 
-	function onSelection(range) {
-		statsMode = 'selection';
-		selectionRange = range;
-		updateStats(chart);
-	}
-
-	statsMode = 'viewport';
-	updateStats(chart);
-
-	let tap1 = null;
-	chartCanvas.addEventListener('click', e => {
-		const xValue = chart.scales.x.getValueForPixel(e.offsetX);
-
-		if (!tap1) {
-			tap1 = xValue;
-		} else {
-			statsMode = 'selection';
-			selectionRange = {
-				min: Math.min(tap1, xValue),
-				max: Math.max(tap1, xValue)
-			};
-			tap1 = null;
-			updateStats(chart);
-		}
-	});
-
-	chartCanvas.addEventListener('dblclick', () => {
-		statsMode = 'viewport';
-		updateStats(chart);
-	});
-
-
-	function renderStats(stats, mode) {
+	function renderStats (stats, mode) {
 		document.getElementById('stats-mode').textContent = mode;
 		document.getElementById('stats-points').textContent = stats.points;
 		document.getElementById('stats-min').textContent = stats.min.toFixed(2);
 		document.getElementById('stats-max').textContent = stats.max.toFixed(2);
-		document.getElementById('stats-amp').textContent = stats.amplitude.toFixed(2);
-		document.getElementById('stats-amp-pct').textContent = stats.amplitudePct.toFixed(2) + ' %';
+		document.getElementById('stats-start').textContent = stats.start.toFixed(2);
+		document.getElementById('stats-end').textContent = stats.end.toFixed(2);
+		document.getElementById('stats-amp-pct').textContent = stats.amplitudePct.toFixed(2);
 
 		const pctEl = document.getElementById('stats-pct');
-		pctEl.textContent = stats.pct.toFixed(2) + ' %';
+		pctEl.textContent = stats.pct.toFixed(2);
 		pctEl.style.color = stats.pct >= 0 ? 'green' : 'red';
 	}
 
-	function drawSelectionRect() {
+	function drawSelectionRect () {
 		// effacer overlay
 		overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-
 		if (statsMode !== 'selection' || !selectionRange) return;
-
+		
 		const { xMin, xMax, yMin, yMax } = selectionRange;
-
 		const w = xMax - xMin;
 		const h = yMax - yMin;
 
@@ -337,6 +308,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		overlayCtx.strokeStyle = 'rgba(0,123,255,0.8)';
 		overlayCtx.fillRect(xMin, yMin, w, h);
 		overlayCtx.strokeRect(xMin, yMin, w, h);
+	}
+	
+	function goViewport () {
+		statsMode = 'viewport';
+		drawSelectionRect();
+		updateStats(chart);
 	}
 	
 });
