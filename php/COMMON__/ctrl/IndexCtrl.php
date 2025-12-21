@@ -393,7 +393,7 @@ class IndexCtrl extends Ctrl
 	{
 		$page = [
 			"module"	=>	"COMMON__",
-			"layout"	=>	"direct",
+			"layout"	=>	"default",
 			"name"		=>	"chart",
 			"title"		=>	"Chart",
 			"breadcrumbs" => static::breadcrumbs(),

@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	
 	// set up the chart
-	const chartCanvas = document.getElementById('chart');
-	const chart = new Chart(chartCanvas, {
+	chartCanvas = document.getElementById('chart');
+	chart = new Chart(chartCanvas, {
 		type: 'line',
 		data: {
 			datasets: [{
@@ -113,6 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 	});
+	
+	
 	
 	
 	// overlay
@@ -300,12 +302,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			updateStats(chart);
 		}
 	});
-	
+
 	chartCanvas.addEventListener('dblclick', () => {
 		statsMode = 'viewport';
 		updateStats(chart);
 	});
-	
+
 
 	function renderStats(stats, mode) {
 		document.getElementById('stats-mode').textContent = mode;
@@ -319,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		pctEl.textContent = stats.pct.toFixed(2) + ' %';
 		pctEl.style.color = stats.pct >= 0 ? 'green' : 'red';
 	}
-	
+
 	function drawSelectionRect() {
 		// effacer overlay
 		overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
@@ -336,5 +338,5 @@ document.addEventListener('DOMContentLoaded', () => {
 		overlayCtx.fillRect(xMin, yMin, w, h);
 		overlayCtx.strokeRect(xMin, yMin, w, h);
 	}
-
+	
 });
