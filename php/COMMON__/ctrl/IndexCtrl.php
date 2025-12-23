@@ -9,6 +9,7 @@ use COMMON__\svc\Stuff;
 use DateTime;
 use DateTimeZone;
 use DB\SQL;
+use ErrorException;
 use Exception;
 
 
@@ -17,8 +18,10 @@ class IndexCtrl extends Ctrl
 	
 	public final static $binance_data_directory = __DIR__ . "/../../../data/binance/";
 	public final static $crypto_pair = "ETHEUR";
-	public final static $candle_size = "15m";
+	public final static $small_candle_size = "15m";
 	public final static $sql_read_limit = 10000;
+	public final static $date_start = "2024-01-01 00:00:00";
+	public final static $date_end = "2024-12-31 23:59:59";
 	
 
 	public static function beforeRoute ()
@@ -51,6 +54,22 @@ class IndexCtrl extends Ctrl
 		
 		self::renderPage($page);
 	}
+
+
+	
+	public static function resetDbGET(Base $f3, $url, $controler)
+	{
+		# init
+		$db = $f3->get("db");
+		/** @var SQL $db */
+
+		# cleanup
+		$sql = "DROP TABLE IF EXISTS " . Kline::table;
+		$db->exec($sql);
+
+		# create DB struct
+		Kline::setup();
+	}
 	
 	
 	public static function downloadGET (Base $f3, $url, $controler)
@@ -63,7 +82,7 @@ class IndexCtrl extends Ctrl
 		
 		while (!$date->diff($max)->invert) {
 			$month = $date->format("Y-m");
-			$filename = static::$crypto_pair."-".static::$candle_size."-{$month}";
+			$filename = static::$crypto_pair."-".static::$small_candle_size."-{$month}";
 			$url = "$base_path$filename.zip";
 			$dest = static::$binance_data_directory . $filename; #TODO test var refacto
 			
@@ -110,13 +129,6 @@ class IndexCtrl extends Ctrl
 		set_time_limit(0);
 		$db = $f3->get("db"); /** @var SQL $db */
 		
-		# cleanup
-		$sql = "DROP TABLE IF EXISTS " . Kline::table;
-		$db->exec($sql);
-		
-		# create DB struct
-		Kline::setup();
-		
 		# lookup for CSV files
 		$files = glob(static::$binance_data_directory . "/*.csv");
 		asort($files);
@@ -136,7 +148,7 @@ class IndexCtrl extends Ctrl
 				$kline = new Kline;
 				$kline->copyfrom($row);
 				$kline->crypto_pair = static::$crypto_pair;
-				$kline->candle_size = static::$candle_size;
+				$kline->candle_size = static::$small_candle_size;
 				$kline->open_time = Binance::timestamp_to_datetime($row ["open_time"])->format("Y-m-d H:i:s");
 				$kline->close_time = Binance::timestamp_to_datetime($row ["close_time"])->format("Y-m-d H:i:s");
 				$kline->save();
@@ -177,14 +189,11 @@ class IndexCtrl extends Ctrl
 		
 		$price_window_size = 100;
 		
-		$date_start = "2024-01-01 00:00:00";
-		$date_end = "2024-12-31 23:59:59";
-		
 		# start reading data
 		$offset = 0;
 		$price_window = [];
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$crypto_pair, static::$candle_size, $date_start, $date_end],
+		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$crypto_pair, static::$small_candle_size, static::$date_start, static::$date_end],
 		["limit" => static::$sql_read_limit, "offset" => $offset])) {
 			if ($offset === 0) {
 				# start variables
@@ -324,24 +333,22 @@ class IndexCtrl extends Ctrl
 	public static function candlesGET (Base $f3, $url, $controler)
 	{
 		# config
-		$date_start = "2020-01-01 00:00:00";
-		$date_end = "2025-12-31 23:59:59";
-		$candle_size = "4h";
+		$big_candle_size = "4h";
 		
 		# start reading data
-		$candle_seconds = Binance::$candles [$candle_size];
-		$buffer_size = $candle_seconds / Binance::$candles [static::$candle_size];
+		$candle_seconds = Binance::$candles [$big_candle_size];
+		$buffer_size = $candle_seconds / Binance::$candles [static::$small_candle_size];
 		$buffer = new Buffer ($buffer_size);
 		$offset = 0;
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$crypto_pair, static::$candle_size, $date_start, $date_end],
+		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$crypto_pair, static::$small_candle_size, static::$date_start, static::$date_end],
 		["limit" => static::$sql_read_limit, "offset" => $offset])) {
 			do {
 				$open_time = $kline_wrapper->open_time; /** @var DateTime $open_time */
 				$timestamp = $open_time->getTimestamp();
 				if (($timestamp % $candle_seconds) === 0) {
 					# create big candle
-					$big_candle = static::candles_aggregate($buffer, $candle_size);
+					$big_candle = static::candles_aggregate($buffer, $big_candle_size);
 					$big_candle->save();
 					$buffer->clear();
 				}
@@ -400,6 +407,86 @@ class IndexCtrl extends Ctrl
 		];
 		
 		self::renderPage($page);
+	}
+	
+	
+	public static function pricesAJAX (Base $f3, $url, $controler)
+	{
+		# init
+		$db = $f3->get("db");
+		/** @var SQL $db */
+		
+		# config
+		$max_result = 1000;
+
+		# query to select optimal candle size (< max_result)
+		$sql = "
+			SELECT		candle_size, COUNT(*) as nb
+			FROM		kline
+			WHERE		crypto_pair = ?
+			AND			? <= open_time
+			AND			open_time <= ?
+			GROUP BY	candle_size
+			HAVING		nb <= ?
+			ORDER BY	nb DESC
+			LIMIT		1
+		";
+		$args = [
+			static::$crypto_pair,
+			static::$date_start,
+			static::$date_end,
+			$max_result,
+		];
+		$data = $db->exec($sql, $args);
+		
+		if (count($data) === 0) {
+			# query to select optimal candle size (> max_result)
+			$sql = "
+				SELECT		candle_size, COUNT(*) as nb
+				FROM		kline
+				WHERE		crypto_pair = ?
+				AND			? <= open_time
+				AND			open_time <= ?
+				GROUP BY	candle_size
+				HAVING		nb > ?
+				ORDER BY	nb ASC
+				LIMIT		1
+			";
+			$args = [
+				static::$crypto_pair,
+				static::$date_start,
+				static::$date_end,
+				$max_result,
+			];
+			$data = $db->exec($sql, $args);
+		}
+
+		if (count($data) === 0) {
+			throw new ErrorException("no kline data for this crypto pair during this period");
+		}
+		$candle_size = $data [0] ["candle_size"];
+		
+		# query to load data
+		$sql = "
+			SELECT	open_time, open
+			FROM	kline
+			WHERE	crypto_pair = ?
+			AND		candle_size = ?
+			AND		? <= open_time
+			AND		open_time <= ?
+		";
+		$args = [
+			static::$crypto_pair,
+			$candle_size,
+			static::$date_start,
+			static::$date_end,
+		];
+		$data = $db->exec($sql, $args);
+		
+		# return result as json
+		header('Content-Type: application/json');
+		echo json_encode ($data);
+		exit;
 	}
 	
 }

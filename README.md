@@ -12,3 +12,5 @@
 
 - calculate many indicators
 - better algorythm
+
+- manque un index unique sur crypto_pair / candle_size / open_time

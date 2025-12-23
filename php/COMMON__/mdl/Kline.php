@@ -1,6 +1,7 @@
 <?php
 namespace COMMON__\mdl;
 
+use Base;
 
 class Kline extends Mdl
 {
@@ -11,23 +12,23 @@ class Kline extends Mdl
 		'crypto_pair' => [
 			'type' => 'VARCHAR128',
 			'nullable' => false,
-			'index' => true,
+			// 'index' => true,
 		],
 		'candle_size' => [
 			'type' => 'VARCHAR128',
 			'nullable' => false,
-			'index' => true,
+			// 'index' => true,
 		],
 		
 		'open_time' => [
 			'type' => 'DATETIME',
 			'nullable' => false,
-			'index' => true,
+			// 'index' => true,
 		],
 		'open' => [
 			'type' => 'FLOAT',
 			'nullable' => false,
-			'index' => true,
+			// 'index' => true,
 		],
 		
 		'high' => [
@@ -71,5 +72,22 @@ class Kline extends Mdl
 			'nullable' => false,
 		],
 	];
+	
+	
+	public static function setup($db = null, $table = null, $fields = null)
+	{
+		parent::setup (); # auto create table
+		
+		# init 
+		$f3 = Base::instance ();
+		$db = $f3->get("db");
+		/** @var SQL $db */
+
+		# add indexes
+		$sql = "
+			ALTER TABLE " . Kline::table . "
+			ADD CONSTRAINT uniq__crypto_pair__candle_size__open_time UNIQUE (crypto_pair, candle_size, open_time); ";
+		$db->exec($sql);
+	}
 	
 }
