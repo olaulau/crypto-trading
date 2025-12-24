@@ -1,3 +1,10 @@
+# install
+git clone
+composer install
+cp conf/user.dist.ini user.ini
+vim user.ini
+
+
 # TODO
 - graph
 	- values
