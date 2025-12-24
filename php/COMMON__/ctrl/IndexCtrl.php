@@ -2,6 +2,8 @@
 namespace COMMON__\ctrl;
 
 use Base;
+use Binance\Client\Spot\Api\SpotRestApi;
+use Binance\Client\Spot\SpotRestApiUtil;
 use COMMON__\mdl\Kline;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
@@ -488,5 +490,43 @@ class IndexCtrl extends Ctrl
 		echo json_encode ($data);
 		exit;
 	}
+
 	
+	public static function binanceGET (Base $f3, $url, $controler)
+	{
+		// Construction de la config
+		$configurationBuilder = SpotRestApiUtil::getConfigurationBuilder();
+		$configurationBuilder
+			->apiKey($f3->get("binance.key"))
+			->secretKey($f3->get("binance.secret"));
+
+		$spot_api = new SpotRestApi($configurationBuilder->build());
+
+		$response = $spot_api->time();
+		var_dump($response->getData());
+
+		// $response = $spot_api->exchangeInfo();
+		// var_dump($response->getData());
+
+		// $response = $spot_api->allOrders("ETHEUR");
+		// var_dump($response->getData());
+		
+		// $response = $spot_api->allOrderList();
+		// var_dump($response->getData());
+		
+		// $response = $spot_api->avgPrice("ETHEUR");
+		// var_dump($response->getData());
+
+		// $response = $spot_api->getOpenOrders();
+		// var_dump($response->getData());
+
+		// $response = $spot_api->getAccount(true);
+		// var_dump($response->getData());
+		
+		// $response = $spot_api->klines("ETHEUR", ); ///////////////////
+		// var_dump($response->getData());
+
+		die;
+	}
+
 }

@@ -6,6 +6,7 @@
 		}
 	],
 	"require": {
-		"olaulau/htmlskel": "dev-master"
+		"olaulau/htmlskel": "dev-master",
+		"binance/binance-connector-php": "^3.0"
 	}
 }
