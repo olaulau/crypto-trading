@@ -3,23 +3,26 @@ document.addEventListener('DOMContentLoaded', () => {
 	// data
 	var data = [];
 	for (let i = 1; i <= 30; i++) {
-		data.push({
+		data.push(
+		{
 			x: new Date(2025, 11, i),
 			y: 100 + Math.random() * 10
 		});
 	}
 
 	// Points clés (hors série principale)
-	const keyPoints = [{
-		x: new Date(2025, 11, 2, 12),
-		y: 107,
-		label: 'Événement A'
-	},
-	{
-		x: new Date(2025, 11, 3, 18),
-		y: 101,
-		label: 'Événement B'
-	}
+	const keyPoints = 
+	[
+		{
+			x: new Date(2025, 11, 2, 12),
+			y: 107,
+			label: 'Événement A'
+		},
+		{
+			x: new Date(2025, 11, 3, 18),
+			y: 101,
+			label: 'Événement B'
+		}
 	];
 
 	
@@ -28,25 +31,27 @@ document.addEventListener('DOMContentLoaded', () => {
 	chart = new Chart (chartCanvas, {
 		type: 'line',
 		data: {
-			datasets: [{
-				label: 'Prix test',
-				data: data,
-				borderWidth: 2,
+			datasets:
+			[
+				{
+					label: 'Prix test',
+					data: data,
+					borderWidth: 2,
 
-				pointRadius: 0, // ❌ pas de points
-				pointHoverRadius: 0, // ❌ même au survol
+					pointRadius: 0, // ❌ pas de points
+					pointHoverRadius: 0, // ❌ même au survol
 
-				tension: 0.3, // ✅ lissage (0 → lignes droites)
-				cubicInterpolationMode: 'monotone' // ✅ lissage propre (finance-friendly)
-			},
-			{
-				label: 'Points clés',
-				data: keyPoints,
-				type: 'scatter', // important pour avoir seulement des points
-				pointRadius: 6, // taille des points
-				pointBackgroundColor: 'red',
-				showLine: false, // pas de ligne
-			}
+					tension: 0.3, // ✅ lissage (0 → lignes droites)
+					cubicInterpolationMode: 'monotone' // ✅ lissage propre (finance-friendly)
+				},
+				{
+					label: 'Points clés',
+					data: keyPoints,
+					type: 'scatter', // important pour avoir seulement des points
+					pointRadius: 6, // taille des points
+					pointBackgroundColor: 'red',
+					showLine: false, // pas de ligne
+				}
 			]
 		},
 		options: {

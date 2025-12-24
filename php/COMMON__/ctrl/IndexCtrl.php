@@ -470,7 +470,7 @@ class IndexCtrl extends Ctrl
 		
 		# query to load data
 		$sql = "
-			SELECT	open_time, open
+			SELECT	open_time AS x, open AS y
 			FROM	kline
 			WHERE	crypto_pair = ?
 			AND		candle_size = ?
