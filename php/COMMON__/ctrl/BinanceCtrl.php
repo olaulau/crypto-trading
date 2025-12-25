@@ -15,19 +15,19 @@ class BinanceCtrl extends Ctrl
 
 
 
-	public static function beforeRoute()
+	public static function beforeRoute ()
 	{
 		parent::beforeRoute();
 	}
 
 
-	public static function afterRoute()
+	public static function afterRoute ()
 	{
 		parent::afterRoute();
 	}
 
 
-	public static function breadcrumbs()
+	public static function breadcrumbs ()
 	{
 		$res = [];
 		return $res;
@@ -35,7 +35,7 @@ class BinanceCtrl extends Ctrl
 
 
 
-	public static function binanceGET(Base $f3, $url, $controler)
+	public static function binanceGET (Base $f3, $url, $controler)
 	{
 		// Construction de la config
 		$binance_key = $f3->get("binance.key");
@@ -73,36 +73,35 @@ class BinanceCtrl extends Ctrl
 		// var_dump($response->getData());
 
 		$response = $spot_api->myTrades("ETHEUR");
-		$data = $response->getData(); /** @var MyTradesResponse $data */
-		$items = $data->getItems(); /** @var MyTradesResponseInner[] $items */
+		$row = $response->getData(); /** @var MyTradesResponse $row */
+		$items = $row->getItems(); /** @var MyTradesResponseInner[] $items */
 		
-		?>
-		<table style="border: 1px solid black;">
-			<?php
-			$attributes = [];
-			foreach ($items as $item) {
-				if (empty($attributes)) {
-					$attributes = $item->attributeMap();
-					static::display_table_row($attributes);
-				}
-				
-				$values = [];
-				foreach ($attributes as $attribute) {
-					$attribute = ucfirst($attribute);
-					$getter_method_name = "get$attribute";
-					$values [$attribute] = $item->$getter_method_name();
-				}
-				static::display_table_row($values);
+		$data = [];
+		foreach ($items as $item) {
+			$row = [];
+			foreach ($item->attributeMap() as $attribute) {
+				$attribute = ucfirst($attribute);
+				$getter_method_name = "get$attribute";
+				$row [$attribute] = $item->$getter_method_name();
 			}
-			?>
-		</table>
-		<?php
+			$data [] = $row;
+		}
+		$f3->set("data", $data);
+		
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"default",
+			"name"		=>	"binance",
+			"title"		=>	"Binance",
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		self::renderPage($page);
 
 		die;
 	}
 
 
-	public static function display_table_row(array $row)
+	public static function display_table_row (array $row)
 	{
 		?>
 		<tr style="border: 1px solid black;">
@@ -116,4 +115,5 @@ class BinanceCtrl extends Ctrl
 		</tr>
 		<?php
 	}
+	
 }
