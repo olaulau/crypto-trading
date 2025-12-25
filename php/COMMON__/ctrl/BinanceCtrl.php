@@ -35,7 +35,7 @@ class BinanceCtrl extends Ctrl
 
 
 
-	public static function binanceGET (Base $f3, $url, $controler)
+	public static function stuffGET (Base $f3, $url, $controler)
 	{
 		// Construction de la config
 		$binance_key = $f3->get("binance.key");
@@ -48,8 +48,8 @@ class BinanceCtrl extends Ctrl
 		$configurationBuilder->apiKey($binance_key)->secretKey($binance_secret);
 		$spot_api = new SpotRestApi($configurationBuilder->build());
 
-		// $response = $spot_api->time();
-		// var_dump($response->getData());
+		$response = $spot_api->time();
+		var_dump($response->getData());
 
 		// $response = $spot_api->exchangeInfo();
 		// var_dump($response->getData());
@@ -72,27 +72,45 @@ class BinanceCtrl extends Ctrl
 		// $response = $spot_api->klines("ETHEUR", ); ///////////////////
 		// var_dump($response->getData());
 
+		die;
+	}
+
+
+	public static function tradesGET(Base $f3, $url, $controler)
+	{
+		// Construction de la config
+		$binance_key = $f3->get("binance.key");
+		$binance_secret = $f3->get("binance.secret");
+		if (empty($binance_key) || empty($binance_secret)) {
+			throw new ErrorException("no binance api key provided");
+		}
+
+		$configurationBuilder = SpotRestApiUtil::getConfigurationBuilder();
+		$configurationBuilder->apiKey($binance_key)->secretKey($binance_secret);
+		$spot_api = new SpotRestApi($configurationBuilder->build());
 		$response = $spot_api->myTrades("ETHEUR");
-		$row = $response->getData(); /** @var MyTradesResponse $row */
-		$items = $row->getItems(); /** @var MyTradesResponseInner[] $items */
-		
+		$row = $response->getData();
+		/** @var MyTradesResponse $row */
+		$items = $row->getItems();
+		/** @var MyTradesResponseInner[] $items */
+
 		$data = [];
 		foreach ($items as $item) {
 			$row = [];
 			foreach ($item->attributeMap() as $attribute) {
 				$attribute = ucfirst($attribute);
 				$getter_method_name = "get$attribute";
-				$row [$attribute] = $item->$getter_method_name();
+				$row[$attribute] = $item->$getter_method_name();
 			}
-			$data [] = $row;
+			$data[] = $row;
 		}
 		$f3->set("data", $data);
-		
+
 		$page = [
 			"module"	=>	"COMMON__",
 			"layout"	=>	"default",
-			"name"		=>	"binance",
-			"title"		=>	"Binance",
+			"name"		=>	"binance/trades",
+			"title"		=>	"Trades",
 			"breadcrumbs" => static::breadcrumbs(),
 		];
 		self::renderPage($page);

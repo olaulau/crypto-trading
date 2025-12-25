@@ -1,34 +1,48 @@
 		<h1><?= $page["title"] ?></h1>
-		
+
 		<div class="row">
 			<div class="col">
-				<h2 class="mt-2"><a href="<?= $BASE . $f3->alias("resetDb") ?>">
-						<i class="fa-solid fa-eraser"></i> reset DB
-					</a></h2>
-				<h2 class="mt-2"><a href="<?= $BASE . $f3->alias("download") ?>">
-						<i class="fa-solid fa-cloud-arrow-down"></i> download and uncompress data from binance
-					</a></h2>
-				<h2 class="mt-2"><a href="<?= $BASE . $f3->alias("import") ?>">
-						<i class="fa-solid fa-file-import"></i> import CSV into db
-					</a></h2>
-				<h2 class="mt-2"><a href="<?= $BASE . $f3->alias("candles") ?>">
-						<i class="fa-solid fa-cake-candles"></i> calculates candles
-					</a></h2>
-				<h2 class="mt-2"><a href="<?= $BASE . $f3->alias("simulate") ?>">
-						<i class="fa-solid fa-file-contract"></i> simulate
-					</a></h2>
-				<h2 class="mt-2"><a href="<?= $BASE . $f3->alias("chart") ?>">
-						<i class="fa-solid fa-chart-line"></i> chart
-					</a></h2>
-				<h2 class="mt-2"><a href="<?= $BASE . $f3->alias("prices") ?>">
-						<i class="fa-solid fa-money-check-dollar"></i> prices
-					</a></h2>
+				<h2>offline data</h2>
+				
+				<h3 class="mt-2"><a href="<?= $BASE . $f3->alias("resetDb") ?>">
+					<i class="fa-solid fa-eraser"></i> reset DB
+				</a></h3>
+				
+				<h3 class="mt-2"><a href="<?= $BASE . $f3->alias("download") ?>">
+					<i class="fa-solid fa-cloud-arrow-down"></i> download and uncompress data from binance
+				</a></h3>
+				
+				<h3 class="mt-2"><a href="<?= $BASE . $f3->alias("import") ?>">
+					<i class="fa-solid fa-file-import"></i> import CSV into db
+				</a></h3>
+				
+				<h3 class="mt-2"><a href="<?= $BASE . $f3->alias("candles") ?>">
+					<i class="fa-solid fa-cake-candles"></i> calculates candles
+				</a></h3>
+				
+				<h3 class="mt-2"><a href="<?= $BASE . $f3->alias("simulate") ?>">
+					<i class="fa-solid fa-file-contract"></i> simulate
+				</a></h3>
+				
+				<h3 class="mt-2"><a href="<?= $BASE . $f3->alias("chart") ?>">
+					<i class="fa-solid fa-chart-line"></i> chart
+				</a></h3>
+				
+				<h3 class="mt-2"><a href="<?= $BASE . $f3->alias("prices") ?>">
+					<i class="fa-solid fa-money-check-dollar"></i> prices
+				</a></h3>
 			</div>
-			
+
 			<div class="col">
-				<h2 class="mt-2"><a href="<?= $BASE . $f3->alias("binance") ?>">
-						<i class="fa-brands fa-btc"></i> binance
-					</a></h2>
+				<h2>binance API</h2>
+				
+				<h3 class="mt-2"><a href="<?= $BASE . $f3->alias("binanceStuff") ?>">
+					<i class="fa-brands fa-btc"></i> stuff
+				</a></h3>
+				
+				<h3 class="mt-2"><a href="<?= $BASE . $f3->alias("binanceTrades") ?>">
+					<i class="fa-brands fa-btc"></i> trades
+				</a></h3>
 			</div>
 		</div>
 
