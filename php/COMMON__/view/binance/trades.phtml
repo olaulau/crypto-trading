@@ -1,34 +1,38 @@
 		<h1><?= $page["title"] ?></h1>
-		
+
 		<?php
-		$headers = array_keys ($data [0]);
+		$headers = array_keys($data[0]);
 		?>
 		<table class="table table-bordered">
 			<thead>
 				<tr>
-					<?php
-					foreach ($headers as $header) {
-						?>
-						<th><?= $header ?></th>
-						<?php
-					}
-					?>
+					<th>OrderListId</th> <!-- group by -->
+					<th>OrderId</th> <!-- group by -->
+					<th>Time</th>
+					<th>Price</th>
+					<th>Qty</th>
+					<th>Commission</th>
+					<th>IsBuyer</th>
+					<th>IsMaker</th>
+					<th>IsBestMatch</th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php
 				foreach ($data as $row) {
-					?>
+				?>
 					<tr>
-						<?php
-						foreach ($headers as $header) {
-							?>
-							<td><?= $row [$header] ?></td>
-							<?php
-						}
-						?>
+						<td><?= $row["OrderListId"] ?></td>
+						<td><?= $row["OrderId"] ?></td>
+						<td><?= $row["Time"] ?></td>
+						<td> 1 ETH = <?= $row["Price"] ?> €</td>
+						<td><?= $row["Qty"] ?> ETH (<?= $row["QuoteQty"] ?> €)</td>
+						<td><?= $row["Commission"] ?> <?= $row["CommissionAsset"] ?></td>
+						<td><?= $row["IsBuyer"] ?></td>
+						<td><?= $row["IsMaker"] ?></td>
+						<td><?= $row["IsBestMatch"] ?></td>
 					</tr>
-					<?php
+				<?php
 				}
 				?>
 			</tbody>

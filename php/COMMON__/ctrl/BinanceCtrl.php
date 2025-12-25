@@ -54,13 +54,13 @@ class BinanceCtrl extends Ctrl
 		// $response = $spot_api->exchangeInfo();
 		// var_dump($response->getData());
 
-		// $response = $spot_api->allOrders("ETHEUR");
+		// $response = $spot_api->allOrders(IndexCtrl::$crypto_pair);
 		// var_dump($response->getData());
 
 		// $response = $spot_api->allOrderList();
 		// var_dump($response->getData());
 
-		// $response = $spot_api->avgPrice("ETHEUR");
+		// $response = $spot_api->avgPrice(IndexCtrl::$crypto_pair);
 		// var_dump($response->getData());
 
 		// $response = $spot_api->getOpenOrders();
@@ -69,7 +69,7 @@ class BinanceCtrl extends Ctrl
 		// $response = $spot_api->getAccount(true);
 		// var_dump($response->getData());
 
-		// $response = $spot_api->klines("ETHEUR", ); ///////////////////
+		// $response = $spot_api->klines(IndexCtrl::$crypto_pair, ); ///////////////////
 		// var_dump($response->getData());
 
 		die;
@@ -78,7 +78,6 @@ class BinanceCtrl extends Ctrl
 
 	public static function tradesGET(Base $f3, $url, $controler)
 	{
-		// Construction de la config
 		$binance_key = $f3->get("binance.key");
 		$binance_secret = $f3->get("binance.secret");
 		if (empty($binance_key) || empty($binance_secret)) {
@@ -88,11 +87,9 @@ class BinanceCtrl extends Ctrl
 		$configurationBuilder = SpotRestApiUtil::getConfigurationBuilder();
 		$configurationBuilder->apiKey($binance_key)->secretKey($binance_secret);
 		$spot_api = new SpotRestApi($configurationBuilder->build());
-		$response = $spot_api->myTrades("ETHEUR");
-		$row = $response->getData();
-		/** @var MyTradesResponse $row */
-		$items = $row->getItems();
-		/** @var MyTradesResponseInner[] $items */
+		$response = $spot_api->myTrades(IndexCtrl::$crypto_pair);
+		$row = $response->getData(); /** @var MyTradesResponse $row */
+		$items = $row->getItems(); /** @var MyTradesResponseInner[] $items */
 
 		$data = [];
 		foreach ($items as $item) {
@@ -110,28 +107,10 @@ class BinanceCtrl extends Ctrl
 			"module"	=>	"COMMON__",
 			"layout"	=>	"default",
 			"name"		=>	"binance/trades",
-			"title"		=>	"Trades",
+			"title"		=>	"Trades " . IndexCtrl::$crypto_pair,
 			"breadcrumbs" => static::breadcrumbs(),
 		];
 		self::renderPage($page);
-
-		die;
 	}
 
-
-	public static function display_table_row (array $row)
-	{
-		?>
-		<tr style="border: 1px solid black;">
-			<?php
-			foreach ($row as $value) {
-			?>
-				<td style="border: 1px solid black;"><?= $value ?></td>
-			<?php
-			}
-			?>
-		</tr>
-		<?php
-	}
-	
 }
