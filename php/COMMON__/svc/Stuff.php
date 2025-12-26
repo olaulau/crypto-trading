@@ -9,10 +9,8 @@ use ErrorException;
 class Stuff
 {
 	
-	public static function timestamp_to_date_formated (int $timestamp) : string
-	{
-		return DateTimeImmutable::createFromTimestamp($timestamp)->format("Y-m-d H:i:s");
-	}
+	public const datetime_sql_format = "Y-m-d H:i:s";
+	public const datetime_french_format = "d/m/Y H:i:s";
 	
 	public static function extract_candle_infos (Mapper $ohlcv) : array
 	{
@@ -104,6 +102,17 @@ class Stuff
 
 		curl_close($ch);
 		fclose($fp);
+	}
+	
+	
+	public static function array_group_by (array $array, string $column) : array
+	{
+		$res = [];
+		foreach ($array as $row) {
+			$key = $row [$column];
+			$res [$key] [] = $row;
+		}
+		return $res;
 	}
 	
 }

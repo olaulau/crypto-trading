@@ -7,6 +7,7 @@ use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\Model\MyTradesResponse;
 use Binance\Client\Spot\Model\MyTradesResponseInner;
 use Binance\Client\Spot\SpotRestApiUtil;
+use COMMON__\svc\Stuff;
 use ErrorException;
 
 
@@ -95,12 +96,13 @@ class BinanceCtrl extends Ctrl
 		foreach ($items as $item) {
 			$row = [];
 			foreach ($item->attributeMap() as $attribute) {
-				$attribute = ucfirst($attribute);
+				$attribute = ucfirst ($attribute);
 				$getter_method_name = "get$attribute";
-				$row[$attribute] = $item->$getter_method_name();
+				$row [$attribute] = $item->$getter_method_name();
 			}
-			$data[] = $row;
+			$data [] = $row;
 		}
+		$data = Stuff::array_group_by($data, "OrderListId");
 		$f3->set("data", $data);
 
 		$page = [

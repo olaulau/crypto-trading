@@ -45,7 +45,7 @@ class Binance
 	
 	
 	
-	public static function to_real_timestamp (int $timestamp) : int
+	public static function to_real_timestamp (int $timestamp) : float
 	{
 		if(strlen($timestamp) === 16) {
 			$timestamp = $timestamp / 1000000;
@@ -59,13 +59,13 @@ class Binance
 		else {
 			throw new ErrorException("unknown timestamp format : {$timestamp}");
 		}
-		return (int)$timestamp;
+		return $timestamp;
 	}
 	
 	public static function timestamp_to_datetime (int $timestamp) : DateTimeInterface
 	{
 		$timestamp = static::to_real_timestamp($timestamp);
-		$res = DateTime::createFromFormat("U", $timestamp); #TODO timezone europe/paris ?
+		$res = DateTime::createFromFormat("U.u", $timestamp); #TODO timezone europe/paris ?
 		return $res;
 	}
 	

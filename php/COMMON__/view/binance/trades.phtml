@@ -1,12 +1,15 @@
+		<?php
+
+		use COMMON__\svc\Binance;
+		use COMMON__\svc\Stuff;
+		?>
+
 		<h1><?= $page["title"] ?></h1>
 
-		<?php
-		$headers = array_keys($data[0]);
-		?>
 		<table class="table table-bordered">
 			<thead>
 				<tr>
-					<th>OrderListId</th> <!-- group by -->
+					<th>OrderListId</th>
 					<th>OrderId</th> <!-- group by -->
 					<th>Time</th>
 					<th>Price</th>
@@ -19,18 +22,31 @@
 			</thead>
 			<tbody>
 				<?php
-				foreach ($data as $row) {
+				foreach ($data as $orderListId => $orderListGroup) {
 				?>
 					<tr>
-						<td><?= $row["OrderListId"] ?></td>
+						<td class="align-middle" rowspan="<?= count($orderListGroup) ?>"><?= $orderListId ?></td>
+						<?php
+						$firstOrder = true;
+						foreach ($orderListGroup as $row) {
+							if (!$firstOrder) {
+							?>
+					<tr>
+							<?php
+							}
+							?>
 						<td><?= $row["OrderId"] ?></td>
-						<td><?= $row["Time"] ?></td>
+						<td><?= Binance::timestamp_to_datetime($row["Time"])->format(Stuff::datetime_french_format . ".u") ?></td>
 						<td> 1 ETH = <?= $row["Price"] ?> €</td>
 						<td><?= $row["Qty"] ?> ETH (<?= $row["QuoteQty"] ?> €)</td>
 						<td><?= $row["Commission"] ?> <?= $row["CommissionAsset"] ?></td>
 						<td><?= $row["IsBuyer"] ?></td>
 						<td><?= $row["IsMaker"] ?></td>
 						<td><?= $row["IsBestMatch"] ?></td>
+						<?php
+						$firstOrder = false;
+					}
+					?>
 					</tr>
 				<?php
 				}
