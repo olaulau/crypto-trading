@@ -4,9 +4,9 @@ namespace COMMON__\ctrl;
 
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
-use Binance\Client\Spot\Model\MyTradesResponse;
-use Binance\Client\Spot\Model\MyTradesResponseInner;
 use Binance\Client\Spot\SpotRestApiUtil;
+use COMMON__\mdl\Kline;
+use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\Stuff;
 use ErrorException;
@@ -78,7 +78,7 @@ class BinanceCtrl extends Ctrl
 	}
 
 
-	public static function tradesGET(Base $f3, $url, $controler)
+	public static function tradesGET (Base $f3, $url, $controler)
 	{
 		$data = BinanceSpotApi::get_trades_grouped(IndexCtrl::$crypto_pair);
 		$f3->set("data", $data);
@@ -88,6 +88,101 @@ class BinanceCtrl extends Ctrl
 			"layout"	=>	"default",
 			"name"		=>	"binance/trades",
 			"title"		=>	"Trades " . IndexCtrl::$crypto_pair,
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		self::renderPage($page);
+	}
+	
+	
+	public static function testGET (Base $f3, $url, $controler)
+	{
+		# config
+		// $crypto_pair = IndexCtrl::$crypto_pair;
+		$base_asset = "BNB";
+		$quote_asset = "EUR";
+		$crypto_pair = "{$base_asset}{$quote_asset}";
+		
+		$quote_dust_threashold = 10; # if we have less that threshold €/$ of remaining asset, reset stats (to cancel lost quote)
+		
+		# get trades
+		$data = BinanceSpotApi::get_trades ($crypto_pair);
+		
+		# init
+		$res = [
+			$crypto_pair => [
+				"entry" => [
+					"total_quantity" => 0,
+					"total_cost" => 0
+				],
+				"exit" => [
+					"total_quantity" => 0,
+					"total_cost" => 0
+				],
+			]
+		];
+		
+		# treat trades
+		foreach ($data as $trade) {
+			// var_dump($trade);
+			echo Binance::timestamp_to_datetime($trade ["Time"]) -> format(Stuff::datetime_sql_format) . " <br/>" . PHP_EOL;
+			if ($trade ["Symbol"] !== $crypto_pair) {
+				throw new ErrorException("wrong symbol found in trade : {$trade ["Symbol"]}");
+			}
+			
+			if ($trade ["IsBuyer"] === true) {
+				echo "- BUY {$trade ["Qty"]} {$base_asset} @ {$trade ["Price"]} = {$trade ["QuoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
+				$res [$crypto_pair] ["entry"] ["total_quantity"] += $trade ["Qty"];
+				$res [$crypto_pair] ["entry"] ["total_cost"] += $trade ["QuoteQty"];
+			}
+			else {
+				echo "- SELL {$trade ["Qty"]} {$base_asset} @ {$trade ["Price"]} = {$trade ["QuoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
+				$res [$crypto_pair] ["entry"] ["total_quantity"] = max($res [$crypto_pair] ["entry"] ["total_quantity"] - $trade ["Qty"], 0);
+				$res [$crypto_pair] ["entry"] ["total_cost"] = max($res [$crypto_pair] ["entry"] ["total_cost"] - $trade ["QuoteQty"], 0);
+			}
+			$remaining_quote = $res [$crypto_pair] ["entry"] ["total_quantity"] * $trade ["Price"];
+			if ($res [$crypto_pair] ["entry"] ["total_quantity"] != 0) {
+				$avg = $res [$crypto_pair] ["entry"] ["total_cost"] / $res [$crypto_pair] ["entry"] ["total_quantity"];
+			}
+			else {
+				$avg = 0;
+			}
+			echo " => " . $res [$crypto_pair] ["entry"] ["total_quantity"] . " {$base_asset} = {$remaining_quote} {$quote_asset} <=> " . $res [$crypto_pair] ["entry"] ["total_cost"] . " {$quote_asset} @ {$avg} <br/>" . PHP_EOL;
+			if ($remaining_quote < $quote_dust_threashold) {
+				$res [$crypto_pair] ["entry"] ["total_quantity"] = 0;
+				$res [$crypto_pair] ["entry"] ["total_cost"] = 0;
+				echo " dust reset <br/>" . PHP_EOL;
+			}
+			echo "<br/>" . PHP_EOL;
+		}
+		var_dump($res);
+		
+		/*
+		=> average_entry_price
+		total_quantity
+		total_cost
+		symbol -> base_asset + quote_asset (ETHEUR -> ETH + EUR)
+			isBuyer = sens de la transaction
+		commission :
+			commissionAsset == base_asset -> impacte la quantité
+			commissionAsset == quote_asset -> impacte le coput
+		=> average_exit_price même algo
+		*/
+		
+		
+		
+		
+		
+		
+		
+		
+		die;
+		$f3->set("data", $data);
+
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"default",
+			"name"		=>	"binance/trades",
+			"title"		=>	"Trades " . $crypto_pair,
 			"breadcrumbs" => static::breadcrumbs(),
 		];
 		self::renderPage($page);
