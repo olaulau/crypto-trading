@@ -98,8 +98,8 @@ class BinanceCtrl extends Ctrl
 	{
 		# config
 		// $crypto_pair = IndexCtrl::$crypto_pair;
-		$base_asset = "BNB";
-		$quote_asset = "EUR";
+		$base_asset = "SKY";
+		$quote_asset = "USDC";
 		$crypto_pair = "{$base_asset}{$quote_asset}";
 		
 		$quote_dust_threashold = 10; # if we have less that threshold €/$ of remaining asset, reset stats (to cancel lost quote)
@@ -124,37 +124,62 @@ class BinanceCtrl extends Ctrl
 		# treat trades
 		foreach ($data as $trade) {
 			// var_dump($trade);
-			echo Binance::timestamp_to_datetime($trade ["Time"]) -> format(Stuff::datetime_sql_format) . " <br/>" . PHP_EOL;
 			if ($trade ["Symbol"] !== $crypto_pair) {
 				throw new ErrorException("wrong symbol found in trade : {$trade ["Symbol"]}");
 			}
+			echo Binance::timestamp_to_datetime($trade ["Time"]) -> format(Stuff::datetime_sql_format) . " <br/>" . PHP_EOL;
 			
 			if ($trade ["IsBuyer"] === true) {
 				echo "- BUY {$trade ["Qty"]} {$base_asset} @ {$trade ["Price"]} = {$trade ["QuoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
 				$res [$crypto_pair] ["entry"] ["total_quantity"] += $trade ["Qty"];
 				$res [$crypto_pair] ["entry"] ["total_cost"] += $trade ["QuoteQty"];
+				$res [$crypto_pair] ["exit"] ["total_quantity"] = max($res [$crypto_pair] ["exit"] ["total_quantity"] - $trade ["Qty"], 0);
+				$res [$crypto_pair] ["exit"] ["total_cost"] = max($res [$crypto_pair] ["exit"] ["total_cost"] - $trade ["QuoteQty"], 0);
 			}
 			else {
 				echo "- SELL {$trade ["Qty"]} {$base_asset} @ {$trade ["Price"]} = {$trade ["QuoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
 				$res [$crypto_pair] ["entry"] ["total_quantity"] = max($res [$crypto_pair] ["entry"] ["total_quantity"] - $trade ["Qty"], 0);
 				$res [$crypto_pair] ["entry"] ["total_cost"] = max($res [$crypto_pair] ["entry"] ["total_cost"] - $trade ["QuoteQty"], 0);
+				$res [$crypto_pair] ["exit"] ["total_quantity"] += $trade ["Qty"];
+				$res [$crypto_pair] ["exit"] ["total_cost"] += $trade ["QuoteQty"];
 			}
-			$remaining_quote = $res [$crypto_pair] ["entry"] ["total_quantity"] * $trade ["Price"];
+			
+			$remaining_entry_quote = $res [$crypto_pair] ["entry"] ["total_quantity"] * $trade ["Price"];
 			if ($res [$crypto_pair] ["entry"] ["total_quantity"] != 0) {
-				$avg = $res [$crypto_pair] ["entry"] ["total_cost"] / $res [$crypto_pair] ["entry"] ["total_quantity"];
+				$entry_avg = $res [$crypto_pair] ["entry"] ["total_cost"] / $res [$crypto_pair] ["entry"] ["total_quantity"];
 			}
 			else {
-				$avg = 0;
+				$entry_avg = 0;
 			}
-			echo " => " . $res [$crypto_pair] ["entry"] ["total_quantity"] . " {$base_asset} = {$remaining_quote} {$quote_asset} <=> " . $res [$crypto_pair] ["entry"] ["total_cost"] . " {$quote_asset} @ {$avg} <br/>" . PHP_EOL;
-			if ($remaining_quote < $quote_dust_threashold) {
+			
+			$remaining_exit_quote = $res [$crypto_pair] ["exit"] ["total_quantity"] * $trade ["Price"];
+			if ($res [$crypto_pair] ["exit"] ["total_quantity"] != 0) {
+				$exit_avg = $res [$crypto_pair] ["exit"] ["total_cost"] / $res [$crypto_pair] ["exit"] ["total_quantity"];
+			}
+			else {
+				$exit_avg = 0;
+			}
+			
+			echo " entry => " . $res [$crypto_pair] ["entry"] ["total_quantity"] . " {$base_asset} = {$remaining_entry_quote} {$quote_asset} <=> " . $res [$crypto_pair] ["entry"] ["total_cost"] . " {$quote_asset} @ {$entry_avg} <br/>" . PHP_EOL;
+			if ($remaining_entry_quote > 0 && $remaining_entry_quote < $quote_dust_threashold) {
 				$res [$crypto_pair] ["entry"] ["total_quantity"] = 0;
 				$res [$crypto_pair] ["entry"] ["total_cost"] = 0;
-				echo " dust reset <br/>" . PHP_EOL;
+				echo " entry dust reset <br/>" . PHP_EOL;
 			}
+			
+			echo " exit => " . $res [$crypto_pair] ["exit"] ["total_quantity"] . " {$base_asset} = {$remaining_exit_quote} {$quote_asset} <=> " . $res [$crypto_pair] ["exit"] ["total_cost"] . " {$quote_asset} @ {$exit_avg} <br/>" . PHP_EOL;
+			if ($remaining_exit_quote > 0 && $remaining_exit_quote < $quote_dust_threashold) {
+				$res [$crypto_pair] ["exit"] ["total_quantity"] = 0;
+				$res [$crypto_pair] ["exit"] ["total_cost"] = 0;
+				echo " exit dust reset <br/>" . PHP_EOL;
+			}
+			
+			
 			echo "<br/>" . PHP_EOL;
 		}
-		var_dump($res);
+		
+		echo "==> entry (buy) avg = {$entry_avg} <br/>" . PHP_EOL;
+		echo "==> exit (sell) avg = {$exit_avg} <br/>" . PHP_EOL;
 		
 		/*
 		=> average_entry_price
@@ -167,12 +192,6 @@ class BinanceCtrl extends Ctrl
 			commissionAsset == quote_asset -> impacte le coput
 		=> average_exit_price même algo
 		*/
-		
-		
-		
-		
-		
-		
 		
 		
 		die;
