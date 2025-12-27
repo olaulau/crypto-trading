@@ -7,6 +7,7 @@ use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\Model\MyTradesResponse;
 use Binance\Client\Spot\Model\MyTradesResponseInner;
 use Binance\Client\Spot\SpotRestApiUtil;
+use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\Stuff;
 use ErrorException;
 
@@ -79,30 +80,7 @@ class BinanceCtrl extends Ctrl
 
 	public static function tradesGET(Base $f3, $url, $controler)
 	{
-		$binance_key = $f3->get("binance.key");
-		$binance_secret = $f3->get("binance.secret");
-		if (empty($binance_key) || empty($binance_secret)) {
-			throw new ErrorException("no binance api key provided");
-		}
-
-		$configurationBuilder = SpotRestApiUtil::getConfigurationBuilder();
-		$configurationBuilder->apiKey($binance_key)->secretKey($binance_secret);
-		$spot_api = new SpotRestApi($configurationBuilder->build());
-		$response = $spot_api->myTrades(IndexCtrl::$crypto_pair);
-		$row = $response->getData(); /** @var MyTradesResponse $row */
-		$items = $row->getItems(); /** @var MyTradesResponseInner[] $items */
-
-		$data = [];
-		foreach ($items as $item) {
-			$row = [];
-			foreach ($item->attributeMap() as $attribute) {
-				$attribute = ucfirst ($attribute);
-				$getter_method_name = "get$attribute";
-				$row [$attribute] = $item->$getter_method_name();
-			}
-			$data [] = $row;
-		}
-		$data = Stuff::array_group_by($data, "OrderListId");
+		$data = BinanceSpotApi::get_trades_grouped(IndexCtrl::$crypto_pair);
 		$f3->set("data", $data);
 
 		$page = [
