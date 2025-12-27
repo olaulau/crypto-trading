@@ -50,30 +50,38 @@ class BinanceCtrl extends Ctrl
 		$configurationBuilder->apiKey($binance_key)->secretKey($binance_secret);
 		$spot_api = new SpotRestApi($configurationBuilder->build());
 
-		$response = $spot_api->time();
-		var_dump($response->getData());
+		# server time
+		// $response = $spot_api->time();
+		// var_dump($response->getData());
 
 		// $response = $spot_api->exchangeInfo();
 		// var_dump($response->getData());
 
+		# orders
 		// $response = $spot_api->allOrders(IndexCtrl::$crypto_pair);
 		// var_dump($response->getData());
 
+		# order lists
 		// $response = $spot_api->allOrderList();
 		// var_dump($response->getData());
 
+		# symbol current price
 		// $response = $spot_api->avgPrice(IndexCtrl::$crypto_pair);
 		// var_dump($response->getData());
 
+		# open orders
 		// $response = $spot_api->getOpenOrders();
 		// var_dump($response->getData());
 
+		# account info
+		# container -> balances = my assets (base)
 		// $response = $spot_api->getAccount(true);
 		// var_dump($response->getData());
 
-		// $response = $spot_api->klines(IndexCtrl::$crypto_pair, ); ///////////////////
+		# klines
+		// $response = $spot_api->klines(IndexCtrl::$crypto_pair, "1d");
 		// var_dump($response->getData());
-
+		
 		die;
 	}
 
@@ -96,13 +104,9 @@ class BinanceCtrl extends Ctrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$base_asset = "SKY";
-		$quote_asset = "USDC";
-		$crypto_pair = "{$base_asset}{$quote_asset}";
-		$res = BinanceSpotApi::get_trades_stats($base_asset, $quote_asset);
+		$res = BinanceSpotApi::get_used_symbols_from_order_lists();
+		var_dump($res);
 		
-		echo "==> entry (buy) avg = {$res [$crypto_pair] ["entry"] ["avg"]} <br/>" . PHP_EOL;
-		echo "==> exit (sell) avg = {$res [$crypto_pair] ["exit"] ["avg"]} <br/>" . PHP_EOL;
 		die;
 	}
 

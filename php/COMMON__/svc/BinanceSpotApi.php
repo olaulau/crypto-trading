@@ -152,4 +152,28 @@ class BinanceSpotApi
 		return $res;
 	}
 	
+	
+	
+	public static function get_order_lists () : array
+	{
+		$spot_api = static::get_spot_api();
+		$response = $spot_api->allOrderList();
+		$items = $response->getData()->getItems();
+		return $items;
+	}
+	
+	
+	public static function get_used_symbols_from_order_lists () : array
+	{
+		$items = static::get_order_lists();
+		$symbols = [];
+		foreach ($items as $item) { /** @var AllOrderListResponseInner $item */
+			$symbol = $item->getSymbol();
+			if (!in_array($symbol, $symbols)) {
+				$symbols [] = $symbol;
+			}
+		}
+		return $symbols;
+	}
+	
 }
