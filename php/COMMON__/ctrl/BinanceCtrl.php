@@ -53,43 +53,49 @@ class BinanceCtrl extends PrivateCtrl
 
 		# server time
 		$response = $spot_api->time();
-		$data = BinanceSpotApi::responseData_to_table($response->getData());
+		$data = Binance::responseData_to_table($response->getData());
 		var_dump($data);
 
 		# infos about symbols
 		// $response = $spot_api->exchangeInfo(null, ["ETHEUR", "BNBEUR"], null, false);
-		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 
 		# orders
 		// $response = $spot_api->allOrders(IndexCtrl::$crypto_pair);
-		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 
 		# order lists
-		// $response = $spot_api->allOrderList();
-		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// $data = BinanceSpotApi::get_order_lists();
+		// var_dump($data);
+		
+		# trades stats
+		// $data = BinanceSpotApi::get_trades_stats("ETH", "EUR");
+		// var_dump($data);
+		
+		# used symbols
+		// $data = BinanceSpotApi::get_used_symbols_from_order_lists();
 		// var_dump($data);
 
 		# symbol current price
 		// $response = $spot_api->avgPrice(IndexCtrl::$crypto_pair);
-		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 
 		# open orders
 		// $response = $spot_api->getOpenOrders();
-		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 
 		# account info
 		# container -> balances = my assets (base)
-		// $response = $spot_api->getAccount(true);
-		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// $data = Binance::get_account();
 		// var_dump($data);
 
 		# klines
 		// $response = $spot_api->klines(IndexCtrl::$crypto_pair, "1d");
-		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 		
 		die;

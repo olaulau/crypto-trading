@@ -1,16 +1,13 @@
 <?php
 namespace COMMON__\svc;
 
-use ArrayAccess;
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\Model\GetAccountResponse;
-use Binance\Client\Spot\Model\MyTradesResponse;
 use Binance\Client\Spot\SpotRestApiUtil;
 use Binance\Common\Dtos\ApiResponse;
-use Binance\Common\Dtos\ModelInterface;
 use ErrorException;
-use ReflectionObject;
+
 
 class BinanceSpotApi
 {
@@ -37,7 +34,7 @@ class BinanceSpotApi
 	{
 		$spot_api = static::get_spot_api();
 		$response = $spot_api->myTrades($crypto_pair); /** @var ApiResponse $response */
-		$data = static::responseData_to_table($response->getData());
+		$data = Binance::responseData_to_table($response->getData());
 		return $data ["items"];
 	}
 	
@@ -82,29 +79,29 @@ class BinanceSpotApi
 		# treat trades
 		foreach ($data as $trade) {
 			// var_dump($trade);
-			if ($trade ["Symbol"] !== $crypto_pair) {
-				throw new ErrorException("wrong symbol found in trade : {$trade ["Symbol"]}");
+			if ($trade ["symbol"] !== $crypto_pair) {
+				throw new ErrorException("wrong symbol found in trade : {$trade ["symbol"]}");
 			}
 			// echo Binance::timestamp_to_datetime($trade ["Time"]) -> format(Stuff::datetime_sql_format) . " <br/>" . PHP_EOL;
 			
-			if ($trade ["IsBuyer"] === true) {
+			if ($trade ["isBuyer"] === true) {
 				// echo "- BUY {$trade ["Qty"]} {$base_asset} @ {$trade ["Price"]} = {$trade ["QuoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
-				$res [$crypto_pair] ["entry"] ["last"] = $trade ["Time"];
-				$res [$crypto_pair] ["entry"] ["quantity"] += $trade ["Qty"];
-				$res [$crypto_pair] ["entry"] ["cost"] += $trade ["QuoteQty"];
-				$res [$crypto_pair] ["exit"] ["quantity"] = max($res [$crypto_pair] ["exit"] ["quantity"] - $trade ["Qty"], 0);
-				$res [$crypto_pair] ["exit"] ["cost"] = max($res [$crypto_pair] ["exit"] ["cost"] - $trade ["QuoteQty"], 0);
+				$res [$crypto_pair] ["entry"] ["last"] = $trade ["time"];
+				$res [$crypto_pair] ["entry"] ["quantity"] += $trade ["qty"];
+				$res [$crypto_pair] ["entry"] ["cost"] += $trade ["quoteQty"];
+				$res [$crypto_pair] ["exit"] ["quantity"] = max($res [$crypto_pair] ["exit"] ["quantity"] - $trade ["qty"], 0);
+				$res [$crypto_pair] ["exit"] ["cost"] = max($res [$crypto_pair] ["exit"] ["cost"] - $trade ["quoteQty"], 0);
 			}
 			else {
 				// echo "- SELL {$trade ["Qty"]} {$base_asset} @ {$trade ["Price"]} = {$trade ["QuoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
-				$res [$crypto_pair] ["exit"] ["last"] = $trade ["Time"];
-				$res [$crypto_pair] ["entry"] ["quantity"] = max($res [$crypto_pair] ["entry"] ["quantity"] - $trade ["Qty"], 0);
-				$res [$crypto_pair] ["entry"] ["cost"] = max($res [$crypto_pair] ["entry"] ["cost"] - $trade ["QuoteQty"], 0);
-				$res [$crypto_pair] ["exit"] ["quantity"] += $trade ["Qty"];
-				$res [$crypto_pair] ["exit"] ["cost"] += $trade ["QuoteQty"];
+				$res [$crypto_pair] ["exit"] ["last"] = $trade ["time"];
+				$res [$crypto_pair] ["entry"] ["quantity"] = max($res [$crypto_pair] ["entry"] ["quantity"] - $trade ["qty"], 0);
+				$res [$crypto_pair] ["entry"] ["cost"] = max($res [$crypto_pair] ["entry"] ["cost"] - $trade ["quoteQty"], 0);
+				$res [$crypto_pair] ["exit"] ["quantity"] += $trade ["qty"];
+				$res [$crypto_pair] ["exit"] ["cost"] += $trade ["quoteQty"];
 			}
 			
-			$res [$crypto_pair] ["entry"] ["quote"] = $res [$crypto_pair] ["entry"] ["quantity"] * $trade ["Price"];
+			$res [$crypto_pair] ["entry"] ["quote"] = $res [$crypto_pair] ["entry"] ["quantity"] * $trade ["price"];
 			if ($res [$crypto_pair] ["entry"] ["quantity"] != 0) {
 				$res [$crypto_pair] ["entry"] ["avg"] = $res [$crypto_pair] ["entry"] ["cost"] / $res [$crypto_pair] ["entry"] ["quantity"];
 			}
@@ -112,7 +109,7 @@ class BinanceSpotApi
 				$res [$crypto_pair] ["entry"] ["avg"] = 0;
 			}
 			
-			$res [$crypto_pair] ["exit"] ["quote"] = $res [$crypto_pair] ["exit"] ["quantity"] * $trade ["Price"];
+			$res [$crypto_pair] ["exit"] ["quote"] = $res [$crypto_pair] ["exit"] ["quantity"] * $trade ["price"];
 			if ($res [$crypto_pair] ["exit"] ["quantity"] != 0) {
 				$res [$crypto_pair] ["exit"] ["avg"] = $res [$crypto_pair] ["exit"] ["cost"] / $res [$crypto_pair] ["exit"] ["quantity"];
 			}
@@ -141,7 +138,6 @@ class BinanceSpotApi
 		
 		// echo "==> entry (buy) avg = {$res [$crypto_pair] ["entry"] ["avg"]} <br/>" . PHP_EOL;
 		// echo "==> exit (sell) avg = {$res [$crypto_pair] ["exit"] ["avg"]} <br/>" . PHP_EOL;
-		
 		return $res;
 	}
 	
@@ -175,45 +171,7 @@ class BinanceSpotApi
 		$spot_api = static::get_spot_api();
 		$response = $spot_api->getAccount(true);
 		$data = $response->getData(); /** @var GetAccountResponse $data */
-		$res = static::responseData_to_table($data);
-		return $res;
-	}
-	
-	
-	public static function responseData_to_table (mixed $data) : mixed
-	{
-		$res = [];
-		if ($data instanceof ModelInterface) {
-			$attributes = $data->attributeMap();
-			foreach ($attributes as $attribute) {
-				$method_name = "get" . ucfirst($attribute);
-				$elem = $data->$method_name();
-				if(is_object($elem) || is_array($elem)) {
-					$res [$attribute] = static::responseData_to_table($elem);
-				}
-				else {
-					$res [$attribute] = $elem;
-				}
-			}
-		}
-		elseif ($data instanceof ArrayAccess) {
-			throw new ErrorException("not implemented : ArrayAccess");
-		}
-		elseif (is_object($data)) {
-			$ref = new ReflectionObject($data);
-			foreach ($ref->getProperties() as $prop) {
-				$elem = $prop->getValue($data);
-				$res [$prop->getName()] = static::responseData_to_table($elem);
-			}
-		}
-		elseif (is_array($data)) {
-			foreach ($data as $key => $elem) {
-				$res [$key] = static::responseData_to_table($elem);
-			}
-		}
-		else {
-			$res = $data;
-		}
+		$res = Binance::responseData_to_table($data);
 		return $res;
 	}
 	

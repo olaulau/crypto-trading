@@ -1,9 +1,12 @@
 <?php
 namespace COMMON__\svc;
 
+use ArrayAccess;
+use Binance\Common\Dtos\ModelInterface;
 use DateTime;
 use DateTimeInterface;
 use ErrorException;
+use ReflectionObject;
 
 
 class Binance
@@ -71,6 +74,44 @@ class Binance
 	{
 		$timestamp = static::to_real_timestamp($timestamp);
 		$res = DateTime::createFromFormat("U.u", $timestamp); #TODO timezone europe/paris ?
+		return $res;
+	}
+	
+	
+	public static function responseData_to_table (mixed $data) : mixed
+	{
+		$res = [];
+		if ($data instanceof ModelInterface) {
+			$attributes = $data->attributeMap();
+			foreach ($attributes as $attribute) {
+				$method_name = "get" . ucfirst($attribute);
+				$elem = $data->$method_name();
+				if(is_object($elem) || is_array($elem)) {
+					$res [$attribute] = static::responseData_to_table($elem);
+				}
+				else {
+					$res [$attribute] = $elem;
+				}
+			}
+		}
+		elseif ($data instanceof ArrayAccess) {
+			throw new ErrorException("not implemented : ArrayAccess");
+		}
+		elseif (is_object($data)) {
+			$ref = new ReflectionObject ($data);
+			foreach ($ref->getProperties() as $prop) {
+				$elem = $prop->getValue($data);
+				$res [$prop->getName()] = static::responseData_to_table($elem);
+			}
+		}
+		elseif (is_array($data)) {
+			foreach ($data as $key => $elem) {
+				$res [$key] = static::responseData_to_table($elem);
+			}
+		}
+		else {
+			$res = $data;
+		}
 		return $res;
 	}
 	
