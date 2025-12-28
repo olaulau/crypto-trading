@@ -3,10 +3,17 @@
 		<table class="table table-bordered">
 			<thead>
 				<tr>
-					<th>symbol</th>
-					<th>price</th>
-					<th>entry</th>
-					<th>exit</th>
+					<th colspan=2 class="text-center">symbol</th>
+					<th rowspan=2 class="text-center align-middle">price</th>
+					<th rowspan=2 class="text-center align-middle">balance</th>
+					<th rowspan=2 class="text-center align-middle">margin</th>
+					<th colspan=2 class="text-center">trades</th>
+				</tr>
+				<tr>
+					<th class="text-center">base</th>
+					<th class="text-center">quote</th>
+					<th class="text-center">entry</th>
+					<th class="text-center">exit</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -14,13 +21,41 @@
 				foreach ($trades_stats as $symbol => $trade_stat) {
 				?>
 					<tr>
-						<td><?= $trade_stat ["base"] ?> --> <?= $trade_stat ["quote"] ?></td>
-						<td><?= $trade_stat ["price"] ?> <?= $trade_stat ["quote"] ?> / <?= $trade_stat ["base"] ?></td>
-						<td>
-							<?= $trade_stat ["entry"] ["quote"] ?> <?= $trade_stat ["quote"] ?> @ <?= $trade_stat ["entry"] ["avg"] ?> <?= $trade_stat ["quote"] ?> / <?= $trade_stat ["base"] ?>
+						<td class="text-end">
+							<?= $trade_stat ["base_asset"] ?>
 						</td>
 						<td>
-							<?= $trade_stat ["exit"] ["quote"] ?> <?= $trade_stat ["quote"] ?> @ <?= $trade_stat ["exit"] ["avg"] ?> <?= $trade_stat ["quote"] ?> / <?= $trade_stat ["base"] ?>
+							<?= $trade_stat ["quote_asset"] ?>
+						</td>
+						<td>
+							<?= $trade_stat ["price"] ?> <?= $trade_stat ["quote_asset"] ?> / <?= $trade_stat ["base_asset"] ?>
+						</td>
+						<td>
+							<?php
+							if(!empty($trade_stat ["balance"] )) {
+								?>
+								<?= $trade_stat ["balance"] ?> <?= $trade_stat ["base_asset"] ?> <br/>
+								(<?= $trade_stat ["quote_balance"] ?> <?= $trade_stat ["quote_asset"] ?>)
+								<?php
+							}
+							?>
+						</td>
+						<td>
+							<?php
+							if(!empty($trade_stat ["entry"] ["avg"])) {
+								?>
+								<?= ($trade_stat ["price"] - $trade_stat ["entry"] ["avg"]) / $trade_stat ["entry"] ["avg"] * 100 ?> %
+								<?php
+							}
+							?>
+						</td>
+						<td>
+							<?= $trade_stat ["entry"] ["quote"] ?> <?= $trade_stat ["quote_asset"] ?> <br/>
+							@ <?= $trade_stat ["entry"] ["avg"] ?> <?= $trade_stat ["quote_asset"] ?> / <?= $trade_stat ["base_asset"] ?>
+						</td>
+						<td>
+							<?= $trade_stat ["exit"] ["quote"] ?> <?= $trade_stat ["quote_asset"] ?> <br/>
+							@ <?= $trade_stat ["exit"] ["avg"] ?> <?= $trade_stat ["quote_asset"] ?> / <?= $trade_stat ["base_asset"] ?>
 						</td>
 					</tr>
 				<?php

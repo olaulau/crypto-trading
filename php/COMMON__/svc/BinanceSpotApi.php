@@ -149,7 +149,6 @@ class BinanceSpotApi
 		return $items;
 	}
 	
-	
 	public static function get_used_symbols_from_order_lists () : array
 	{
 		$items = static::get_order_lists();
@@ -170,6 +169,25 @@ class BinanceSpotApi
 		$response = $spot_api->getAccount(true);
 		$data = $response->getData(); /** @var GetAccountResponse $data */
 		$res = Binance::responseData_to_table($data);
+		return $res;
+	}
+	
+	public static function get_account_balances () : array
+	{
+		$account = static::get_account();
+		$balances = $account ["balances"];
+		$res = Stuff::array_group_by($balances, "asset", false);
+		return $res;
+	}
+	
+	public static function get_account_balances_consolidated () : array
+	{
+		$account = static::get_account();
+		$balances = $account ["balances"];
+		$res = [];
+		foreach ($balances as $balance) {
+			$res [$balance ["asset"]] = $balance ["free"] + $balance ["locked"];
+		}
 		return $res;
 	}
 	

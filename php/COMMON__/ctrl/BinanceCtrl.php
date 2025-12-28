@@ -94,9 +94,9 @@ class BinanceCtrl extends PrivateCtrl
 
 		# account info
 		# container -> balances = my assets (base)
-		// $data = Binance::get_account();
+		// $data = BinanceSpotApi::get_account();
 		// var_dump($data);
-
+		
 		# klines
 		// $response = $spot_api->klines(IndexCtrl::$crypto_pair, "1d");
 		// $data = Binance::responseData_to_table($response->getData());
@@ -124,8 +124,6 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$res = BinanceSpotApi::get_account();
-		var_dump($res);
 		
 		die;
 	}
@@ -141,17 +139,21 @@ class BinanceCtrl extends PrivateCtrl
 		
 		$ticker_prices = BinanceSpotApi::get_ticker_price($used_symbols);
 		
+		$balances = BinanceSpotApi::get_account_balances_consolidated();
+		
 		$trades_stats = [];
 		foreach ($used_symbols as $symbol) {
 			$symbol_infos = $symbols_infos_indexed [$symbol];
-			$base = $symbol_infos ["baseAsset"];
-			$quote = $symbol_infos ["quoteAsset"];
+			$base_asset = $symbol_infos ["baseAsset"];
+			$quote_asset = $symbol_infos ["quoteAsset"];
 			
-			$trade_stats = BinanceSpotApi::get_trades_stats($base, $quote);
+			$trade_stats = BinanceSpotApi::get_trades_stats($base_asset, $quote_asset);
 			$trades_stats [$symbol] = $trade_stats;
-			$trades_stats [$symbol] ["base"] = $base;
-			$trades_stats [$symbol] ["quote"] = $quote;
+			$trades_stats [$symbol] ["base_asset"] = $base_asset;
+			$trades_stats [$symbol] ["quote_asset"] = $quote_asset;
 			$trades_stats [$symbol] ["price"] = $ticker_prices [$symbol] ["price"];
+			$trades_stats [$symbol] ["balance"] = $balances [$base_asset] ?? null;
+			$trades_stats [$symbol] ["quote_balance"] = isset($balances [$base_asset]) ? ($balances [$base_asset] * $ticker_prices [$symbol] ["price"]) : null;
 		}
 		$f3->set("trades_stats", $trades_stats);
 
