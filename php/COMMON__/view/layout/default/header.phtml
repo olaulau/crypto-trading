@@ -51,6 +51,17 @@
 						<button class="btn btn-lg btn-outline-success" type="submit">Search</button>
 					</form>
 					 -->
+					
+					<div id="auth">
+						<span class="text-light">
+							<?= $SESSION ["auth"] ["login"] ?>
+						</span>
+						<span class="text-danger">
+							<a href="<?= $BASE . $f3->alias("logout") ?>">
+								<i class="fa-solid fa-right-from-bracket"></i>
+							</a>
+						</span>
+					</div>
 				</div>
 			</div>
 		</nav>

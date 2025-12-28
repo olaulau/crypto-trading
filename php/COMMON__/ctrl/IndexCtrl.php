@@ -13,7 +13,7 @@ use ErrorException;
 use Exception;
 
 
-class IndexCtrl extends Ctrl
+class IndexCtrl extends PrivateCtrl
 {
 	
 	public final static $binance_data_directory = __DIR__ . "/../../../data/binance/";

@@ -4,6 +4,9 @@ composer install
 cp conf/user.dist.ini user.ini
 vim user.ini
 
+# config
+default password is 'admin', don't forget to change it
+
 
 # TODO
 - graph

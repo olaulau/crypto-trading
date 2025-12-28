@@ -4,6 +4,7 @@ namespace COMMON__\ctrl;
 
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
+use Binance\Client\Spot\Model\Symbols;
 use Binance\Client\Spot\SpotRestApiUtil;
 use COMMON__\mdl\Kline;
 use COMMON__\svc\Binance;
@@ -12,7 +13,7 @@ use COMMON__\svc\Stuff;
 use ErrorException;
 
 
-class BinanceCtrl extends Ctrl
+class BinanceCtrl extends PrivateCtrl
 {
 
 
@@ -54,7 +55,8 @@ class BinanceCtrl extends Ctrl
 		// $response = $spot_api->time();
 		// var_dump($response->getData());
 
-		// $response = $spot_api->exchangeInfo();
+		# infos about symbols
+		// $response = $spot_api->exchangeInfo(null, ["ETHEUR", "BNBEUR"], null, false);
 		// var_dump($response->getData());
 
 		# orders
