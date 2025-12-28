@@ -105,12 +105,17 @@ class Stuff
 	}
 	
 	
-	public static function array_group_by (array $array, string $column) : array
+	public static function array_group_by (array $array, string $column, bool $stack=true) : array
 	{
 		$res = [];
 		foreach ($array as $row) {
 			$key = $row [$column];
-			$res [$key] [] = $row;
+			if ($stack) {
+				$res [$key] [] = $row;
+			}
+			else {
+				$res [$key] = $row;
+			}
 		}
 		return $res;
 	}

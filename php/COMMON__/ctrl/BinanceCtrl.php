@@ -44,7 +44,7 @@ class BinanceCtrl extends PrivateCtrl
 		$binance_key = $f3->get("binance.key");
 		$binance_secret = $f3->get("binance.secret");
 		if (empty($binance_key) || empty($binance_secret)) {
-			throw new ErrorException("no binance api key provided");
+			throw new ErrorException("no binance api key / secret provided");
 		}
 
 		$configurationBuilder = SpotRestApiUtil::getConfigurationBuilder();
@@ -57,8 +57,7 @@ class BinanceCtrl extends PrivateCtrl
 		var_dump($data);
 
 		# infos about symbols
-		// $response = $spot_api->exchangeInfo(null, ["ETHEUR", "BNBEUR"], null, false);
-		// $data = Binance::responseData_to_table($response->getData());
+		// $data = BinanceSpotApi::get_exchange_infos(["ETHEUR", "BNBEUR"]);
 		// var_dump($data);
 
 		# orders
@@ -125,5 +124,36 @@ class BinanceCtrl extends PrivateCtrl
 		
 		die;
 	}
+	
+	
+	public static function dashboardGET (Base $f3, $url, $controler)
+	{
+		$used_symbols = BinanceSpotApi::get_used_symbols_from_order_lists();
+		
+		$exchange_infos = BinanceSpotApi::get_exchange_infos ($used_symbols);
+		$symbols_infos = $exchange_infos ["symbols"];
+		$symbols_infos_indexed = stuff::array_group_by($symbols_infos, "symbol", false);
+		
+		$trades_stats = [];
+		foreach ($used_symbols as $symbol) {
+			$symbol_infos = $symbols_infos_indexed [$symbol];
+			$base = $symbol_infos ["baseAsset"];
+			$quote = $symbol_infos ["quoteAsset"];
+			$trade_stats = BinanceSpotApi::get_trades_stats($base, $quote);
+			$trades_stats [$symbol] = $trade_stats;
+			$trades_stats [$symbol] ["base"] = $base;
+			$trades_stats [$symbol] ["quote"] = $quote;
+		}
+		$f3->set("trades_stats", $trades_stats);
 
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"default",
+			"name"		=>	"binance/dashboard",
+			"title"		=>	"Dashboard",
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		self::renderPage($page);
+	}
+	
 }

@@ -1,0 +1,37 @@
+		<h1><?= $page["title"] ?></h1>
+
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th>symbol</th>
+					<th>price</th>
+					<th>entry</th>
+					<th>exit</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				foreach ($trades_stats as $symbol => $trade_stat) {
+				?>
+					<tr>
+						<td><?= $trade_stat ["base"] ?> --> <?= $trade_stat ["quote"] ?></td>
+						<td><?= "price" ?></td>
+						<td>
+							<?= $trade_stat ["entry"] ["quote"] ?> <?= $trade_stat ["quote"] ?> @ <?= $trade_stat ["entry"] ["avg"] ?> <?= $trade_stat ["quote"] ?> / <?= $trade_stat ["base"] ?>
+						</td>
+						<td>
+							<?= $trade_stat ["exit"] ["quote"] ?> <?= $trade_stat ["quote"] ?> @ <?= $trade_stat ["exit"] ["avg"] ?> <?= $trade_stat ["quote"] ?> / <?= $trade_stat ["base"] ?>
+						</td>
+					</tr>
+				<?php
+				}
+				?>
+			</tbody>
+			<tfoot>
+				<!-- <tr>
+					<th></th>
+				</tr> -->
+			</tfoot>
+		</table>
+		
+		</main>
