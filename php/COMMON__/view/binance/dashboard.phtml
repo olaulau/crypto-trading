@@ -15,7 +15,7 @@
 				?>
 					<tr>
 						<td><?= $trade_stat ["base"] ?> --> <?= $trade_stat ["quote"] ?></td>
-						<td><?= "price" ?></td>
+						<td><?= $trade_stat ["price"] ?> <?= $trade_stat ["quote"] ?> / <?= $trade_stat ["base"] ?></td>
 						<td>
 							<?= $trade_stat ["entry"] ["quote"] ?> <?= $trade_stat ["quote"] ?> @ <?= $trade_stat ["entry"] ["avg"] ?> <?= $trade_stat ["quote"] ?> / <?= $trade_stat ["base"] ?>
 						</td>

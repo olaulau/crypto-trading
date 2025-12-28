@@ -5,6 +5,7 @@ namespace COMMON__\ctrl;
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\Model\Symbols;
+use Binance\Client\Spot\Model\TickerPriceResponse;
 use Binance\Client\Spot\SpotRestApiUtil;
 use COMMON__\mdl\Kline;
 use COMMON__\svc\Binance;
@@ -77,9 +78,13 @@ class BinanceCtrl extends PrivateCtrl
 		// $data = BinanceSpotApi::get_used_symbols_from_order_lists();
 		// var_dump($data);
 
-		# symbol current price
+		# average price (last 5 minutes)
 		// $response = $spot_api->avgPrice(IndexCtrl::$crypto_pair);
 		// $data = Binance::responseData_to_table($response->getData());
+		// var_dump($data);
+		
+		# ticker price
+		// $data = BinanceSpotApi::get_ticker_price(["ETHEUR", "BNBEUR"]);
 		// var_dump($data);
 
 		# open orders
@@ -134,15 +139,19 @@ class BinanceCtrl extends PrivateCtrl
 		$symbols_infos = $exchange_infos ["symbols"];
 		$symbols_infos_indexed = stuff::array_group_by($symbols_infos, "symbol", false);
 		
+		$ticker_prices = BinanceSpotApi::get_ticker_price($used_symbols);
+		
 		$trades_stats = [];
 		foreach ($used_symbols as $symbol) {
 			$symbol_infos = $symbols_infos_indexed [$symbol];
 			$base = $symbol_infos ["baseAsset"];
 			$quote = $symbol_infos ["quoteAsset"];
+			
 			$trade_stats = BinanceSpotApi::get_trades_stats($base, $quote);
 			$trades_stats [$symbol] = $trade_stats;
 			$trades_stats [$symbol] ["base"] = $base;
 			$trades_stats [$symbol] ["quote"] = $quote;
+			$trades_stats [$symbol] ["price"] = $ticker_prices [$symbol] ["price"];
 		}
 		$f3->set("trades_stats", $trades_stats);
 

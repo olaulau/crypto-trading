@@ -182,4 +182,16 @@ class BinanceSpotApi
 		return $data;
 	}
 	
+	
+	public static function get_ticker_price (array $symbols) : array
+	{
+		$spot_api = static::get_spot_api();
+		$response = $spot_api->tickerPrice (null, $symbols);
+		$data = $response->getData(); /** @var TickerPriceResponse $data */
+		$response2 = $data->getTickerPriceResponse2();
+		$res = Binance::responseData_to_table ($response2);
+		$res = Stuff::array_group_by($res ["items"], "symbol", false);
+		return $res;
+	}
+	
 }
