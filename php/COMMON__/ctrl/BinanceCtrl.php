@@ -52,37 +52,45 @@ class BinanceCtrl extends PrivateCtrl
 		$spot_api = new SpotRestApi($configurationBuilder->build());
 
 		# server time
-		// $response = $spot_api->time();
-		// var_dump($response->getData());
+		$response = $spot_api->time();
+		$data = BinanceSpotApi::responseData_to_table($response->getData());
+		var_dump($data);
 
 		# infos about symbols
 		// $response = $spot_api->exchangeInfo(null, ["ETHEUR", "BNBEUR"], null, false);
-		// var_dump($response->getData());
+		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// var_dump($data);
 
 		# orders
 		// $response = $spot_api->allOrders(IndexCtrl::$crypto_pair);
-		// var_dump($response->getData());
+		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// var_dump($data);
 
 		# order lists
 		// $response = $spot_api->allOrderList();
-		// var_dump($response->getData());
+		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// var_dump($data);
 
 		# symbol current price
 		// $response = $spot_api->avgPrice(IndexCtrl::$crypto_pair);
-		// var_dump($response->getData());
+		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// var_dump($data);
 
 		# open orders
 		// $response = $spot_api->getOpenOrders();
-		// var_dump($response->getData());
+		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// var_dump($data);
 
 		# account info
 		# container -> balances = my assets (base)
 		// $response = $spot_api->getAccount(true);
-		// var_dump($response->getData());
+		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// var_dump($data);
 
 		# klines
 		// $response = $spot_api->klines(IndexCtrl::$crypto_pair, "1d");
-		// var_dump($response->getData());
+		// $data = BinanceSpotApi::responseData_to_table($response->getData());
+		// var_dump($data);
 		
 		die;
 	}
@@ -106,7 +114,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$res = BinanceSpotApi::get_used_symbols_from_order_lists();
+		$res = BinanceSpotApi::get_account();
 		var_dump($res);
 		
 		die;

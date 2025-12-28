@@ -9,15 +9,15 @@
 		<table class="table table-bordered">
 			<thead>
 				<tr>
-					<th>OrderListId</th>
-					<th>OrderId</th> <!-- group by -->
-					<th>Time</th>
-					<th>Price</th>
-					<th>Qty</th>
-					<th>Commission</th>
-					<th>IsBuyer</th>
-					<th>IsMaker</th>
-					<th>IsBestMatch</th>
+					<th>orderListId</th>
+					<th>orderId</th> <!-- group by -->
+					<th>time</th>
+					<th>price</th>
+					<th>qty</th>
+					<th>commission</th>
+					<th>isBuyer</th>
+					<th>isMaker</th>
+					<th>isBestMatch</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -35,14 +35,14 @@
 							<?php
 							}
 							?>
-						<td><?= $row["OrderId"] ?></td>
-						<td><?= Binance::timestamp_to_datetime($row["Time"])->format(Stuff::datetime_french_format . ".u") ?></td>
-						<td> 1 ETH = <?= $row["Price"] ?> €</td>
-						<td><?= $row["Qty"] ?> ETH (<?= $row["QuoteQty"] ?> €)</td>
-						<td><?= $row["Commission"] ?> <?= $row["CommissionAsset"] ?></td>
-						<td><?= $row["IsBuyer"] ?></td>
-						<td><?= $row["IsMaker"] ?></td>
-						<td><?= $row["IsBestMatch"] ?></td>
+						<td><?= $row["orderId"] ?></td>
+						<td><?= Binance::timestamp_to_datetime($row["time"])->format(Stuff::datetime_french_format . ".u") ?></td>
+						<td> 1 ETH = <?= $row["price"] ?> €</td>
+						<td><?= $row["qty"] ?> ETH (<?= $row["quoteQty"] ?> €)</td>
+						<td><?= $row["commission"] ?> <?= $row["commissionAsset"] ?></td>
+						<td><?= $row["isBuyer"] ?></td>
+						<td><?= $row["isMaker"] ?></td>
+						<td><?= $row["isBestMatch"] ?></td>
 						<?php
 						$firstOrder = false;
 					}

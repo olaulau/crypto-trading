@@ -1,11 +1,16 @@
 <?php
 namespace COMMON__\svc;
 
+use ArrayAccess;
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
+use Binance\Client\Spot\Model\GetAccountResponse;
+use Binance\Client\Spot\Model\MyTradesResponse;
 use Binance\Client\Spot\SpotRestApiUtil;
+use Binance\Common\Dtos\ApiResponse;
+use Binance\Common\Dtos\ModelInterface;
 use ErrorException;
-
+use ReflectionObject;
 
 class BinanceSpotApi
 {
@@ -31,28 +36,16 @@ class BinanceSpotApi
 	public static function get_trades (string $crypto_pair) : array
 	{
 		$spot_api = static::get_spot_api();
-		$response = $spot_api->myTrades($crypto_pair);
-		$row = $response->getData(); /** @var MyTradesResponse $row */
-		$items = $row->getItems(); /** @var MyTradesResponseInner[] $items */
-
-		$data = [];
-		foreach ($items as $item) {
-			$row = [];
-			foreach ($item->attributeMap() as $attribute) {
-				$attribute = ucfirst ($attribute);
-				$getter_method_name = "get$attribute";
-				$row [$attribute] = $item->$getter_method_name();
-			}
-			$data [] = $row;
-		}
-		return $data;
+		$response = $spot_api->myTrades($crypto_pair); /** @var ApiResponse $response */
+		$data = static::responseData_to_table($response->getData());
+		return $data ["items"];
 	}
 	
 	
 	public static function get_trades_grouped (string $crypto_pair) : array
 	{
 		$data = static::get_trades($crypto_pair);
-		$data = Stuff::array_group_by($data, "OrderListId");
+		$data = Stuff::array_group_by($data, "orderListId");
 		return $data;
 	}
 	
@@ -174,6 +167,54 @@ class BinanceSpotApi
 			}
 		}
 		return $symbols;
+	}
+	
+	
+	public static function get_account () : array
+	{
+		$spot_api = static::get_spot_api();
+		$response = $spot_api->getAccount(true);
+		$data = $response->getData(); /** @var GetAccountResponse $data */
+		$res = static::responseData_to_table($data);
+		return $res;
+	}
+	
+	
+	public static function responseData_to_table (mixed $data) : mixed
+	{
+		$res = [];
+		if ($data instanceof ModelInterface) {
+			$attributes = $data->attributeMap();
+			foreach ($attributes as $attribute) {
+				$method_name = "get" . ucfirst($attribute);
+				$elem = $data->$method_name();
+				if(is_object($elem) || is_array($elem)) {
+					$res [$attribute] = static::responseData_to_table($elem);
+				}
+				else {
+					$res [$attribute] = $elem;
+				}
+			}
+		}
+		elseif ($data instanceof ArrayAccess) {
+			throw new ErrorException("not implemented : ArrayAccess");
+		}
+		elseif (is_object($data)) {
+			$ref = new ReflectionObject($data);
+			foreach ($ref->getProperties() as $prop) {
+				$elem = $prop->getValue($data);
+				$res [$prop->getName()] = static::responseData_to_table($elem);
+			}
+		}
+		elseif (is_array($data)) {
+			foreach ($data as $key => $elem) {
+				$res [$key] = static::responseData_to_table($elem);
+			}
+		}
+		else {
+			$res = $data;
+		}
+		return $res;
 	}
 	
 }
