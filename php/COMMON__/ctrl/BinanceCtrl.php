@@ -71,7 +71,7 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 		
 		# trades stats
-		// $data = BinanceSpotApi::get_trades_stats("ETH", "EUR");
+		// $data = BinanceSpotApi::get_trades_stats("ETHEUR");
 		// var_dump($data);
 		
 		# used symbols
@@ -108,14 +108,16 @@ class BinanceCtrl extends PrivateCtrl
 
 	public static function tradesGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceSpotApi::get_trades_grouped(IndexCtrl::$crypto_pair);
+		// $symbol = IndexCtrl::$crypto_pair;
+		$symbol = "DOGEEUR";
+		$data = BinanceSpotApi::get_trades_grouped($symbol);
 		$f3->set("data", $data);
 
 		$page = [
 			"module"	=>	"COMMON__",
 			"layout"	=>	"default",
 			"name"		=>	"binance/trades",
-			"title"		=>	"Trades " . IndexCtrl::$crypto_pair,
+			"title"		=>	"Trades {$symbol}",
 			"breadcrumbs" => static::breadcrumbs(),
 		];
 		self::renderPage($page);
@@ -131,6 +133,9 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function dashboardGET (Base $f3, $url, $controler)
 	{
+		$balances = BinanceSpotApi::get_account_balances_consolidated();
+		// $balance_assets = array_keys($balances);
+		#TODO integrate this as source, so that we don't miss EUR
 		$used_symbols = BinanceSpotApi::get_used_symbols_from_order_lists();
 		
 		$exchange_infos = BinanceSpotApi::get_exchange_infos ($used_symbols);
@@ -138,8 +143,6 @@ class BinanceCtrl extends PrivateCtrl
 		$symbols_infos_indexed = stuff::array_group_by($symbols_infos, "symbol", false);
 		
 		$ticker_prices = BinanceSpotApi::get_ticker_price($used_symbols);
-		
-		$balances = BinanceSpotApi::get_account_balances_consolidated();
 		
 		$trades_stats = [];
 		foreach ($used_symbols as $symbol) {

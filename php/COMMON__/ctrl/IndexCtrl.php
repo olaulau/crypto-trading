@@ -17,7 +17,7 @@ class IndexCtrl extends PrivateCtrl
 {
 	
 	public final static $binance_data_directory = __DIR__ . "/../../../data/binance/";
-	public final static $crypto_pair = "ETHEUR";
+	public final static $symbol = "ETHEUR";
 	public final static $small_candle_size = "15m";
 	public final static $sql_read_limit = 10000;
 	public final static $date_start = "2024-01-01 00:00:00";
@@ -82,7 +82,7 @@ class IndexCtrl extends PrivateCtrl
 		
 		while (!$date->diff($max)->invert) {
 			$month = $date->format("Y-m");
-			$filename = static::$crypto_pair."-".static::$small_candle_size."-{$month}";
+			$filename = static::$symbol."-".static::$small_candle_size."-{$month}";
 			$url = "$base_path$filename.zip";
 			$dest = static::$binance_data_directory . $filename; #TODO test var refacto
 			
@@ -147,7 +147,7 @@ class IndexCtrl extends PrivateCtrl
 				# write into DB
 				$kline = new Kline;
 				$kline->copyfrom($row);
-				$kline->crypto_pair = static::$crypto_pair;
+				$kline->crypto_pair = static::$symbol;
 				$kline->candle_size = static::$small_candle_size;
 				$kline->open_time = Binance::timestamp_to_datetime($row ["open_time"])->format("Y-m-d H:i:s");
 				$kline->close_time = Binance::timestamp_to_datetime($row ["close_time"])->format("Y-m-d H:i:s");
@@ -193,7 +193,7 @@ class IndexCtrl extends PrivateCtrl
 		$offset = 0;
 		$price_window = [];
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$crypto_pair, static::$small_candle_size, static::$date_start, static::$date_end],
+		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
 		["limit" => static::$sql_read_limit, "offset" => $offset])) {
 			if ($offset === 0) {
 				# start variables
@@ -341,7 +341,7 @@ class IndexCtrl extends PrivateCtrl
 		$buffer = new Buffer ($buffer_size);
 		$offset = 0;
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$crypto_pair, static::$small_candle_size, static::$date_start, static::$date_end],
+		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
 		["limit" => static::$sql_read_limit, "offset" => $offset])) {
 			do {
 				$open_time = $kline_wrapper->open_time; /** @var DateTime $open_time */
@@ -364,7 +364,7 @@ class IndexCtrl extends PrivateCtrl
 	private static function candles_aggregate (Buffer $candles, string $big_candle_size) : Kline
 	{
 		$res = new Kline;
-		$res->crypto_pair = static::$crypto_pair;
+		$res->crypto_pair = static::$symbol;
 		$res->candle_size = $big_candle_size;
 		
 		$first_candle = $candles->first();
@@ -432,7 +432,7 @@ class IndexCtrl extends PrivateCtrl
 			LIMIT		1
 		";
 		$args = [
-			static::$crypto_pair,
+			static::$symbol,
 			static::$date_start,
 			static::$date_end,
 			$max_result,
@@ -453,7 +453,7 @@ class IndexCtrl extends PrivateCtrl
 				LIMIT		1
 			";
 			$args = [
-				static::$crypto_pair,
+				static::$symbol,
 				static::$date_start,
 				static::$date_end,
 				$max_result,
@@ -476,7 +476,7 @@ class IndexCtrl extends PrivateCtrl
 			AND		open_time <= ?
 		";
 		$args = [
-			static::$crypto_pair,
+			static::$symbol,
 			$candle_size,
 			static::$date_start,
 			static::$date_end,

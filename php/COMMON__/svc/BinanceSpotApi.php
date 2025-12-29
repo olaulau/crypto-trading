@@ -47,14 +47,15 @@ class BinanceSpotApi
 	}
 	
 	
-	public static function get_trades_stats (string $base_asset, $quote_asset)
+	public static function get_trades_stats (string $base_asset, string $quote_asset)
 	{
+		$symbol = "{$base_asset}{$quote_asset}";
+		
 		# config
-		$crypto_pair = "{$base_asset}{$quote_asset}";
 		$quote_dust_threashold = 10; # if we have less that threshold €/$ of remaining asset, reset stats (to cancel lost quote)
 		
 		# get trades
-		$data = BinanceSpotApi::get_trades ($crypto_pair);
+		$data = BinanceSpotApi::get_trades ($symbol);
 		
 		# init
 		$res = [
@@ -77,65 +78,65 @@ class BinanceSpotApi
 		# treat trades
 		foreach ($data as $trade) {
 			// var_dump($trade);
-			if ($trade ["symbol"] !== $crypto_pair) {
+			if ($trade ["symbol"] !== $symbol) {
 				throw new ErrorException("wrong symbol found in trade : {$trade ["symbol"]}");
 			}
-			// echo Binance::timestamp_to_datetime($trade ["Time"]) -> format(Stuff::datetime_sql_format) . " <br/>" . PHP_EOL;
+			// echo Binance::timestamp_to_datetime($trade ["time"]) -> format(Stuff::datetime_sql_format) . " <br/>" . PHP_EOL;
 			
 			if ($trade ["isBuyer"] === true) {
-				// echo "- BUY {$trade ["Qty"]} {$base_asset} @ {$trade ["Price"]} = {$trade ["QuoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
-				 $res ["entry"] ["last"] = $trade ["time"];
-				 $res ["entry"] ["quantity"] += $trade ["qty"];
-				 $res ["entry"] ["cost"] += $trade ["quoteQty"];
-				 $res ["exit"] ["quantity"] = max( $res ["exit"] ["quantity"] - $trade ["qty"], 0);
-				 $res ["exit"] ["cost"] = max( $res ["exit"] ["cost"] - $trade ["quoteQty"], 0);
+				// echo "- BUY {$trade ["qty"]} {$base_asset} @ {$trade ["price"]} = {$trade ["quoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
+				$res ["entry"] ["last"] = $trade ["time"];
+				$res ["entry"] ["quantity"] += $trade ["qty"];
+				$res ["entry"] ["cost"] += $trade ["quoteQty"];
+				$res ["exit"] ["quantity"] = max( $res ["exit"] ["quantity"] - $trade ["qty"], 0);
+				$res ["exit"] ["cost"] = max( $res ["exit"] ["cost"] - $trade ["quoteQty"], 0);
 			}
 			else {
-				// echo "- SELL {$trade ["Qty"]} {$base_asset} @ {$trade ["Price"]} = {$trade ["QuoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
-				 $res ["exit"] ["last"] = $trade ["time"];
-				 $res ["entry"] ["quantity"] = max( $res ["entry"] ["quantity"] - $trade ["qty"], 0);
-				 $res ["entry"] ["cost"] = max( $res ["entry"] ["cost"] - $trade ["quoteQty"], 0);
-				 $res ["exit"] ["quantity"] += $trade ["qty"];
-				 $res ["exit"] ["cost"] += $trade ["quoteQty"];
+				// echo "- SELL {$trade ["qty"]} {$base_asset} @ {$trade ["price"]} = {$trade ["quoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
+				$res ["exit"] ["last"] = $trade ["time"];
+				$res ["entry"] ["quantity"] = max( $res ["entry"] ["quantity"] - $trade ["qty"], 0);
+				$res ["entry"] ["cost"] = max( $res ["entry"] ["cost"] - $trade ["quoteQty"], 0);
+				$res ["exit"] ["quantity"] += $trade ["qty"];
+				$res ["exit"] ["cost"] += $trade ["quoteQty"];
 			}
 			
-			 $res ["entry"] ["quote"] =  $res ["entry"] ["quantity"] * $trade ["price"];
-			if ( $res ["entry"] ["quantity"] != 0) {
-				 $res ["entry"] ["avg"] =  $res ["entry"] ["cost"] /  $res ["entry"] ["quantity"];
+			$res ["entry"] ["quote"] = $res ["entry"] ["quantity"] * $trade ["price"];
+			if ($res ["entry"] ["quantity"] != 0) {
+				$res ["entry"] ["avg"] =  $res ["entry"] ["cost"] /  $res ["entry"] ["quantity"];
 			}
 			else {
-				 $res ["entry"] ["avg"] = 0;
+				$res ["entry"] ["avg"] = 0;
 			}
 			
-			 $res ["exit"] ["quote"] =  $res ["exit"] ["quantity"] * $trade ["price"];
-			if ( $res ["exit"] ["quantity"] != 0) {
-				 $res ["exit"] ["avg"] =  $res ["exit"] ["cost"] /  $res ["exit"] ["quantity"];
+			$res ["exit"] ["quote"] = $res ["exit"] ["quantity"] * $trade ["price"];
+			if ($res ["exit"] ["quantity"] != 0) {
+				$res ["exit"] ["avg"] =  $res ["exit"] ["cost"] /  $res ["exit"] ["quantity"];
 			}
 			else {
-				 $res ["exit"] ["avg"] = 0;
+				$res ["exit"] ["avg"] = 0;
 			}
 			
-			// echo " entry => " .  $res ["entry"] ["quantity"] . " {$base_asset} = { $res ["entry"] ["quote"]} {$quote_asset} <=> "
-			// 	 .  $res ["entry"] ["cost"] . " {$quote_asset} @ { $res ["entry"] ["avg"]} <br/>" . PHP_EOL;
-			if ( $res ["entry"] ["quote"] > 0 &&  $res ["entry"] ["quote"] < $quote_dust_threashold) {
-				 $res ["entry"] ["quantity"] = 0;
-				 $res ["entry"] ["cost"] = 0;
+			// echo " entry => {$res ["entry"] ["quantity"]} {$base_asset} = {$res ["entry"] ["quote"]} {$quote_asset} <=> "
+			// 	 .  "{$res ["entry"] ["cost"]} {$quote_asset} @ {$res ["entry"] ["avg"]} <br/>" . PHP_EOL;
+			if ($res ["entry"] ["quote"] > 0 &&  $res ["entry"] ["quote"] < $quote_dust_threashold) {
+				$res ["entry"] ["quantity"] = 0;
+				$res ["entry"] ["cost"] = 0;
 				// echo " entry dust reset <br/>" . PHP_EOL;
 			}
 			
-			// echo " exit => " .  $res ["exit"] ["quantity"] . " {$base_asset} = { $res ["exit"] ["quote"]} {$quote_asset} <=> "
-			// 	 .  $res ["exit"] ["cost"] . " {$quote_asset} @ { $res ["exit"] ["avg"]} <br/>" . PHP_EOL;
-			if ( $res ["exit"] ["quote"] > 0 &&  $res ["exit"] ["quote"] < $quote_dust_threashold) {
-				 $res ["exit"] ["quantity"] = 0;
-				 $res ["exit"] ["cost"] = 0;
+			// echo " exit => {$res ["exit"] ["quantity"]} {$base_asset} = {$res ["exit"] ["quote"]} {$quote_asset} <=> "
+			// 	 .  "{$res ["exit"] ["cost"]} {$quote_asset} @ {$res ["exit"] ["avg"]} <br/>" . PHP_EOL;
+			if ($res ["exit"] ["quote"] > 0 &&  $res ["exit"] ["quote"] < $quote_dust_threashold) {
+				$res ["exit"] ["quantity"] = 0;
+				$res ["exit"] ["cost"] = 0;
 				// echo " exit dust reset <br/>" . PHP_EOL;
 			}
 			
 			// echo "<br/>" . PHP_EOL;
 		}
 		
-		// echo "==> entry (buy) avg = { $res ["entry"] ["avg"]} <br/>" . PHP_EOL;
-		// echo "==> exit (sell) avg = { $res ["exit"] ["avg"]} <br/>" . PHP_EOL;
+		// echo "==> entry (buy) avg = {$res ["entry"] ["avg"]} <br/>" . PHP_EOL;
+		// echo "==> exit (sell) avg = {$res ["exit"] ["avg"]} <br/>" . PHP_EOL;
 		return $res;
 	}
 	
