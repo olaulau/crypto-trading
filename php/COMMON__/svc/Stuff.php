@@ -1,7 +1,6 @@
 <?php
 namespace COMMON__\svc;
 
-use DateTimeImmutable;
 use DB\SQL\Mapper;
 use ErrorException;
 
@@ -118,6 +117,57 @@ class Stuff
 			}
 		}
 		return $res;
+	}
+	
+	
+	public static function array_display_table (array $matrix)
+	{
+		if (empty($matrix)) {
+			return;
+		}
+		
+		$headers = array_keys($matrix [0]);
+		?>
+		<table>
+			<thead>
+				<tr>
+					<?php
+					foreach ($headers as $header) {
+						?>
+						<th><?= $header ?></th>
+						<?php
+					}
+					?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				foreach ($matrix as $row) {
+					?>
+					<tr>
+					<?php
+					foreach ($headers as $header) {
+						$val = $row [$header];
+						?>
+						
+						<td><?= $val ?></td>
+						<?php
+					}
+					?>
+					</tr>
+					<?php
+				}
+				?>
+			</tbody>
+			<!--
+			<tfoot>
+				<tr>
+					<th></th>
+				</tr>
+			</tfoot>
+			 -->
+		</table>
+		<?php
 	}
 	
 }

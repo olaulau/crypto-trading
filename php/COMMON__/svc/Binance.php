@@ -3,6 +3,7 @@ namespace COMMON__\svc;
 
 use ArrayAccess;
 use Binance\Common\Dtos\ModelInterface;
+use DateInterval;
 use DateTime;
 use DateTimeInterface;
 use ErrorException;
@@ -11,6 +12,8 @@ use ReflectionObject;
 
 class Binance
 {
+	
+	public final const quote_dust_threashold = 10;
 	
 	public final static $kline_format = [
 		"open_time",
@@ -36,19 +39,17 @@ class Binance
 		"30m"	 => 30 * 60,
 		"1h"	 => 60 * 60,
 		"2h"	 => 2 * 60 * 60,
-		"4h"	 => 4 * 60 * 60,
+		"3h"	 => 3 * 60 * 60,
 		"6h"	 => 6 * 60 * 60,
-		"8h"	 => 8 * 60 * 60,
 		"12h"	 => 12 * 60 * 60,
 		"1d"	 => 24 * 60 * 60,
 		// "3d"	 => 3 * 24 * 60 * 60,
 		// "1w"	 => 7 * 24 * 60 * 60,
 		// "1mo"	 => 30 * 24 * 60 * 60,
-		"7d"	 => 3 * 24 * 60 * 60,
-		"30d"	 => 3 * 24 * 60 * 60,
-		"60d"	 => 3 * 24 * 60 * 60,
-		"90d"	 => 3 * 24 * 60 * 60,
-		"1y"	 => 3 * 24 * 60 * 60,
+		"7d"	 => 7 * 24 * 60 * 60,
+		"28d"	 => 28 * 24 * 60 * 60,
+		"84d"	 => 84 * 24 * 60 * 60,
+		// "1y"	 => 365 * 24 * 60 * 60,
 	];
 	
 	
@@ -86,7 +87,7 @@ class Binance
 			foreach ($attributes as $attribute) {
 				$method_name = "get" . ucfirst($attribute);
 				$elem = $data->$method_name();
-				if(is_object($elem) || is_array($elem)) {
+				if (is_object($elem) || is_array($elem)) {
 					$res [$attribute] = static::responseData_to_table($elem);
 				}
 				else {
@@ -112,6 +113,113 @@ class Binance
 		else {
 			$res = $data;
 		}
+		return $res;
+	}
+	
+	
+	public static function get_all_trades_sorted (string $symbol)
+	{
+		$spot_trades = BinanceSpotApi::get_trades ($symbol);
+		
+		$convert_trades = BinanceConvertApi::get_trade_history_large_for_symbol ((new DateTime)->sub(new DateInterval("P4M")), new DateTime, $symbol); #TODO find accurate start date for account
+		
+		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
+		$all_trades = array_merge($spot_trades, $convert_trades);
+		
+		$sort = array_column($all_trades, "time");
+		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $all_trades);
+		return $all_trades;
+	}
+	
+	
+	public static function get_trades_stats (string $base_asset, string $quote_asset)
+	{
+		# get trades
+		$symbol = "{$base_asset}{$quote_asset}";
+		$all_trades = static::get_all_trades_sorted ($symbol);
+		
+		# init
+		$res = [
+			"entry" => [
+				"quantity"	=> 0,
+				"cost"		=> 0,
+				"quote"		=> 0,
+				"avg"		=> 0,
+				"last"		=> 0,
+			],
+			"exit" => [
+				"quantity"	=> 0,
+				"cost"		=> 0,
+				"quote"		=> 0,
+				"avg"		=> 0,
+				"last"		=> 0,
+			],
+		];
+		
+		# treat trades
+		foreach ($all_trades as $trade) {
+			var_dump($trade);
+			if ($trade ["symbol"] !== $symbol) {
+				throw new ErrorException("wrong symbol found in trade : {$trade ["symbol"]}");
+			}
+			echo Binance::timestamp_to_datetime ($trade ["time"]) -> format(Stuff::datetime_sql_format) . " <br/>" . PHP_EOL;
+			
+			if ($trade ["isBuyer"] === true) {
+				echo "- BUY {$trade ["qty"]} {$base_asset} @ {$trade ["price"]} = {$trade ["quoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
+				$res ["entry"] ["last"] = $trade ["time"];
+				$res ["entry"] ["quantity"] += $trade ["qty"];
+				$res ["entry"] ["cost"] += $trade ["quoteQty"];
+				$res ["exit"] ["quantity"] = max( $res ["exit"] ["quantity"] - $trade ["qty"], 0);
+				$res ["exit"] ["cost"] = max( $res ["exit"] ["cost"] - $trade ["quoteQty"], 0);
+			}
+			else {
+				echo "- SELL {$trade ["qty"]} {$base_asset} @ {$trade ["price"]} = {$trade ["quoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
+				$res ["exit"] ["last"] = $trade ["time"];
+				$res ["entry"] ["quantity"] = max( $res ["entry"] ["quantity"] - $trade ["qty"], 0);
+				$res ["entry"] ["cost"] = max( $res ["entry"] ["cost"] - $trade ["quoteQty"], 0);
+				$res ["exit"] ["quantity"] += $trade ["qty"];
+				$res ["exit"] ["cost"] += $trade ["quoteQty"];
+			}
+			$res ["entry"] ["quote"] = $res ["entry"] ["quantity"] * $trade ["price"];
+			$res ["exit"] ["quote"] = $res ["exit"] ["quantity"] * $trade ["price"];
+			
+			# dust reset
+			if ($res ["entry"] ["quote"] > 0 && $res ["entry"] ["quote"] < static::quote_dust_threashold) {
+				echo " entry dust reset <br/>" . PHP_EOL;
+				$res ["entry"] ["quantity"] = 0;
+				$res ["entry"] ["cost"] = 0;
+				$res ["entry"] ["quote"] = 0;
+			}
+			if ($res ["exit"] ["quote"] > 0 && $res ["exit"] ["quote"] < static::quote_dust_threashold) {
+				echo " exit dust reset <br/>" . PHP_EOL;
+				$res ["exit"] ["quantity"] = 0;
+				$res ["exit"] ["cost"] = 0;
+				$res ["exit"] ["quote"] = 0;
+			}
+			
+			# avg compute
+			if ($res ["entry"] ["quantity"] != 0) {
+				$res ["entry"] ["avg"] =  $res ["entry"] ["cost"] /  $res ["entry"] ["quantity"];
+			}
+			else {
+				$res ["entry"] ["avg"] = 0;
+			}
+			if ($res ["exit"] ["quantity"] != 0) {
+				$res ["exit"] ["avg"] =  $res ["exit"] ["cost"] /  $res ["exit"] ["quantity"];
+			}
+			else {
+				$res ["exit"] ["avg"] = 0;
+			}
+			
+			echo " entry => {$res ["entry"] ["quantity"]} {$base_asset} = {$res ["entry"] ["quote"]} {$quote_asset} <=> "
+				 .  "{$res ["entry"] ["cost"]} {$quote_asset} @ {$res ["entry"] ["avg"]} <br/>" . PHP_EOL;
+			echo " exit => {$res ["exit"] ["quantity"]} {$base_asset} = {$res ["exit"] ["quote"]} {$quote_asset} <=> "
+				.  "{$res ["exit"] ["cost"]} {$quote_asset} @ {$res ["exit"] ["avg"]} <br/>" . PHP_EOL;
+			echo "<br/>" . PHP_EOL;
+		}
+		
+		echo "==> entry (buy) avg = {$res ["entry"] ["avg"]} <br/>" . PHP_EOL;
+		echo "==> exit (sell) avg = {$res ["exit"] ["avg"]} <br/>" . PHP_EOL;
 		return $res;
 	}
 	

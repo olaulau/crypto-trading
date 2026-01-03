@@ -1,3 +1,8 @@
+<?php
+
+use COMMON__\svc\Binance;
+use COMMON__\svc\Stuff;
+?>
 		<h1><?= $page["title"] ?></h1>
 
 		<table class="table table-bordered">
@@ -28,14 +33,17 @@
 							<?= $trade_stat ["quote_asset"] ?>
 						</td>
 						<td>
-							<?= $trade_stat ["price"] ?> <?= $trade_stat ["quote_asset"] ?> / <?= $trade_stat ["base_asset"] ?>
+							<?= Stuff::format_float_significative($trade_stat ["price"], 6) ?> <?= $trade_stat ["quote_asset"] ?> / <?= $trade_stat ["base_asset"] ?>
 						</td>
 						<td>
 							<?php
 							if(!empty($trade_stat ["balance"] )) {
+								$low_balance = $trade_stat ["quote_balance"] < Binance::quote_dust_threashold;
 								?>
-								<?= $trade_stat ["balance"] ?> <?= $trade_stat ["base_asset"] ?> <br/>
-								(<?= $trade_stat ["quote_balance"] ?> <?= $trade_stat ["quote_asset"] ?>)
+								<span class="<?= $low_balance ? "text-secondary" : "" ?>">
+									<?= Stuff::format_float_significative($trade_stat ["balance"], 6) ?> <?= $trade_stat ["base_asset"] ?> <br/>
+									(<?= Stuff::format_float_significative($trade_stat ["quote_balance"], 6) ?> <?= $trade_stat ["quote_asset"] ?>)
+								</span>
 								<?php
 							}
 							?>
@@ -44,18 +52,18 @@
 							<?php
 							if(!empty($trade_stat ["entry"] ["avg"])) {
 								?>
-								<?= ($trade_stat ["price"] - $trade_stat ["entry"] ["avg"]) / $trade_stat ["entry"] ["avg"] * 100 ?> %
+								<?= Stuff::percent_format(($trade_stat ["price"] - $trade_stat ["entry"] ["avg"]) / $trade_stat ["entry"] ["avg"] * 100) ?>
 								<?php
 							}
 							?>
 						</td>
 						<td>
-							<?= $trade_stat ["entry"] ["quote"] ?> <?= $trade_stat ["quote_asset"] ?> <br/>
-							@ <?= $trade_stat ["entry"] ["avg"] ?> <?= $trade_stat ["quote_asset"] ?> / <?= $trade_stat ["base_asset"] ?>
+							<?= Stuff::format_float_significative($trade_stat ["entry"] ["quote"], 6) ?> <?= $trade_stat ["quote_asset"] ?> <br/>
+							@ <?= Stuff::format_float_significative($trade_stat ["entry"] ["avg"], 6) ?> <?= $trade_stat ["quote_asset"] ?> / <?= $trade_stat ["base_asset"] ?>
 						</td>
 						<td>
-							<?= $trade_stat ["exit"] ["quote"] ?> <?= $trade_stat ["quote_asset"] ?> <br/>
-							@ <?= $trade_stat ["exit"] ["avg"] ?> <?= $trade_stat ["quote_asset"] ?> / <?= $trade_stat ["base_asset"] ?>
+							<?= Stuff::format_float_significative($trade_stat ["exit"] ["quote"], 6) ?> <?= $trade_stat ["quote_asset"] ?> <br/>
+							@ <?= Stuff::format_float_significative($trade_stat ["exit"] ["avg"], 6) ?> <?= $trade_stat ["quote_asset"] ?> / <?= $trade_stat ["base_asset"] ?>
 						</td>
 					</tr>
 				<?php

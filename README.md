@@ -4,8 +4,10 @@ composer install
 cp conf/user.dist.ini user.ini
 vim user.ini
 
+
 # config
 default password is 'admin', don't forget to change it
+
 
 
 # TODO
@@ -24,6 +26,7 @@ default password is 'admin', don't forget to change it
 - better algorythm
 
 - manque un index unique sur crypto_pair / candle_size / open_time
+
 
 
 # NEXT

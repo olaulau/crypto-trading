@@ -72,7 +72,7 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 		
 		# trades stats
-		// $data = BinanceSpotApi::get_trades_stats("ETHEUR");
+		// $data = Binance::get_trades_stats("ETHEUR");
 		// var_dump($data);
 		
 		# used symbols
@@ -103,6 +103,10 @@ class BinanceCtrl extends PrivateCtrl
 		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 		
+		# convert trades
+		// $trade_history = BinanceConvertApi::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
+		// var_dump($trade_history);
+		
 		die;
 	}
 
@@ -110,7 +114,7 @@ class BinanceCtrl extends PrivateCtrl
 	public static function tradesGET (Base $f3, $url, $controler)
 	{
 		// $symbol = IndexCtrl::$crypto_pair;
-		$symbol = "DOGEEUR";
+		$symbol = "DOGEEUR"; ///////////////////
 		$data = BinanceSpotApi::get_trades_grouped($symbol);
 		$f3->set("data", $data);
 
@@ -127,16 +131,18 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$start = (new DateTimeImmutable())->sub(new DateInterval("P4M"));
-		$end = $start->add(new DateInterval("P4M"));
-		$trade_history = BinanceConvertApi::get_trade_history_large($start, $end);
+		$convert_trades = BinanceConvertApi::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), (new DateTime));
+		Stuff::array_display_table($convert_trades);
 		
-		foreach ($trade_history as $trade) {
-			$timestamp = $trade ["createTime"];
-			$date = DateTime::createFromTimestamp($timestamp/1000);
-			$date_formated = $date->format("Y-m-d H:i:s.u");
-			echo "{$date_formated} : {$trade ["fromAmount"]} {$trade ["fromAsset"]} => {$trade ["toAmount"]} {$trade ["toAsset"]} @ {$trade ["ratio"]} <br/>" . PHP_EOL;
-		}
+		// $converted = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
+		// Stuff::array_display_table($converted);
+		
+		// $symbol = "ETHEUR";
+		// $all_trades = Binance::get_all_trades_sorted($symbol);
+		// Stuff::array_display_table($all_trades);
+		
+		// $trade_stats = Binance::get_trades_stats("ETH", "EUR");
+		// var_dump($trade_stats);
 		
 		die;
 	}
@@ -151,7 +157,7 @@ class BinanceCtrl extends PrivateCtrl
 		
 		$exchange_infos = BinanceSpotApi::get_exchange_infos ($used_symbols);
 		$symbols_infos = $exchange_infos ["symbols"];
-		$symbols_infos_indexed = stuff::array_group_by($symbols_infos, "symbol", false);
+		$symbols_infos_indexed = Stuff::array_group_by($symbols_infos, "symbol", false);
 		
 		$ticker_prices = BinanceSpotApi::get_ticker_price($used_symbols);
 		
@@ -161,7 +167,7 @@ class BinanceCtrl extends PrivateCtrl
 			$base_asset = $symbol_infos ["baseAsset"];
 			$quote_asset = $symbol_infos ["quoteAsset"];
 			
-			$trade_stats = BinanceSpotApi::get_trades_stats($base_asset, $quote_asset);
+			$trade_stats = Binance::get_trades_stats($base_asset, $quote_asset);
 			$trades_stats [$symbol] = $trade_stats;
 			$trades_stats [$symbol] ["base_asset"] = $base_asset;
 			$trades_stats [$symbol] ["quote_asset"] = $quote_asset;
