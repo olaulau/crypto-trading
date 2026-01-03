@@ -167,13 +167,18 @@ class BinanceCtrl extends PrivateCtrl
 			$base_asset = $symbol_infos ["baseAsset"];
 			$quote_asset = $symbol_infos ["quoteAsset"];
 			
-			$trade_stats = Binance::get_trades_stats($base_asset, $quote_asset);
-			$trades_stats [$symbol] = $trade_stats;
+			$balance = $balances [$base_asset] ?? null;
+			$quote_balance = isset($balances [$base_asset]) ? ($balances [$base_asset] * $ticker_prices [$symbol] ["price"]) : null;
+			
+			if ($quote_balance > Binance::quote_dust_threashold) {
+				$trade_stats = Binance::get_trades_stats($base_asset, $quote_asset);
+				$trades_stats [$symbol] = $trade_stats;
+			}
 			$trades_stats [$symbol] ["base_asset"] = $base_asset;
 			$trades_stats [$symbol] ["quote_asset"] = $quote_asset;
 			$trades_stats [$symbol] ["price"] = $ticker_prices [$symbol] ["price"];
-			$trades_stats [$symbol] ["balance"] = $balances [$base_asset] ?? null;
-			$trades_stats [$symbol] ["quote_balance"] = isset($balances [$base_asset]) ? ($balances [$base_asset] * $ticker_prices [$symbol] ["price"]) : null;
+			$trades_stats [$symbol] ["balance"] = $balance;
+			$trades_stats [$symbol] ["quote_balance"] = $quote_balance;
 		}
 		$f3->set("trades_stats", $trades_stats);
 
