@@ -4,13 +4,14 @@ namespace COMMON__\ctrl;
 
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
-use Binance\Client\Spot\Model\Symbols;
-use Binance\Client\Spot\Model\TickerPriceResponse;
 use Binance\Client\Spot\SpotRestApiUtil;
-use COMMON__\mdl\Kline;
 use COMMON__\svc\Binance;
+use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\Stuff;
+use DateInterval;
+use DateTime;
+use DateTimeImmutable;
 use ErrorException;
 
 
@@ -126,6 +127,16 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
+		$start = (new DateTimeImmutable())->sub(new DateInterval("P4M"));
+		$end = $start->add(new DateInterval("P4M"));
+		$trade_history = BinanceConvertApi::get_trade_history_large($start, $end);
+		
+		foreach ($trade_history as $trade) {
+			$timestamp = $trade ["createTime"];
+			$date = DateTime::createFromTimestamp($timestamp/1000);
+			$date_formated = $date->format("Y-m-d H:i:s.u");
+			echo "{$date_formated} : {$trade ["fromAmount"]} {$trade ["fromAsset"]} => {$trade ["toAmount"]} {$trade ["toAsset"]} @ {$trade ["ratio"]} <br/>" . PHP_EOL;
+		}
 		
 		die;
 	}
