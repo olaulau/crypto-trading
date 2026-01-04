@@ -139,18 +139,10 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$all_spot_trades = BinanceSpotApiCached::get_all_trades_cached();
-		$all_convert_trades = BinanceConvertApiCached::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
-		$all_convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($all_convert_trades);
-		$all_trades = array_merge($all_spot_trades, $all_convert_trades);
-		
-		$sort = array_column($all_trades, "time");
-		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $all_trades);
+		$all_trades = Binance::get_all_trades();
 		
 		$accounting = new Accounting ();
-		foreach ($all_trades as $trade) {
-			$accounting->execute_trade($trade);
-		}
+		$accounting->execute_trades($all_trades);
 		var_dump($accounting);
 		
 		die;

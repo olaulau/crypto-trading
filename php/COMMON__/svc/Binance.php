@@ -13,6 +13,8 @@ use ReflectionObject;
 class Binance
 {
 	
+	public final const reference_asset = "EUR";
+	
 	public final const quote_dust_threashold = 10;
 	
 	public final static $kline_format = [
@@ -221,6 +223,19 @@ class Binance
 		// echo "==> entry (buy) avg = {$res ["entry"] ["avg"]} <br/>" . PHP_EOL;
 		// echo "==> exit (sell) avg = {$res ["exit"] ["avg"]} <br/>" . PHP_EOL;
 		return $res;
+	}
+	
+	
+	public static function get_all_trades () : array
+	{
+		$all_spot_trades = BinanceSpotApiCached::get_all_trades_cached();
+		$all_convert_trades = BinanceConvertApiCached::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime); #TODO
+		$all_convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($all_convert_trades);
+		$all_trades = array_merge($all_spot_trades, $all_convert_trades);
+		
+		$sort = array_column($all_trades, "time");
+		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $all_trades);
+		return $all_spot_trades;
 	}
 	
 }

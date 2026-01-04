@@ -52,7 +52,17 @@ getusedsymbols n'est pas fiable (basé sur orderlists, donc exclue les orders no
 aucun moyen n'existe pour récupérer TOUS les orders via l'API, ni les symbols utilisés
 il faut partir de la balance, et trouver tous les symboles associés, et récupérer les trades de chaque symbole
 [on pourra optimiser ca à l'aide des websockets, pour alléger le live]
-la contrepartie de la vente d'ETH en DASH est complexe, il faut passer par USDC poura rriver en EUR
+la contrepartie de la vente d'ETH en DASH est complexe, il faut passer par USDC pour arriver en EUR
 il faut se basser sur les assets, pas les symbols
-faire la compta gloable de tous les trades de toutes les symbols
+faire la compta globale de tous les trades de tous les symbols
 impacter les 2 parties à chaque trade
+calculer les comissions
+
+
+
+- récupérer les trades en live avec un WS
+- forcer l'actualisation périodique des trades pour les symboles / assets pertinents
+	- balance > 0
+	- trades passés
+- mettre les trades en BdD
+- récupérer les déposit / withdraw FIAT

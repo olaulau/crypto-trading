@@ -75,4 +75,11 @@ class Accounting
 		}
 	}
 	
+	public function execute_trades(array $trades)
+	{
+		foreach ($trades as $trade) {
+			$this->execute_trade($trade);
+		}
+	}
+	
 }
