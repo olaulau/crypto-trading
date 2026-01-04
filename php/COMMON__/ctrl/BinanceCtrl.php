@@ -6,6 +6,7 @@ use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
 use Cache;
+use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceConvertApiCached;
@@ -138,8 +139,19 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceSpotApiCached::get_all_trades_cached ();
-		var_dump($data);
+		$all_spot_trades = BinanceSpotApiCached::get_all_trades_cached();
+		$all_convert_trades = BinanceConvertApiCached::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
+		$all_convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($all_convert_trades);
+		$all_trades = array_merge($all_spot_trades, $all_convert_trades);
+		
+		$sort = array_column($all_trades, "time");
+		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $all_trades);
+		
+		$accounting = new Accounting ();
+		foreach ($all_trades as $trade) {
+			$accounting->execute_trade($trade);
+		}
+		var_dump($accounting);
 		
 		die;
 	}

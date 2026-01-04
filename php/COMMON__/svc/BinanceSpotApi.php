@@ -138,6 +138,7 @@ class BinanceSpotApi
 	{
 		$exchange_infos = static::get_exchange_infos([], false);
 		$symbols = $exchange_infos ["symbols"];
+		$symbols = array_combine (array_column($symbols, "symbol"), $symbols);
 		return $symbols;
 	}
 	

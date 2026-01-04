@@ -8,6 +8,7 @@ use DateTimeInterface;
 class BinanceConvertApiCached
 {
 	
+	#TODO find account start to be able to remove those parameters
 	public static function get_trade_history_large (DateTimeInterface $start, DateTimeInterface $end) : array
 	{
 		$cache = Cache::instance();

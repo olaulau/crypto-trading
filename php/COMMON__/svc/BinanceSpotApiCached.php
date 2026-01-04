@@ -14,11 +14,13 @@ class BinanceSpotApiCached
 		$cache_function = __FUNCTION__;
 		$cache_key = "{$cache_class}__{$cache_function}__{$symbol}";
 		$cache_ttl = 2 * 60;
+		$cache_ttl = 15 * 60; /////////////////////////TODO dev remove
 		
 		if ($cache->exists($cache_key) === false) {
 			$data = BinanceSpotApi::$cache_function($symbol);
 			if ($data === []) {
 				$cache_ttl = 60 * 60; # long cache for symbols without any trade
+				$cache_ttl = 3 * 60 * 60; /////////////////////////TODO dev remove
 			}
 			$cache->set($cache_key, $data, $cache_ttl);
 		}
@@ -35,7 +37,7 @@ class BinanceSpotApiCached
 		
 		$res = [];
 		foreach ($symbols as $symbol) {
-			$trades = static::get_trades($symbol);
+			$trades = static::get_trades($symbol); #TODO too many opened files (guzzlehttp)
 			$res = array_merge($res, $trades);
 		}
 		
