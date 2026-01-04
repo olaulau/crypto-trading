@@ -172,4 +172,68 @@ class BinanceSpotApiCached
 		return $data;
 	}
 	
+	
+	private static function get_all_assets () : array
+	{
+		$symbols = BinanceSpotApiCached::get_all_symbols();
+		$base_assets = array_column($symbols, "baseAsset");
+		$quote_assets = array_column($symbols, "quoteAsset");
+		$assets = array_merge ($base_assets, $quote_assets);
+		sort($assets);
+		$assets = array_unique($assets);
+		return $assets;
+	}
+	
+	public static function get_all_assets_cached () : array
+	{
+		$cache = Cache::instance();
+		$cache_class = "BinanceSpotApiCached";
+		$cache_function = "get_all_assets";
+		$cache_key = "{$cache_class}__{$cache_function}";
+		$cache_ttl = 24 * 60 * 60;
+		
+		if ($cache->exists($cache_key) === false) {
+			$data = BinanceSpotApiCached::$cache_function();
+			$cache->set($cache_key, $data, $cache_ttl);
+		}
+		else {
+			$data = $cache->get($cache_key);
+		}
+		return $data;
+	}
+	
+	
+	private static function guess_symbol_assets (string $symbol) : ?array
+	{
+		$assets = static::get_all_assets_cached();
+		
+		foreach ($assets as $base_asset) {
+			foreach ($assets as $quote_asset) {
+				$tested_symbol = "{$base_asset}{$quote_asset}";
+				if ($tested_symbol === $symbol) {
+					return ["base_asset" => $base_asset, "quote_asset" => $quote_asset];
+				}
+			}
+		}
+		return null;
+	}
+	
+	public static function guess_symbol_assets_cached (string $symbol) : ?array
+	{
+		$cache = Cache::instance();
+		$cache_class = "BinanceSpotApiCached";
+		$cache_function = "guess_symbol_assets";
+		$cache_key = "{$cache_class}__{$cache_function}__{$symbol}";
+		$cache_ttl = 24 * 60 * 60;
+		
+		if ($cache->exists($cache_key) === false) {
+			$data = BinanceSpotApiCached::$cache_function($symbol);
+			$cache->set($cache_key, $data, $cache_ttl);
+		}
+		else {
+			$data = $cache->get($cache_key);
+		}
+		return $data;
+	}
+	
 }

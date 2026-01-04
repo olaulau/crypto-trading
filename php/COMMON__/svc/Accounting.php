@@ -44,17 +44,23 @@ class Accounting
 	{
 		$symbol = $trade ["symbol"];
 		
-		// $symbols = BinanceSpotApiCached::get_all_symbols();
 		if(!isset(static::$symbols [$symbol])) {
-			echo "$symbol from trade doesn't seem to exist <br/>" . PHP_EOL;
-			return; #TODO find why !
+			$assets = BinanceSpotApiCached::guess_symbol_assets_cached($symbol);
+			if (empty($assets)) {
+				echo "$symbol not in current symbols and couldn't be guessed <br/>" . PHP_EOL;
+				return; #TODO find why !
+			}
+			list("base_asset" => $base_asset, "quote_asset" => $quote_asset) = $assets;
 		}
-		$symbol_infos = static::$symbols [$symbol];
-		$base_asset = $symbol_infos ["baseAsset"];
+		else {
+			$symbol_infos = static::$symbols [$symbol];
+			$base_asset = $symbol_infos ["baseAsset"];
+			$quote_asset = $symbol_infos ["quoteAsset"];
+		}
+		
 		if (!$this->exists_account($base_asset)) {
 			$this->create_account($base_asset);
 		}
-		$quote_asset = $symbol_infos ["quoteAsset"];
 		if (!$this->exists_account($quote_asset)) {
 			$this->create_account($quote_asset);
 		}
