@@ -138,17 +138,8 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$cache = Cache::instance();
-		$cache_key = "test";
-		
-		if (!$cache->exists($cache_key)) {
-			sleep(1);
-			$value = "testage";
-			$cache->set($cache_key, $value, 5);
-		}
-		
-		$value = $cache->get($cache_key);
-		var_dump($value);
+		$data = BinanceSpotApiCached::get_symbols_with_asset("DASH");
+		var_dump($data);
 		
 		die;
 	}

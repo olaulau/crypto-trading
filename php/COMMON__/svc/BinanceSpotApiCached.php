@@ -101,4 +101,17 @@ class BinanceSpotApiCached
 		return $data;
 	}
 	
+	
+	public static function get_symbols_with_asset (string $asset) : array
+	{
+		$all_symbols = BinanceSpotApiCached::get_all_symbols();
+		$res = [];
+		foreach ($all_symbols as $symbol) {
+			if ($symbol ["baseAsset"] === $asset || $symbol ["quoteAsset"] === $asset) {
+				$res [] = $symbol ["symbol"];
+			}
+		}
+		return $res;
+	}
+	
 }
