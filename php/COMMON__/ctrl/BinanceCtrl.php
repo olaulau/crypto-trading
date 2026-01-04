@@ -5,8 +5,10 @@ namespace COMMON__\ctrl;
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
+use Cache;
 use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceConvertApi;
+use COMMON__\svc\BinanceConvertApiCached;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\Stuff;
 use DateInterval;
@@ -54,9 +56,9 @@ class BinanceCtrl extends PrivateCtrl
 		$spot_api = new SpotRestApi($configurationBuilder->build());
 
 		# server time
-		$response = $spot_api->time();
-		$data = Binance::responseData_to_table($response->getData());
-		var_dump($data);
+		// $response = $spot_api->time();
+		// $data = Binance::responseData_to_table($response->getData());
+		// var_dump($data);
 
 		# exchange infos
 		// $data = BinanceSpotApi::get_exchange_infos(["ETHEUR", "BNBUSDC"], false);
@@ -108,8 +110,8 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 		
 		# convert trades
-		// $trade_history = BinanceConvertApi::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
-		// var_dump($trade_history);
+		$trade_history = BinanceConvertApiCached::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
+		var_dump($trade_history);
 		
 		die;
 	}
@@ -135,21 +137,17 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		// $convert_trades = BinanceConvertApi::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), (new DateTime));
-		// Stuff::array_display_table($convert_trades);
+		$cache = Cache::instance();
+		$cache_key = "test";
 		
-		// $converted = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
-		// Stuff::array_display_table($converted);
+		if (!$cache->exists($cache_key)) {
+			sleep(1);
+			$value = "testage";
+			$cache->set($cache_key, $value, 5);
+		}
 		
-		// $symbol = "ETHEUR";
-		// $all_trades = Binance::get_all_trades_sorted($symbol);
-		// foreach ($all_trades as &$trade) {
-		// 	$trade ["time"] = Binance::timestamp_to_datetime($trade ["time"])->format(Stuff::datetime_sql_format);
-		// }
-		// Stuff::array_display_table($all_trades);
-		
-		$trade_stats = Binance::get_trades_stats("ETH", "EUR");
-		var_dump($trade_stats);
+		$value = $cache->get($cache_key);
+		var_dump($value);
 		
 		die;
 	}

@@ -67,7 +67,7 @@ class BinanceConvertApi
 	
 	public static function get_trade_history_large_for_symbol (DateTimeInterface $start, DateTimeInterface $end, string $symbol) : array
 	{
-		$trades = static::get_trade_history_large($start, $end);
+		$trades = BinanceConvertApiCached::get_trade_history_large($start, $end);
 		$res = [];
 		foreach ($trades as $trade) {
 			$trade_symbol = $trade ["fromAsset"] . $trade ["toAsset"];
@@ -114,37 +114,4 @@ class BinanceConvertApi
 		return $res;
 	}
 	
-	
-	
-		/*
-		
-    array (size=13)
-      'symbol' => string 'DOGEEUR' (length=7)
-      'id' => int 34052421
-      'orderId' => int 1249907506
-      'orderListId' => int -1
-      'price' => string '0.12144000' (length=10)
-      'qty' => string '157.00000000' (length=12)
-      'quoteQty' => string '19.06608000' (length=11)
-      'commission' => string '0.01811278' (length=10)
-      'commissionAsset' => string 'EUR' (length=3)
-      'time' => int 1767440343749
-      'isBuyer' => boolean false
-      'isMaker' => boolean false
-      'isBestMatch' => boolean true
-
-    array (size=10)
-      'quoteId' => string 'edd0292137c6442ead5c8413a584afb8' (length=32)
-      'orderId' => int 2119578317765251804
-      'orderStatus' => string 'SUCCESS' (length=7)
-      'fromAsset' => string 'ETH' (length=3)
-      'fromAmount' => string '0.0268731' (length=9)
-      'toAsset' => string 'EUR' (length=3)
-      'toAmount' => string '93.95735156' (length=11)
-      'ratio' => string '3496.33' (length=7)
-      'inverseRatio' => string '0.000286014' (length=11)
-      'createTime' => int 1761487392869
-	  
-	  */
-		
 }

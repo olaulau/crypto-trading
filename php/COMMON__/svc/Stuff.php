@@ -8,8 +8,14 @@ use ErrorException;
 class Stuff
 {
 	
-	public const datetime_sql_format = "Y-m-d H:i:s";
-	public const datetime_french_format = "d/m/Y H:i:s";
+	public const date_sql_format = "Y-m-d";
+	public const time_format = " H:i:s";
+	public const datetime_sql_format = self::date_sql_format . " " . self::time_format;
+	// public const datetime_sql_format = "Y-m-d H:i:s";
+	public const date_french_format = "d/m/Y";
+	public const datetime_french_format = self::date_french_format . " " . self::time_format;
+	// public const datetime_french_format = "d/m/Y H:i:s";
+	
 	
 	public static function extract_candle_infos (Mapper $ohlcv) : array
 	{
