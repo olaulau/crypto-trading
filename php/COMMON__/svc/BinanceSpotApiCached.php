@@ -159,7 +159,7 @@ class BinanceSpotApiCached
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApi";
 		$cache_function = __FUNCTION__;
-		$cache_key = "{$cache_class}__{$cache_function}__" . serialize($used_symbols);
+		$cache_key = "{$cache_class}__{$cache_function}__" . base64_encode(json_encode($used_symbols));
 		$cache_ttl = 15;
 		
 		if ($cache->exists($cache_key) === false) {
