@@ -10,6 +10,7 @@ use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceConvertApiCached;
 use COMMON__\svc\BinanceSpotApi;
+use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\Stuff;
 use DateInterval;
 use DateTime;
@@ -56,9 +57,9 @@ class BinanceCtrl extends PrivateCtrl
 		$spot_api = new SpotRestApi($configurationBuilder->build());
 
 		# server time
-		// $response = $spot_api->time();
-		// $data = Binance::responseData_to_table($response->getData());
-		// var_dump($data);
+		$response = $spot_api->time();
+		$data = Binance::responseData_to_table($response->getData());
+		var_dump($data);
 
 		# exchange infos
 		// $data = BinanceSpotApi::get_exchange_infos(["ETHEUR", "BNBUSDC"], false);
@@ -110,8 +111,8 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 		
 		# convert trades
-		$trade_history = BinanceConvertApiCached::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
-		var_dump($trade_history);
+		// $trade_history = BinanceConvertApi::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
+		// var_dump($trade_history);
 		
 		die;
 	}
@@ -155,17 +156,15 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function dashboardGET (Base $f3, $url, $controler)
 	{
-		$balances = BinanceSpotApi::get_account_balances_consolidated();
+		$balances = BinanceSpotApiCached::get_account_balances_consolidated();
 		// $balance_assets = array_keys($balances);
 		#TODO integrate this as source, so that we don't miss EUR
-		$used_symbols = BinanceSpotApi::get_used_symbols_from_order_lists(); #TODO pas fiable du tout !
-		// BinanceSpotApi::get_all_symbols()
+		$used_symbols = BinanceSpotApiCached::get_used_symbols_from_order_lists(); #TODO pas fiable du tout !
 		
-		$exchange_infos = BinanceSpotApi::get_exchange_infos ($used_symbols);
-		$symbols_infos = $exchange_infos ["symbols"];
+		$symbols_infos = BinanceSpotApiCached::get_all_symbols();
 		$symbols_infos_indexed = Stuff::array_group_by($symbols_infos, "symbol", false);
 		
-		$ticker_prices = BinanceSpotApi::get_ticker_price($used_symbols);
+		$ticker_prices = BinanceSpotApiCached::get_ticker_price($used_symbols);
 		
 		$trades_stats = [];
 		foreach ($used_symbols as $symbol) {

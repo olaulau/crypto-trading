@@ -119,7 +119,7 @@ class Binance
 	
 	public static function get_all_trades_sorted (string $symbol)
 	{
-		$spot_trades = BinanceSpotApi::get_trades ($symbol);
+		$spot_trades = BinanceSpotApiCached::get_trades ($symbol);
 		
 		$convert_trades = BinanceConvertApi::get_trade_history_large_for_symbol ((new DateTime)->sub(new DateInterval("P4M")), new DateTime, $symbol); #TODO find accurate start date for account
 		

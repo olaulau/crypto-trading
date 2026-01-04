@@ -73,14 +73,14 @@ class BinanceSpotApi
 	public static function get_orders () : array
 	{
 		$spot_api = static::get_spot_api();
-		$response = $spot_api->allOrders("");
+		$response = $spot_api->allOrders(""); #TODO doesn't work
 		$items = $response->getData()->getItems();
 		return $items;
 	}
 	
 	public static function get_used_symbols_from_orders () : array
 	{
-		$items = static::get_orders();
+		$items = static::get_orders(); #TODO so this doesn't really exists neither
 		$symbols = [];
 		foreach ($items as $item) { /** @var AllOrderListResponseInner $item */
 			$symbol = $item->getSymbol();
