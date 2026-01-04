@@ -57,9 +57,14 @@ class Stuff
 	
 	public static function format_float_significative (float $value, int $significative_numbers, bool $force_sign=false)
 	{
-		list("exposant" => $exposant) = self::float_parts ($value);
-		$decimals = $significative_numbers - $exposant - 1;
-		return self::number_format_french ($value, $decimals, $force_sign);
+		list("mantisse" => $mantisse, "exposant" => $exposant) = self::float_parts ($value);
+		if ($exposant <= -3) { # pseudo scientific  decimal notation for very small numbers
+			return "0,0<sub>" . abs($exposant+1) . "</sub>" . str_replace(".", "", (string)($mantisse));
+		}
+		else {
+			$decimals = $significative_numbers - $exposant - 1;
+			return self::number_format_french ($value, $decimals, $force_sign);
+		}
 	}
 	
 	
