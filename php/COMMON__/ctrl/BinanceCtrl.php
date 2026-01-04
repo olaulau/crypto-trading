@@ -138,7 +138,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceSpotApiCached::get_symbols_with_asset("DASH");
+		$data = BinanceSpotApiCached::get_possible_symbols ();
 		var_dump($data);
 		
 		die;

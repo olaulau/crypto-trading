@@ -17,12 +17,39 @@ class BinanceSpotApiCached
 		
 		if ($cache->exists($cache_key) === false) {
 			$data = BinanceSpotApi::$cache_function($symbol);
+			if($data === []) {
+				$cache_ttl = 60 * 60; # long  cache for symbols without any trade
+			}
 			$cache->set($cache_key, $data, $cache_ttl);
 		}
 		else {
 			$data = $cache->get($cache_key);
 		}
 		return $data;
+	}
+	
+	
+	public static function get_all_trades () : array
+	{
+		#TODO
+		
+		$res = [];
+		return $res;
+	}
+	
+	
+	public static function get_possible_symbols () : array
+	{
+		$balances = static::get_account_balances_consolidated();
+		$balances_assets = array_keys ($balances);
+		
+		$symbols = [];
+		foreach ($balances_assets as $asset) {
+			$tmp = static::get_symbols_with_asset ($asset);
+			$symbols = array_merge($symbols, $tmp);
+		}
+		sort($symbols);
+		return array_unique($symbols);
 	}
 	
 	
@@ -45,7 +72,7 @@ class BinanceSpotApiCached
 	}
 	
 	
-	public static function get_used_symbols_from_order_lists () : array
+	public static function get_used_symbols_from_order_lists () : array #TODO stop using this
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApi";
@@ -83,6 +110,19 @@ class BinanceSpotApiCached
 	}
 	
 	
+	public static function get_symbols_with_asset (string $asset) : array
+	{
+		$all_symbols = BinanceSpotApiCached::get_all_symbols();
+		$res = [];
+		foreach ($all_symbols as $symbol) {
+			if ($symbol ["baseAsset"] === $asset || $symbol ["quoteAsset"] === $asset) {
+				$res [] = $symbol ["symbol"];
+			}
+		}
+		return $res;
+	}
+	
+	
 	public static function get_ticker_price (array $used_symbols) : array
 	{
 		$cache = Cache::instance();
@@ -99,19 +139,6 @@ class BinanceSpotApiCached
 			$data = $cache->get($cache_key);
 		}
 		return $data;
-	}
-	
-	
-	public static function get_symbols_with_asset (string $asset) : array
-	{
-		$all_symbols = BinanceSpotApiCached::get_all_symbols();
-		$res = [];
-		foreach ($all_symbols as $symbol) {
-			if ($symbol ["baseAsset"] === $asset || $symbol ["quoteAsset"] === $asset) {
-				$res [] = $symbol ["symbol"];
-			}
-		}
-		return $res;
 	}
 	
 }
