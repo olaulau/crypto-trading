@@ -158,14 +158,14 @@ class Binance
 		
 		# treat trades
 		foreach ($all_trades as $trade) {
-			var_dump($trade);
+			// var_dump($trade);
 			if ($trade ["symbol"] !== $symbol) {
 				throw new ErrorException("wrong symbol found in trade : {$trade ["symbol"]}");
 			}
-			echo Binance::timestamp_to_datetime ($trade ["time"]) -> format(Stuff::datetime_sql_format) . " <br/>" . PHP_EOL;
+			// echo Binance::timestamp_to_datetime ($trade ["time"]) -> format(Stuff::datetime_sql_format) . " <br/>" . PHP_EOL;
 			
 			if ($trade ["isBuyer"] === true) {
-				echo "- BUY {$trade ["qty"]} {$base_asset} @ {$trade ["price"]} = {$trade ["quoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
+				// echo "- BUY {$trade ["qty"]} {$base_asset} @ {$trade ["price"]} = {$trade ["quoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
 				$res ["entry"] ["last"] = $trade ["time"];
 				$res ["entry"] ["quantity"] += $trade ["qty"];
 				$res ["entry"] ["cost"] += $trade ["quoteQty"];
@@ -173,7 +173,7 @@ class Binance
 				$res ["exit"] ["cost"] = max( $res ["exit"] ["cost"] - $trade ["quoteQty"], 0);
 			}
 			else {
-				echo "- SELL {$trade ["qty"]} {$base_asset} @ {$trade ["price"]} = {$trade ["quoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
+				// echo "- SELL {$trade ["qty"]} {$base_asset} @ {$trade ["price"]} = {$trade ["quoteQty"]} {$quote_asset} <br/>" . PHP_EOL;
 				$res ["exit"] ["last"] = $trade ["time"];
 				$res ["entry"] ["quantity"] = max( $res ["entry"] ["quantity"] - $trade ["qty"], 0);
 				$res ["entry"] ["cost"] = max( $res ["entry"] ["cost"] - $trade ["quoteQty"], 0);
@@ -185,13 +185,13 @@ class Binance
 			
 			# dust reset
 			if ($res ["entry"] ["quote"] > 0 && $res ["entry"] ["quote"] < static::quote_dust_threashold) {
-				echo " entry dust reset <br/>" . PHP_EOL;
+				// echo " entry dust reset <br/>" . PHP_EOL;
 				$res ["entry"] ["quantity"] = 0;
 				$res ["entry"] ["cost"] = 0;
 				$res ["entry"] ["quote"] = 0;
 			}
 			if ($res ["exit"] ["quote"] > 0 && $res ["exit"] ["quote"] < static::quote_dust_threashold) {
-				echo " exit dust reset <br/>" . PHP_EOL;
+				// echo " exit dust reset <br/>" . PHP_EOL;
 				$res ["exit"] ["quantity"] = 0;
 				$res ["exit"] ["cost"] = 0;
 				$res ["exit"] ["quote"] = 0;
@@ -211,15 +211,15 @@ class Binance
 				$res ["exit"] ["avg"] = 0;
 			}
 			
-			echo " entry => {$res ["entry"] ["quantity"]} {$base_asset} = {$res ["entry"] ["quote"]} {$quote_asset} <=> "
-				 .  "{$res ["entry"] ["cost"]} {$quote_asset} @ {$res ["entry"] ["avg"]} <br/>" . PHP_EOL;
-			echo " exit => {$res ["exit"] ["quantity"]} {$base_asset} = {$res ["exit"] ["quote"]} {$quote_asset} <=> "
-				.  "{$res ["exit"] ["cost"]} {$quote_asset} @ {$res ["exit"] ["avg"]} <br/>" . PHP_EOL;
-			echo "<br/>" . PHP_EOL;
+			// echo " entry => {$res ["entry"] ["quantity"]} {$base_asset} = {$res ["entry"] ["quote"]} {$quote_asset} <=> "
+			// 	 .  "{$res ["entry"] ["cost"]} {$quote_asset} @ {$res ["entry"] ["avg"]} <br/>" . PHP_EOL;
+			// echo " exit => {$res ["exit"] ["quantity"]} {$base_asset} = {$res ["exit"] ["quote"]} {$quote_asset} <=> "
+			// 	.  "{$res ["exit"] ["cost"]} {$quote_asset} @ {$res ["exit"] ["avg"]} <br/>" . PHP_EOL;
+			// echo "<br/>" . PHP_EOL;
 		}
 		
-		echo "==> entry (buy) avg = {$res ["entry"] ["avg"]} <br/>" . PHP_EOL;
-		echo "==> exit (sell) avg = {$res ["exit"] ["avg"]} <br/>" . PHP_EOL;
+		// echo "==> entry (buy) avg = {$res ["entry"] ["avg"]} <br/>" . PHP_EOL;
+		// echo "==> exit (sell) avg = {$res ["exit"] ["avg"]} <br/>" . PHP_EOL;
 		return $res;
 	}
 	

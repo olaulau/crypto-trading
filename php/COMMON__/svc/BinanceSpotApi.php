@@ -48,9 +48,6 @@ class BinanceSpotApi
 	
 	
 	
-	
-	
-	
 	public static function get_order_lists () : array
 	{
 		$spot_api = static::get_spot_api();
@@ -62,6 +59,28 @@ class BinanceSpotApi
 	public static function get_used_symbols_from_order_lists () : array
 	{
 		$items = static::get_order_lists();
+		$symbols = [];
+		foreach ($items as $item) { /** @var AllOrderListResponseInner $item */
+			$symbol = $item->getSymbol();
+			if (!in_array($symbol, $symbols)) {
+				$symbols [] = $symbol;
+			}
+		}
+		return $symbols;
+	}
+	
+	
+	public static function get_orders () : array
+	{
+		$spot_api = static::get_spot_api();
+		$response = $spot_api->allOrders("");
+		$items = $response->getData()->getItems();
+		return $items;
+	}
+	
+	public static function get_used_symbols_from_orders () : array
+	{
+		$items = static::get_orders();
 		$symbols = [];
 		foreach ($items as $item) { /** @var AllOrderListResponseInner $item */
 			$symbol = $item->getSymbol();
@@ -102,12 +121,24 @@ class BinanceSpotApi
 	}
 	
 	
-	public static function get_exchange_infos (array $symbols) : array
+	public static function get_exchange_infos (array $symbols, bool $keep_symbols_filters = true) : array
 	{
 		$spot_api = static::get_spot_api();
 		$response = $spot_api->exchangeInfo(null, $symbols, null, false);
 		$data = Binance::responseData_to_table($response->getData());
+		if($keep_symbols_filters === false) {
+			foreach ($data ["symbols"] as &$symbol) {
+				unset ($symbol ["filters"]);
+			}
+		}
 		return $data;
+	}
+	
+	public static function get_all_symbols () : array
+	{
+		$exchange_infos = static::get_exchange_infos([], false);
+		$symbols = $exchange_infos ["symbols"];
+		return $symbols;
 	}
 	
 	

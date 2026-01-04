@@ -30,63 +30,29 @@ default password is 'admin', don't forget to change it
 
 
 # NEXT
-- manque balance SKY sur spot get account balance :
-
-	Teste l’API Capital (SAPI) :
-	GET /sapi/v1/capital/config/getall
-	👉 C’est LA clé.
-
-	Tu devrais voir une entrée du type :
-	{
-	  "coin": "SKY",
-	  "free": "1878",
-	  "locked": "0",
-	  "name": "Sky",
-	  "networkList": [...]
-	}
-
-	⚠️ Cette API :
-	n’est PAS /api/v3
-	nécessite permissions Wallet
-	est souvent oubliée
-	
-	=> les orders (stop loss, take profit) pour le SKY n'apparaissent pas non plus
-	(c'est pour ca que ce sont les seuls pour lesquels on recoit des emails)
-
-
-
-- le calcul trade entry avg pour DOGE donne du reste alors que je suis à 0 depuis longtemps
-	DOGE acheté le 21/10, converti en euros le 26/10 : n'apparait pas dans les trades & orders spot
-
-	✅ L’API à utiliser : Convert History
-	Endpoint officiel
-	GET /sapi/v1/convert/tradeFlow
-
-(anciennement convert/orderHistory selon versions)
-
-Exemple de réponse
-{
-  "list": [
-    {
-      "orderId": "123456789",
-      "fromAsset": "SKY",
-      "fromAmount": "1878",
-      "toAsset": "USDC",
-      "toAmount": "101.23",
-      "price": "0.0539",
-      "status": "SUCCESS",
-      "createTime": 1712345678901
-    }
-  ]
-}
-
-
-
 - dashboard : ajouter les order stop loss & take profit en cours pour chaque symbol
 
 
 
-- ajouter la balance FIAT (EUR)
+- ajouter la balance
+	FIAT (EUR)
+	stable coin (USDC)
+	compte bancaire externe (virments)
+	
+- requêter les virements FIAT
 
 
 - aller voir du côté de earn, y'a un peu de USDC dessus aussi
+
+
+
+
+- pb calcul ETH : un trade DASHETH n'est pas récupéré (04/11)
+getusedsymbols n'est pas fiable (basé sur orderlists, donc exclue les orders non groupés avec orderList=-1)
+aucun moyen n'existe pour récupérer TOUS les orders via l'API, ni les symbols utilisés
+il faut partir de la balance, et trouver tous les symboles associés, et récupérer les trades de chaque symbole
+[on pourra optimiser ca à l'aide des websockets, pour alléger le live]
+la contrepartie de la vente d'ETH en DASH est complexe, il faut passer par USDC poura rriver en EUR
+il faut se basser sur les assets, pas les symbols
+faire la compta gloable de tous les trades de toutes les symbols
+impacter les 2 parties à chaque trade
