@@ -17,8 +17,8 @@ class BinanceSpotApiCached
 		
 		if ($cache->exists($cache_key) === false) {
 			$data = BinanceSpotApi::$cache_function($symbol);
-			if($data === []) {
-				$cache_ttl = 60 * 60; # long  cache for symbols without any trade
+			if ($data === []) {
+				$cache_ttl = 60 * 60; # long cache for symbols without any trade
 			}
 			$cache->set($cache_key, $data, $cache_ttl);
 		}
@@ -29,12 +29,37 @@ class BinanceSpotApiCached
 	}
 	
 	
-	public static function get_all_trades () : array
+	private static function get_all_trades () : array
 	{
-		#TODO
+		$symbols = static::get_possible_symbols();
 		
 		$res = [];
+		foreach ($symbols as $symbol) {
+			$trades = static::get_trades($symbol);
+			$res = array_merge($res, $trades);
+		}
+		
+		$sort = array_column($res, "time");
+		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $res);
 		return $res;
+	}
+	
+	public static function get_all_trades_cached () : array
+	{
+		$cache = Cache::instance();
+		$cache_class = "BinanceSpotApiCached";
+		$cache_function = "get_all_trades";
+		$cache_key = "{$cache_class}__{$cache_function}";
+		$cache_ttl = 1 * 60;
+		
+		if ($cache->exists($cache_key) === false) {
+			$data = BinanceSpotApiCached::$cache_function();
+			$cache->set($cache_key, $data, $cache_ttl);
+		}
+		else {
+			$data = $cache->get($cache_key);
+		}
+		return $data;
 	}
 	
 	
