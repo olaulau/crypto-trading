@@ -180,6 +180,10 @@ class BinanceCtrl extends PrivateCtrl
 			$trades_stats [$symbol] ["balance"] = $balance;
 			$trades_stats [$symbol] ["quote_balance"] = $quote_balance;
 		}
+		
+		$sort = array_column($trades_stats, "quote_balance");
+		array_multisort($sort, SORT_DESC, SORT_NUMERIC, $trades_stats);
+		
 		$f3->set("trades_stats", $trades_stats);
 
 		$page = [
