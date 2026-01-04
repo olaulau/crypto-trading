@@ -43,9 +43,10 @@ class BinanceSpotApiCached
 		$balances = static::get_account_balances_consolidated();
 		$balances_assets = array_keys ($balances);
 		
+		$all_symbols = BinanceSpotApiCached::get_all_symbols();
 		$symbols = [];
 		foreach ($balances_assets as $asset) {
-			$tmp = static::get_symbols_with_asset ($asset);
+			$tmp = static::get_symbols_with_asset ($asset, $all_symbols);
 			$symbols = array_merge($symbols, $tmp);
 		}
 		sort($symbols);
@@ -110,9 +111,12 @@ class BinanceSpotApiCached
 	}
 	
 	
-	public static function get_symbols_with_asset (string $asset) : array
+	public static function get_symbols_with_asset (string $asset, array $all_symbols=[]) : array
 	{
-		$all_symbols = BinanceSpotApiCached::get_all_symbols();
+		if (empty ($all_symbols)) {
+			$all_symbols = BinanceSpotApiCached::get_all_symbols();
+		}
+		
 		$res = [];
 		foreach ($all_symbols as $symbol) {
 			if ($symbol ["baseAsset"] === $asset || $symbol ["quoteAsset"] === $asset) {
