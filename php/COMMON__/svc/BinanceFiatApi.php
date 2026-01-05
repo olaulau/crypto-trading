@@ -33,7 +33,7 @@ class BinanceFiatApi
 	}
 
 
-	private static function get_deposit_withdraw_history (int $transaction_type, DateTimeInterface $start, DateTimeInterface $end) : array
+	public static function get_deposit_withdraw_history (int $transaction_type, DateTimeInterface $start, DateTimeInterface $end) : array
 	{
 		$diff = $start->diff($end);
 		if($diff->days > 30) {
@@ -46,7 +46,8 @@ class BinanceFiatApi
 		return $res;
 	}
 	
-	private static function get_deposit_withdraw_history_large (int $transaction_type, DateTimeInterface $start, DateTimeInterface $end) : array
+	
+	public static function get_deposit_withdraw_history_large (int $transaction_type, DateTimeInterface $start, DateTimeInterface $end) : array
 	{
 		$now = new DateTimeImmutable();
 		$current_start = DateTime::createFromInterface ($start);
@@ -67,9 +68,7 @@ class BinanceFiatApi
 					$query_done = true;
 					$res = array_merge($res, $history);
 					
-					$current_start->add(new DateInterval("P29D"));
-					$diff = $current_start->diff($end);
-					sleep(5); # fiat API throttling is very aggresive, this prevents more waiting
+					
 				}
 				catch (ApiException $ex) {
 					if (str_contains($ex->getMessage(), "Too many requests; current request has limited.")) {
@@ -80,16 +79,14 @@ class BinanceFiatApi
 					}
 				}
 			}
+			
+			$current_start->add(new DateInterval("P29D"));
+			$diff = $current_start->diff($end);
+			if ($diff->invert === 0) {
+				sleep(5); # fiat API throttling is very aggresive, this prevents more waiting
+			}
 		}
 		return $res;
-	}
-	
-	public static function get_deposit_history_large (DateTimeInterface $start, DateTimeInterface $end) : array {
-		return static::get_deposit_withdraw_history_large (0, $start, $end);
-	}
-	
-	public static function get_withdraw_history_large (DateTimeInterface $start, DateTimeInterface $end) : array {
-		return static::get_deposit_withdraw_history_large (1, $start, $end);
 	}
 	
 }

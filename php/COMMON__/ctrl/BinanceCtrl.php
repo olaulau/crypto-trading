@@ -11,6 +11,7 @@ use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceFiatApi;
 use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceConvertApiCached;
+use COMMON__\svc\BinanceFiatApiCached;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\Stuff;
@@ -140,7 +141,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceFiatApi::get_withdraw_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
+		$data = BinanceFiatApiCached::get_deposit_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
 		var_dump(value: $data);
 		
 		die;
