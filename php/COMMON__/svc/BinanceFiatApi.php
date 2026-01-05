@@ -4,12 +4,13 @@ namespace COMMON__\svc;
 use Base;
 use Binance\Client\Fiat\Api\FiatRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
+use Binance\Common\ApiException;
 use DateInterval;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use ErrorException;
-use Exception;
+
 
 class BinanceFiatApi
 {
@@ -32,7 +33,7 @@ class BinanceFiatApi
 	}
 
 
-	public static function get_deposit_history (DateTimeInterface $start, DateTimeInterface $end) : array
+	private static function get_deposit_withdraw_history (int $transaction_type, DateTimeInterface $start, DateTimeInterface $end) : array
 	{
 		$diff = $start->diff($end);
 		if($diff->days > 30) {
@@ -40,12 +41,12 @@ class BinanceFiatApi
 		}
 		
 		$api = static::get_api();
-		$response = $api->getFiatDepositWithdrawHistory (0, $start->getTimestamp()*1000, $end->getTimestamp()*1000);
+		$response = $api->getFiatDepositWithdrawHistory ($transaction_type, $start->getTimestamp()*1000, $end->getTimestamp()*1000);
 		$res = Binance::responseData_to_table($response->getData()->getData());
 		return $res;
 	}
 	
-	public static function get_deposit_history_large (DateTimeInterface $start, DateTimeInterface $end) : array
+	private static function get_deposit_withdraw_history_large (int $transaction_type, DateTimeInterface $start, DateTimeInterface $end) : array
 	{
 		$now = new DateTimeImmutable();
 		$current_start = DateTime::createFromInterface ($start);
@@ -61,10 +62,8 @@ class BinanceFiatApi
 			
 			$query_done = false;
 			while ($query_done === false) {
-				// echo "querying with " . $current_start->format(Stuff::date_sql_format) . " (" . $current_start->getTimestamp() . ") / " . $current_end->format(Stuff::date_sql_format) . " (" . $current_end->getTimestamp() . ") <br/>" . PHP_EOL;
 				try {
-					$history = static::get_deposit_history ($current_start, $current_end);
-					// var_dump($history);
+					$history = static::get_deposit_withdraw_history ($transaction_type, $current_start, $current_end);
 					$query_done = true;
 					$res = array_merge($res, $history);
 					
@@ -72,13 +71,25 @@ class BinanceFiatApi
 					$diff = $current_start->diff($end);
 					sleep(5); # fiat API throttling is very aggresive, this prevents more waiting
 				}
-				catch (Exception $ex) {
-					// echo "EXCEPTION : " . get_class($ex) . " {$ex->getCode()} {$ex->getMessage()}";
-					sleep(10); # more waiting in case of throttling
+				catch (ApiException $ex) {
+					if (str_contains($ex->getMessage(), "Too many requests; current request has limited.")) {
+						sleep(10); # more waiting in case of throttling
+					}
+					else {
+						throw $ex;
+					}
 				}
 			}
 		}
 		return $res;
+	}
+	
+	public static function get_deposit_history_large (DateTimeInterface $start, DateTimeInterface $end) : array {
+		return static::get_deposit_withdraw_history_large (0, $start, $end);
+	}
+	
+	public static function get_withdraw_history_large (DateTimeInterface $start, DateTimeInterface $end) : array {
+		return static::get_deposit_withdraw_history_large (1, $start, $end);
 	}
 	
 }
