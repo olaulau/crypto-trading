@@ -6,9 +6,10 @@ use Binance\Client\Fiat\Api\FiatRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
 use DateInterval;
 use DateTime;
+use DateTimeImmutable;
 use DateTimeInterface;
 use ErrorException;
-
+use Exception;
 
 class BinanceFiatApi
 {
@@ -44,26 +45,39 @@ class BinanceFiatApi
 		return $res;
 	}
 	
-	// X-MBX-USED-WEIGHT
-	
 	public static function get_deposit_history_large (DateTimeInterface $start, DateTimeInterface $end) : array
 	{
+		$now = new DateTimeImmutable();
 		$current_start = DateTime::createFromInterface ($start);
 		
 		$diff = $current_start->diff($end);
 		$res = [];
 		while ($diff->invert === 0) {
-			echo " . <br/>" . PHP_EOL;
 			$current_end = clone $current_start;
 			$current_end->add(new DateInterval("P29D"));
-			$history = static::get_deposit_history ($current_start, $current_end);
-			// sleep(2);
-			$res = array_merge($res, $history);
+			if ($current_end->diff($now)->invert === 1) {
+				$current_end = $now;
+			}
 			
-			$current_start->add(new DateInterval("P29D"));
-			$diff = $current_start->diff($end);
+			$query_done = false;
+			while ($query_done === false) {
+				// echo "querying with " . $current_start->format(Stuff::date_sql_format) . " (" . $current_start->getTimestamp() . ") / " . $current_end->format(Stuff::date_sql_format) . " (" . $current_end->getTimestamp() . ") <br/>" . PHP_EOL;
+				try {
+					$history = static::get_deposit_history ($current_start, $current_end);
+					// var_dump($history);
+					$query_done = true;
+					$res = array_merge($res, $history);
+					
+					$current_start->add(new DateInterval("P29D"));
+					$diff = $current_start->diff($end);
+					sleep(5); # fiat API throttling is very aggresive, this prevents more waiting
+				}
+				catch (Exception $ex) {
+					// echo "EXCEPTION : " . get_class($ex) . " {$ex->getCode()} {$ex->getMessage()}";
+					sleep(10); # more waiting in case of throttling
+				}
+			}
 		}
-		
 		return $res;
 	}
 	

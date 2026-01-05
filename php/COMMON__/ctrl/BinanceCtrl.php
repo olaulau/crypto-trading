@@ -140,7 +140,6 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		// $data = BinanceFiatApi::get_deposit_history((new DateTime)->sub(new DateInterval("P29D")), new DateTime);
 		$data = BinanceFiatApi::get_deposit_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
 		var_dump(value: $data);
 		

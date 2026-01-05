@@ -37,7 +37,7 @@ default password is 'admin', don't forget to change it
 - ajouter la balance
 	FIAT (EUR)
 	stable coin (USDC)
-	compte bancaire externe (virments)
+	compte bancaire externe (virements SEPA)
 	
 - requêter les virements FIAT
 
@@ -56,7 +56,8 @@ la contrepartie de la vente d'ETH en DASH est complexe, il faut passer par USDC 
 il faut se basser sur les assets, pas les symbols
 faire la compta globale de tous les trades de tous les symbols
 impacter les 2 parties à chaque trade
-calculer les comissions
+- calculer les commissions
+- pour calculer la contrepartie en reference_asset, il faudra parfois convertir. obtenir le taux historique via GET /api/v3/klines?symbol=XXX&interval=1m&startTime=T&endTime=T
 
 
 
