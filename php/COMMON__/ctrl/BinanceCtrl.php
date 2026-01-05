@@ -8,6 +8,7 @@ use Binance\Client\Spot\SpotRestApiUtil;
 use Cache;
 use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
+use COMMON__\svc\BinanceFiatApi;
 use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceConvertApiCached;
 use COMMON__\svc\BinanceSpotApi;
@@ -139,11 +140,9 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$all_trades = Binance::get_all_trades();
-		
-		$accounting = new Accounting ();
-		$accounting->execute_trades($all_trades);
-		var_dump($accounting);
+		// $data = BinanceFiatApi::get_deposit_history((new DateTime)->sub(new DateInterval("P29D")), new DateTime);
+		$data = BinanceFiatApi::get_deposit_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
+		var_dump(value: $data);
 		
 		die;
 	}

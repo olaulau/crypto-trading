@@ -38,7 +38,7 @@ class BinanceConvertApi
 			throw new ErrorException("convert trade history can't query more that 30 days");
 		}
 		
-		$convert_api = BinanceConvertApi::get_convert_api();
+		$convert_api = static::get_convert_api();
 		$trade_history_response = $convert_api->getConvertTradeHistory ($start->getTimestamp()*1000, $end->getTimestamp()*1000);
 		$res = Binance::responseData_to_table($trade_history_response);
 		return $res ["data"] ["list"];
