@@ -16,8 +16,10 @@ use ErrorException;
 class BinanceFiatApi
 {
 
-	public final const transaction_type_deposit = 0;
-	public final const transaction_type_withdraw = 1;
+	public final const transaction_types = [
+		"deposit"	=> 0,
+		"withdraw"	=> 1,
+	];
 
 	
 	public static function get_api () : FiatRestApi
