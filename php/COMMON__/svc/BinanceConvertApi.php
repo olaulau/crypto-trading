@@ -83,13 +83,13 @@ class BinanceConvertApi
 	{
 		$res = [];
 		foreach ($convertion_trades as $convertion_trade) {
-			if ($convertion_trade ["toAsset"] === "EUR") {
+			if ($convertion_trade ["toAsset"] === Binance::reference_asset) { #TODO maybe no one of the assets is EUR
 				$base_asset = $convertion_trade ["fromAsset"];
 				$quote_asset = $convertion_trade ["toAsset"];
 				$is_buyer = false;
 			}
 			else {
-				$base_asset = $convertion_trade ["toAsset"];
+				$base_asset = $convertion_trade ["toAsset"]; #TODO so maybe this pair doesn't exist, but the opposite does
 				$quote_asset = $convertion_trade ["fromAsset"];
 				$is_buyer = true;
 			}

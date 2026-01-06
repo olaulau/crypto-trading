@@ -4,7 +4,6 @@ namespace COMMON__\svc;
 use ArrayAccess;
 use Base;
 use Binance\Common\Dtos\ModelInterface;
-use DateInterval;
 use DateTime;
 use DateTimeInterface;
 use ErrorException;

@@ -5,19 +5,11 @@ namespace COMMON__\ctrl;
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
-use Cache;
-use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceFiatApi;
-use COMMON__\svc\BinanceConvertApi;
-use COMMON__\svc\BinanceConvertApiCached;
-use COMMON__\svc\BinanceFiatApiCached;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\Stuff;
-use DateInterval;
-use DateTime;
-use DateTimeImmutable;
 use ErrorException;
 
 
@@ -142,6 +134,7 @@ class BinanceCtrl extends PrivateCtrl
 	public static function testGET (Base $f3, $url, $controler)
 	{
 		$data = BinanceFiatApi::get_all_trades ();
+		$data = BinanceFiatApi::fiatTrades_to_spotTrades($data);
 		var_dump($data);
 		
 		die;
