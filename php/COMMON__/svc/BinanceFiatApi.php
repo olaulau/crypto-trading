@@ -5,6 +5,7 @@ use Base;
 use Binance\Client\Fiat\Api\FiatRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
 use Binance\Common\ApiException;
+use Cache;
 use COMMON__\mdl\FiatTrade;
 use DateInterval;
 use DateTime;
@@ -99,39 +100,67 @@ class BinanceFiatApi
 	}
 
 
-	public static function store_trades_into_db (int $transactionType, array $trades) : void
-	{
-		foreach ($trades as $trade) {
-			$ft = new FiatTrade();
-			$ft->load (["orderNo = ?", $trade ["orderNo"]], []);
-			$ft->copyfrom($trade);
-			$ft->transactionType = $transactionType;
-			$ft->save();
-		}
-	}
-	
-	
-	public static function get_all_trades_cached () : array
+	private static function get_all_trades_from_api () : array
 	{
 		$f3 = Base::instance();
 		
-		$now = new DateTimeImmutable ();
 		$start = datetime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00");
+		$now = new DateTimeImmutable ();
 		
-		// $deposits = static::get_deposit_withdraw_history_large (static::transaction_types ["deposit"], $start, $now);
-		// $withdraws = static::get_deposit_withdraw_history_large (static::transaction_types ["withdraw"], $start, $now);
+		# get data and add "transactionType" field
+		$deposits = static::get_deposit_withdraw_history_large (static::transaction_types ["deposit"], $start, $now);
+		foreach ($deposits as &$deposit) {
+			$deposit ["transactionType"] = static::transaction_types ["deposit"];
+		}
+		$withdraws = static::get_deposit_withdraw_history_large (static::transaction_types ["withdraw"], $start, $now);
+		foreach ($withdraws as &$withdraw) {
+			$withdraw ["transactionType"] = static::transaction_types ["withdraw"];
+		}
 		
-		$deposits = BinanceFiatApiCached::get_deposit_history_large ($start, $now);
-		var_dump($deposits[0]);
+		# merge and sort
+		$res = array_merge ($deposits, $withdraws);
+		$sort = array_column ($res, "createTime");
+		array_multisort ($sort, SORT_ASC, SORT_NUMERIC, $res);
+		return $res;
+	}
+	
+	private static function store_trades_into_db (array $trades) : void
+	{
+		foreach ($trades as $trade) {
+			$ft = new FiatTrade;
+			$ft->load (["orderNo = ?", $trade ["orderNo"]], []);
+			$ft->copyfrom ($trade);
+			$ft->save ();
+		}
+	}
+	
+	private static function get_all_trades_from_db () : array
+	{
+		$f3 = Base::instance();
 		
 		$ft_wrapper = new FiatTrade;
-		$fiat_trades = $ft_wrapper->find([""], []);
-		var_dump($fiat_trades->castAll()[0]);
+		$trades = $ft_wrapper->getAll("createTime");
+		return $trades->castAll();
+	}
+	
+	public static function get_all_trades () : array
+	{
+		$cache = Cache::instance();
+		$cache_class = "BinanceFiatApi";
+		$cache_function = __FUNCTION__;
+		$cache_key = "{$cache_class}__{$cache_function}";
+		$cache_ttl = 60 * 60;
 		
-		
-		
-		die;
-		return []; ///////////////
+		if ($cache->exists($cache_key) === false) {
+			$data = static::get_all_trades_from_api ();
+			static::store_trades_into_db ($data);
+			
+			$cache->set($cache_key, null, $cache_ttl);
+		}
+		else {
+			$data = static::get_all_trades_from_db ();
+		}
+		return $data;
 	}
 	
 }

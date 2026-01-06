@@ -141,8 +141,8 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		BinanceFiatApi::get_all_trades_cached();
-
+		$data = BinanceFiatApi::get_all_trades ();
+		var_dump($data);
 		
 		die;
 	}
