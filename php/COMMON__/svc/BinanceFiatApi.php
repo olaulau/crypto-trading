@@ -15,6 +15,10 @@ use ErrorException;
 
 class BinanceFiatApi
 {
+
+	public final const transaction_type_deposit = 0;
+	public final const transaction_type_withdraw = 1;
+
 	
 	public static function get_api () : FiatRestApi
 	{
@@ -91,12 +95,13 @@ class BinanceFiatApi
 	}
 
 
-	public static function store_trades_into_db (array $trades) : void
+	public static function store_trades_into_db (bool $transactionType, array $trades) : void
 	{
 		foreach ($trades as $trade) {
 			$ft = new FiatTrade();
 			$ft->load (["orderNo = ?", $trade ["orderNo"]], []);
 			$ft->copyfrom($trade);
+			$ft->transactionType = $transactionType;
 			$ft->save();
 		}
 	}

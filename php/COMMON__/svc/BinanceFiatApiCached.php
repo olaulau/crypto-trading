@@ -28,11 +28,11 @@ class BinanceFiatApiCached
 	}
 	
 	public static function get_deposit_history_large (DateTimeInterface $start, DateTimeInterface $end) : array {
-		return static::get_deposit_withdraw_history_large (0, $start, $end);
+		return static::get_deposit_withdraw_history_large (BinanceFiatApi::transaction_type_deposit, $start, $end);
 	}
 	
 	public static function get_withdraw_history_large (DateTimeInterface $start, DateTimeInterface $end) : array {
-		return static::get_deposit_withdraw_history_large (1, $start, $end);
+		return static::get_deposit_withdraw_history_large (BinanceFiatApi::transaction_type_withdraw, $start, $end);
 	}
 	
 	#TODO fiatTrades_to_spotTrades

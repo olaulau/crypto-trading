@@ -12,6 +12,11 @@ class FiatTrade extends Mdl
 	public const table = "fiat_trade";
 	
 	protected $fieldConf = [
+		'transactionType' => [ #TODO enum ?
+			'type' => Schema::DT_BOOLEAN,
+			'nullable' => false,
+			'index' => true,
+		],
 		'orderNo' => [
 			'type' => Schema::DT_VARCHAR128,
 			'nullable' => false,

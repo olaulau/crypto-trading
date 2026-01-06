@@ -143,8 +143,8 @@ class BinanceCtrl extends PrivateCtrl
 	{
 		$data = BinanceFiatApiCached::get_deposit_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
 		// var_dump(value: $data);
-		BinanceFiatApi::store_trades_into_db($data);
-		
+		BinanceFiatApi::store_trades_into_db(BinanceFiatApi::transaction_type_deposit, $data);
+
 		
 		die;
 	}
