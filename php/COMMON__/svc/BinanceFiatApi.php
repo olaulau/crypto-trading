@@ -99,7 +99,7 @@ class BinanceFiatApi
 	}
 
 
-	public static function store_trades_into_db (bool $transactionType, array $trades) : void
+	public static function store_trades_into_db (int $transactionType, array $trades) : void
 	{
 		foreach ($trades as $trade) {
 			$ft = new FiatTrade();
@@ -108,6 +108,30 @@ class BinanceFiatApi
 			$ft->transactionType = $transactionType;
 			$ft->save();
 		}
+	}
+	
+	
+	public static function get_all_trades_cached () : array
+	{
+		$f3 = Base::instance();
+		
+		$now = new DateTimeImmutable ();
+		$start = datetime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00");
+		
+		// $deposits = static::get_deposit_withdraw_history_large (static::transaction_types ["deposit"], $start, $now);
+		// $withdraws = static::get_deposit_withdraw_history_large (static::transaction_types ["withdraw"], $start, $now);
+		
+		$deposits = BinanceFiatApiCached::get_deposit_history_large ($start, $now);
+		var_dump($deposits[0]);
+		
+		$ft_wrapper = new FiatTrade;
+		$fiat_trades = $ft_wrapper->find([""], []);
+		var_dump($fiat_trades->castAll()[0]);
+		
+		
+		
+		die;
+		return []; ///////////////
 	}
 	
 }

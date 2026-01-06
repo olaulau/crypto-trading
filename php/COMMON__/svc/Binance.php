@@ -2,6 +2,7 @@
 namespace COMMON__\svc;
 
 use ArrayAccess;
+use Base;
 use Binance\Common\Dtos\ModelInterface;
 use DateInterval;
 use DateTime;
@@ -121,9 +122,11 @@ class Binance
 	
 	public static function get_all_trades_sorted (string $symbol)
 	{
+		$f3 = Base::instance();
+		
 		$spot_trades = BinanceSpotApiCached::get_trades ($symbol);
 		
-		$convert_trades = BinanceConvertApi::get_trade_history_large_for_symbol (DateTime::createFromFormat(Stuff::date_sql_format, $f3->get("binance.start_date")), new DateTime, $symbol);
+		$convert_trades = BinanceConvertApi::get_trade_history_large_for_symbol (DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00"), new DateTime, $symbol);
 		
 		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
 		$all_trades = array_merge($spot_trades, $convert_trades);
@@ -228,8 +231,10 @@ class Binance
 	
 	public static function get_all_trades () : array
 	{
+		$f3 = Base::instance();
+		
 		$all_spot_trades = BinanceSpotApiCached::get_all_trades_cached();
-		$all_convert_trades = BinanceConvertApiCached::get_trade_history_large(DateTime::createFromFormat(Stuff::date_sql_format, $f3->get("binance.start_date")), new DateTime);
+		$all_convert_trades = BinanceConvertApiCached::get_trade_history_large(DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00"), new DateTime);
 		$all_convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($all_convert_trades);
 		$all_trades = array_merge($all_spot_trades, $all_convert_trades);
 		
