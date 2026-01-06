@@ -20,6 +20,8 @@ class BinanceFiatApi
 		"deposit"	=> 0,
 		"withdraw"	=> 1,
 	];
+	
+	public final const max_history_days = 30;
 
 	
 	public static function get_api () : FiatRestApi
@@ -43,8 +45,8 @@ class BinanceFiatApi
 	public static function get_deposit_withdraw_history (int $transaction_type, DateTimeInterface $start, DateTimeInterface $end) : array
 	{
 		$diff = $start->diff($end);
-		if($diff->days > 30) {
-			throw new ErrorException("fiat deposit history can't query more that 30 days");
+		if($diff->days > static::max_history_days) {
+			throw new ErrorException("fiat deposit history can't query more that " . static::max_history_days . " days");
 		}
 		
 		$api = static::get_api();
@@ -63,7 +65,7 @@ class BinanceFiatApi
 		$res = [];
 		while ($diff->invert === 0) {
 			$current_end = clone $current_start;
-			$current_end->add(new DateInterval("P29D"));
+			$current_end->add(new DateInterval("P" . static::max_history_days-1 . "D"));
 			if ($current_end->diff($now)->invert === 1) {
 				$current_end = $now;
 			}
@@ -87,7 +89,7 @@ class BinanceFiatApi
 				}
 			}
 			
-			$current_start->add(new DateInterval("P29D"));
+			$current_start->add(new DateInterval("P" . static::max_history_days-1 . "D"));
 			$diff = $current_start->diff($end);
 			if ($diff->invert === 0) {
 				sleep(5); # fiat API throttling is very aggresive, this prevents more waiting
