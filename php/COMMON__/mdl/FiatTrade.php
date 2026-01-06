@@ -42,17 +42,17 @@ class FiatTrade extends Mdl
 			'nullable' => false,
 		],
 		'createTime' => [
-			'type' => Schema::DT_INT,
+			'type' => Schema::DT_BIGINT,
 			'nullable' => false,
 		],
 		'updateTime' => [
-			'type' => Schema::DT_INT,
+			'type' => Schema::DT_BIGINT,
 			'nullable' => false,
 		],
 	];
 	
 	
-	public static function setup($db = null, $table = null, $fields = null)
+	public static function setup ($db = null, $table = null, $fields = null)
 	{
 		parent::setup (); # auto create table
 		

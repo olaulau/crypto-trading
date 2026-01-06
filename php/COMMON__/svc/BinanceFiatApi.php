@@ -5,6 +5,7 @@ use Base;
 use Binance\Client\Fiat\Api\FiatRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
 use Binance\Common\ApiException;
+use COMMON__\mdl\FiatTrade;
 use DateInterval;
 use DateTime;
 use DateTimeImmutable;
@@ -87,6 +88,17 @@ class BinanceFiatApi
 			}
 		}
 		return $res;
+	}
+
+
+	public static function store_trades_into_db (array $trades) : void
+	{
+		foreach ($trades as $trade) {
+			$ft = new FiatTrade();
+			$ft->load (["orderNo = ?", $trade ["orderNo"]], []);
+			$ft->copyfrom($trade);
+			$ft->save();
+		}
 	}
 	
 }
