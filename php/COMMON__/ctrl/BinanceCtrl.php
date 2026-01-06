@@ -114,7 +114,7 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 		
 		# convert trades
-		// $trade_history = BinanceConvertApi::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
+		// $trade_history = BinanceConvertApi::get_trade_history_large(DateTime::createFromFormat(Stuff::date_sql_format, $f3->get("binance.start_date")), new DateTime);
 		// var_dump($trade_history);
 		
 		die;
@@ -141,7 +141,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceFiatApiCached::get_deposit_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime);
+		$data = BinanceFiatApiCached::get_deposit_history_large(DateTime::createFromFormat(Stuff::date_sql_format, $f3->get("binance.start_date")), new DateTime);
 		// var_dump(value: $data);
 		BinanceFiatApi::store_trades_into_db(BinanceFiatApi::transaction_types ["deposit"], $data);
 

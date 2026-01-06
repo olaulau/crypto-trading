@@ -123,7 +123,7 @@ class Binance
 	{
 		$spot_trades = BinanceSpotApiCached::get_trades ($symbol);
 		
-		$convert_trades = BinanceConvertApi::get_trade_history_large_for_symbol ((new DateTime)->sub(new DateInterval("P4M")), new DateTime, $symbol); #TODO find accurate start date for account
+		$convert_trades = BinanceConvertApi::get_trade_history_large_for_symbol (DateTime::createFromFormat(Stuff::date_sql_format, $f3->get("binance.start_date")), new DateTime, $symbol);
 		
 		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
 		$all_trades = array_merge($spot_trades, $convert_trades);
@@ -229,7 +229,7 @@ class Binance
 	public static function get_all_trades () : array
 	{
 		$all_spot_trades = BinanceSpotApiCached::get_all_trades_cached();
-		$all_convert_trades = BinanceConvertApiCached::get_trade_history_large((new DateTime)->sub(new DateInterval("P4M")), new DateTime); #TODO
+		$all_convert_trades = BinanceConvertApiCached::get_trade_history_large(DateTime::createFromFormat(Stuff::date_sql_format, $f3->get("binance.start_date")), new DateTime);
 		$all_convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($all_convert_trades);
 		$all_trades = array_merge($all_spot_trades, $all_convert_trades);
 		
