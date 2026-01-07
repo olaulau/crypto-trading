@@ -76,7 +76,7 @@ abstract class Mdl extends \DB\Cortex
 		return $data;
 	}
 	
-	public static function findOneBy($key, $value)
+	public static function findOneBy($key, $value) : ?static
 	{
 		$data = self::findBy($key, $value);
 		if(empty($data)) {

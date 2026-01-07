@@ -5,8 +5,8 @@ use Base;
 use Binance\Client\Fiat\Api\FiatRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
 use Binance\Common\ApiException;
-use Cache;
 use COMMON__\mdl\FiatTrade;
+use COMMON__\mdl\KeyValue;
 use DateInterval;
 use DateTime;
 use DateTimeImmutable;
@@ -102,11 +102,16 @@ class BinanceFiatApi
 	}
 
 
-	private static function get_all_trades_from_api () : array
+	private static function get_all_trades_from_api (?int $start_timestamp = null) : array
 	{
 		$f3 = Base::instance();
 		
-		$start = datetime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00");
+		if(!empty($start_timestamp)) {
+			$start = DateTime::createFromTimestamp($start_timestamp);
+		}
+		else {
+			$start = DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00");
+		}
 		$now = new DateTimeImmutable ();
 		
 		# get data and add "transactionType" field
@@ -147,21 +152,41 @@ class BinanceFiatApi
 	
 	public static function get_all_trades () : array
 	{
-		$cache = Cache::instance();
 		$cache_class = "BinanceFiatApi";
 		$cache_function = __FUNCTION__;
-		$cache_key = "{$cache_class}__{$cache_function}";
+		$cache_key = "{$cache_class}__{$cache_function}__last_update";
 		$cache_ttl = 60 * 60;
 		
-		if ($cache->exists($cache_key) === false) {
-			$data = static::get_all_trades_from_api ();
-			static::store_trades_into_db ($data);
-			
-			$cache->set($cache_key, null, $cache_ttl);
+		# get actual data
+		$db_trades = FiatTrade::getAll("createTime")->castAll();
+		
+		# calculate last_update
+		$last_update_o = new KeyValue;
+		$last_update_o->load(["key = ?", $cache_key]);
+		if($last_update_o->dry()) {
+			# use last trade date
+			$last_trade = end($db_trades);
+			$last_update_dt = DateTime::createFromTimestamp($last_trade ["createTime"]/1000);
 		}
 		else {
-			$data = static::get_all_trades_from_db ();
+			# use saved last update
+			$last_update_dt = DateTime::createFromFormat(Stuff::datetime_sql_format, $last_update_o->value);
 		}
+		
+		# check if we have to query the API to refresh data
+		$new_trades = [];
+		if ((time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
+			# get new trades
+			$new_trades = static::get_all_trades_from_api ($last_update_dt->getTimestamp());
+			# store them into db
+			static::store_trades_into_db($new_trades);
+			# store last update
+			$last_update_o->key = $cache_key;
+			$last_update_o->value = (new DateTime)->format(Stuff::datetime_sql_format);
+			$last_update_o->save();
+		}
+		
+		$data = array_merge($db_trades, $new_trades);
 		return $data;
 	}
 	

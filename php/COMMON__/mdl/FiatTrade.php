@@ -21,6 +21,7 @@ class FiatTrade extends Mdl
 			'type' => Schema::DT_VARCHAR128,
 			'nullable' => false,
 			'index' => true,
+			'unique' => true,
 		],
 		'fiatCurrency' => [
 			'type' => Schema::DT_VARCHAR128,

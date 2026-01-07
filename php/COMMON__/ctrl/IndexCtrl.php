@@ -3,6 +3,7 @@ namespace COMMON__\ctrl;
 
 use Base;
 use COMMON__\mdl\FiatTrade;
+use COMMON__\mdl\KeyValue;
 use COMMON__\mdl\Kline;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
@@ -69,10 +70,13 @@ class IndexCtrl extends PrivateCtrl
 		$db->exec($sql);
 		$sql = "DROP TABLE IF EXISTS " . FiatTrade::table;
 		$db->exec($sql);
+		$sql = "DROP TABLE IF EXISTS " . KeyValue::table;
+		$db->exec($sql);
 
 		# create DB struct
 		Kline::setup();
 		FiatTrade::setup();
+		KeyValue::setup();
 	}
 	
 	
