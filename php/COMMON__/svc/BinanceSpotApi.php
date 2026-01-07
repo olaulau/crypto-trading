@@ -30,12 +30,30 @@ class BinanceSpotApi
 	}
 	
 	
-	public static function get_trades (string $symbol) : array
+	public static function get_trades (string $symbol, ?SpotRestApi $spot_api = null) : array
 	{
-		$spot_api = static::get_spot_api();
+		if (empty($spot_api)) {
+			$spot_api = static::get_spot_api();
+		}
 		$response = $spot_api->myTrades($symbol); /** @var ApiResponse $response */ #TODO Failed to open stream: Too many open files
 		$data = Binance::responseData_to_table($response->getData());
 		return $data ["items"];
+	}
+	
+	public static function get_all_trades () : array #TODO remove
+	{
+		$symbols = BinanceSpotApiCached::get_possible_symbols();
+		$spot_api = static::get_spot_api();
+		
+		$res = [];
+		foreach ($symbols as $symbol) {
+			$trades = static::get_trades($symbol, $spot_api); #TODO too many opened files (guzzlehttp)
+			$res = array_merge($res, $trades);
+		}
+		
+		$sort = array_column($res, "time");
+		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $res);
+		return $res;
 	}
 	
 	

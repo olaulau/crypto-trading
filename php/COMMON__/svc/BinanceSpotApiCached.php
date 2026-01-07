@@ -1,14 +1,19 @@
 <?php
 namespace COMMON__\svc;
 
+use Binance\Client\Spot\Api\SpotRestApi;
 use Cache;
 
 
 class BinanceSpotApiCached
 {
 	
-	public static function get_trades (string $symbol) : array
+	public static function get_trades (string $symbol, ?SpotRestApi $spot_api = null) : array
 	{
+		if (empty($spot_api)) {
+			$spot_api = BinanceSpotApi::get_spot_api();
+		}
+		
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApi";
 		$cache_function = __FUNCTION__;
@@ -17,7 +22,7 @@ class BinanceSpotApiCached
 		$cache_ttl = 15 * 60; /////////////////////////TODO dev remove
 		
 		if ($cache->exists($cache_key) === false) {
-			$data = BinanceSpotApi::$cache_function($symbol);
+			$data = BinanceSpotApi::$cache_function($symbol, $spot_api);
 			if ($data === []) {
 				$cache_ttl = 60 * 60; # long cache for symbols without any trade
 				$cache_ttl = 3 * 60 * 60; /////////////////////////TODO dev remove
@@ -34,10 +39,11 @@ class BinanceSpotApiCached
 	private static function get_all_trades () : array
 	{
 		$symbols = static::get_possible_symbols();
+		$spot_api = BinanceSpotApi::get_spot_api();
 		
 		$res = [];
 		foreach ($symbols as $symbol) {
-			$trades = static::get_trades($symbol); #TODO too many opened files (guzzlehttp)
+			$trades = static::get_trades($symbol, $spot_api);
 			$res = array_merge($res, $trades);
 		}
 		
