@@ -136,7 +136,7 @@ class Binance
 	}
 	
 	
-	public static function get_trades_stats (string $base_asset, string $quote_asset)
+	public static function get_trades_stats (string $base_asset, string $quote_asset) #TODO remove in favor of Accounting
 	{
 		# get trades
 		$symbol = "{$base_asset}{$quote_asset}";

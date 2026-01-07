@@ -174,10 +174,10 @@ class BinanceFiatApi
 				$base_asset = static::fiat_bank;
 				$quote_asset = $fiat_trade ["fiatCurrency"];
 				if ($fiat_trade ["transactionType"] === BinanceFiatApi::transaction_types ["deposit"]) {
-					$is_buyer = true;
+					$is_buyer = false;
 				}
 				else {
-					$is_buyer = false;
+					$is_buyer = true;
 				}
 				
 				$res [] = [

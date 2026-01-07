@@ -65,4 +65,5 @@ impacter les 2 parties à chaque trade
 - forcer l'actualisation périodique des trades pour les symboles / assets pertinents
 	- balance > 0
 	- trades passés
-- mettre les trades spot en BdD
+- mettre les trades spot en BdD, idem convert
+

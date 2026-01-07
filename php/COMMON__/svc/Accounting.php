@@ -11,6 +11,10 @@ class Accounting
 	public function __construct ()
 	{
 		static::$symbols = BinanceSpotApiCached::get_all_symbols();
+		static::$symbols [BinanceFiatApi::fiat_bank . Binance::reference_asset] = [
+			"baseAsset"		=> BinanceFiatApi::fiat_bank,
+			"quoteAsset"	=> Binance::reference_asset,
+		];
 	}
 	
 	
@@ -43,7 +47,7 @@ class Accounting
 	public function execute_trade (array $trade) : void
 	{
 		$symbol = $trade ["symbol"];
-		
+
 		if(!isset(static::$symbols [$symbol])) {
 			$assets = BinanceSpotApiCached::guess_symbol_assets_cached($symbol);
 			if (empty($assets)) {
