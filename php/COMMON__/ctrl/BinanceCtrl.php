@@ -6,7 +6,6 @@ use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
 use COMMON__\svc\Binance;
-use COMMON__\svc\BinanceFiatApi;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\Stuff;
@@ -133,8 +132,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceFiatApi::get_all_trades ();
-		$data = BinanceFiatApi::fiatTrades_to_spotTrades($data);
+		$data = Binance::get_all_trades ();
 		var_dump($data);
 		
 		die;

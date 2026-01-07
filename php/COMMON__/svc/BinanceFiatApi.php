@@ -168,33 +168,34 @@ class BinanceFiatApi
 	
 	public static function fiatTrades_to_spotTrades (array $fiat_trades) : array
 	{
-		
 		$res = [];
 		foreach ($fiat_trades as $fiat_trade) {
-			$base_asset = static::fiat_bank;
-			$quote_asset = $fiat_trade ["fiatCurrency"];
-			if ($fiat_trade ["transactionType"] === BinanceFiatApi::transaction_types ["deposit"]) {
-				$is_buyer = true;
+			if ($fiat_trade ["status"] === "Successful") {
+				$base_asset = static::fiat_bank;
+				$quote_asset = $fiat_trade ["fiatCurrency"];
+				if ($fiat_trade ["transactionType"] === BinanceFiatApi::transaction_types ["deposit"]) {
+					$is_buyer = true;
+				}
+				else {
+					$is_buyer = false;
+				}
+				
+				$res [] = [
+					'symbol'			=> "{$base_asset}{$quote_asset}",
+					'id'				=> null,
+					'orderId'			=> $fiat_trade ["orderNo"],
+					'orderListId'		=> -1,
+					'price'				=> 1,
+					'qty'				=> $fiat_trade ["indicatedAmount"],
+					'quoteQty'			=> $fiat_trade ["indicatedAmount"],
+					'commission'		=> $fiat_trade ["totalFee"], 
+					'commissionAsset'	=> $fiat_trade ["fiatCurrency"],
+					'time'				=> $fiat_trade ["createTime"],
+					'isBuyer'			=> $is_buyer,
+					'isMaker'			=> false,
+					'isBestMatch'		=> true,
+				];
 			}
-			else {
-				$is_buyer = false;
-			}
-			
-			$res [] = [
-				'symbol'			=> "{$base_asset}{$quote_asset}",
-				'id'				=> null,
-				'orderId'			=> $fiat_trade ["orderNo"],
-				'orderListId'		=> -1,
-				'price'				=> 1,
-				'qty'				=> $fiat_trade ["indicatedAmount"],
-				'quoteQty'			=> $fiat_trade ["indicatedAmount"],
-				'commission'		=> $fiat_trade ["totalFee"], 
-				'commissionAsset'	=> $fiat_trade ["fiatCurrency"],
-				'time'				=> $fiat_trade ["createTime"],
-				'isBuyer'			=> $is_buyer,
-				'isMaker'			=> false,
-				'isBestMatch'		=> true,
-			];
 		}
 		return $res;
 	}

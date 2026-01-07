@@ -232,14 +232,16 @@ class Binance
 	{
 		$f3 = Base::instance();
 		
-		$all_spot_trades = BinanceSpotApiCached::get_all_trades_cached();
-		$all_convert_trades = BinanceConvertApiCached::get_trade_history_large(DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00"), new DateTime);
-		$all_convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($all_convert_trades);
-		$all_trades = array_merge($all_spot_trades, $all_convert_trades);
+		$spot_trades = BinanceSpotApiCached::get_all_trades_cached();
+		$convert_trades = BinanceConvertApiCached::get_trade_history_large(DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00"), new DateTime);
+		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
+		$fiat_trades = BinanceFiatApi::get_all_trades();
+		$fiat_trades = BinanceFiatApi::fiatTrades_to_spotTrades($fiat_trades);
+		$all_trades = array_merge($spot_trades, $convert_trades, $fiat_trades);
 		
 		$sort = array_column($all_trades, "time");
 		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $all_trades);
-		return $all_spot_trades;
+		return $all_trades;
 	}
 	
 }

@@ -33,7 +33,7 @@ class BinanceSpotApi
 	public static function get_trades (string $symbol) : array
 	{
 		$spot_api = static::get_spot_api();
-		$response = $spot_api->myTrades($symbol); /** @var ApiResponse $response */
+		$response = $spot_api->myTrades($symbol); /** @var ApiResponse $response */ #TODO Failed to open stream: Too many open files
 		$data = Binance::responseData_to_table($response->getData());
 		return $data ["items"];
 	}
