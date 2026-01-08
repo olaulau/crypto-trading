@@ -143,8 +143,6 @@ class BinanceFiatApi
 	
 	private static function get_all_trades_from_db () : array
 	{
-		$f3 = Base::instance();
-		
 		$ft_wrapper = new FiatTrade;
 		$trades = $ft_wrapper->getAll("createTime");
 		return $trades->castAll();
@@ -158,7 +156,7 @@ class BinanceFiatApi
 		$cache_ttl = 60 * 60;
 		
 		# get actual data
-		$db_trades = FiatTrade::getAll("createTime")->castAll();
+		$db_trades = static::get_all_trades_from_db();
 		
 		# calculate last_update
 		$last_update_o = new KeyValue;
