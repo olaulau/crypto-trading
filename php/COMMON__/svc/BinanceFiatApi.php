@@ -166,7 +166,10 @@ class BinanceFiatApi
 		if($last_update_o->dry()) {
 			# use last trade date
 			$last_trade = end($db_trades);
-			$last_update_dt = DateTime::createFromTimestamp($last_trade ["createTime"]/1000);
+			$last_update_dt = null;
+			if (!empty($last_trade)) {
+				$last_update_dt = DateTime::createFromTimestamp($last_trade ["createTime"]/1000);
+			}
 		}
 		else {
 			# use saved last update
@@ -175,9 +178,9 @@ class BinanceFiatApi
 		
 		# check if we have to query the API to refresh data
 		$new_trades = [];
-		if ((time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
+		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
 			# get new trades
-			$new_trades = static::get_all_trades_from_api ($last_update_dt->getTimestamp());
+			$new_trades = static::get_all_trades_from_api ($last_update_dt ? $last_update_dt->getTimestamp() : null);
 			# store them into db
 			static::store_trades_into_db($new_trades);
 			# store last update
