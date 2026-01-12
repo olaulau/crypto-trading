@@ -3,7 +3,9 @@ namespace COMMON__\svc;
 
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
+use Binance\Client\Spot\Model\AllOrderListResponseInner;
 use Binance\Client\Spot\Model\GetAccountResponse;
+use Binance\Client\Spot\Model\TickerPriceResponse;
 use Binance\Client\Spot\SpotRestApiUtil;
 use Binance\Common\Dtos\ApiResponse;
 use ErrorException;
@@ -61,28 +63,6 @@ class BinanceSpotApi
 	public static function get_used_symbols_from_order_lists () : array
 	{
 		$items = static::get_order_lists();
-		$symbols = [];
-		foreach ($items as $item) { /** @var AllOrderListResponseInner $item */
-			$symbol = $item->getSymbol();
-			if (!in_array($symbol, $symbols)) {
-				$symbols [] = $symbol;
-			}
-		}
-		return $symbols;
-	}
-	
-	
-	public static function get_orders () : array
-	{
-		$spot_api = static::get_spot_api();
-		$response = $spot_api->allOrders(""); #TODO doesn't work
-		$items = $response->getData()->getItems();
-		return $items;
-	}
-	
-	public static function get_used_symbols_from_orders () : array
-	{
-		$items = static::get_orders(); #TODO so this doesn't really exists neither
 		$symbols = [];
 		foreach ($items as $item) { /** @var AllOrderListResponseInner $item */
 			$symbol = $item->getSymbol();

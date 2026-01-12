@@ -6,6 +6,7 @@ use COMMON__\mdl\ConvertTrade;
 use COMMON__\mdl\FiatTrade;
 use COMMON__\mdl\KeyValue;
 use COMMON__\mdl\Kline;
+use COMMON__\mdl\SpotTrade;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
 use COMMON__\svc\Stuff;
@@ -60,7 +61,7 @@ class IndexCtrl extends PrivateCtrl
 
 
 	
-	public static function resetDbGET(Base $f3, $url, $controler)
+	public static function resetDbGET (Base $f3, $url, $controler)
 	{
 		# init
 		$db = $f3->get("db");
@@ -75,12 +76,15 @@ class IndexCtrl extends PrivateCtrl
 		$db->exec($sql);
 		$sql = "DROP TABLE IF EXISTS " . ConvertTrade::table;
 		$db->exec($sql);
+		$sql = "DROP TABLE IF EXISTS " . SpotTrade::table;
+		$db->exec($sql);
 
 		# create DB struct
 		Kline::setup();
 		FiatTrade::setup();
 		KeyValue::setup();
 		ConvertTrade::setup();
+		SpotTrade::setup();
 	}
 	
 	

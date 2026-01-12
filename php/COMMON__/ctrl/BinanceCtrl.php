@@ -133,7 +133,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceConvertApi::get_all_trades();
+		$data = BinanceSpotApi::get_trades("ETHEUR");
 		var_dump($data);
 		
 		die;
@@ -142,15 +142,15 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function dashboardGET (Base $f3, $url, $controler)
 	{
-		$balances = BinanceSpotApiCached::get_account_balances_consolidated();
+		$balances = BinanceSpotApiCached::get_account_balances_consolidated ();
 		// $balance_assets = array_keys($balances);
 		#TODO integrate this as source, so that we don't miss EUR
-		$used_symbols = BinanceSpotApiCached::get_used_symbols_from_order_lists(); #TODO pas fiable du tout !
+		$used_symbols = BinanceSpotApiCached::get_used_symbols_from_order_lists (); #TODO pas fiable du tout !
 		
 		$symbols_infos = BinanceSpotApiCached::get_all_symbols();
-		$symbols_infos_indexed = Stuff::array_group_by($symbols_infos, "symbol", false);
+		$symbols_infos_indexed = Stuff::array_group_by ($symbols_infos, "symbol", false);
 		
-		$ticker_prices = BinanceSpotApiCached::get_ticker_price($used_symbols);
+		$ticker_prices = BinanceSpotApiCached::get_ticker_price ($used_symbols);
 		
 		$trades_stats = [];
 		foreach ($used_symbols as $symbol) {
@@ -162,7 +162,7 @@ class BinanceCtrl extends PrivateCtrl
 			$quote_balance = isset($balances [$base_asset]) ? ($balances [$base_asset] * $ticker_prices [$symbol] ["price"]) : null;
 			
 			if ($quote_balance > Binance::quote_dust_threashold) {
-				$trade_stats = Binance::get_trades_stats($base_asset, $quote_asset);
+				$trade_stats = Binance::get_trades_stats ($base_asset, $quote_asset);
 				$trades_stats [$symbol] = $trade_stats;
 			}
 			$trades_stats [$symbol] ["base_asset"] = $base_asset;
