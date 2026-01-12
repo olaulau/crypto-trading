@@ -144,7 +144,7 @@ class BinanceConvertApi
 		$new_trades = [];
 		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
 			# get new trades
-			$new_trades = static::get_all_trades_from_api ($last_update_dt ? $last_update_dt->getTimestamp() : null);
+			$new_trades = static::get_all_trades_from_api ($last_update_dt);
 			# store them into db
 			static::store_trades_into_db ($new_trades);
 			# store last update
