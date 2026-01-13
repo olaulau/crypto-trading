@@ -17,7 +17,7 @@ use ErrorException;
 class BinanceSpotApi
 {
 	
-	public static function get_spot_api () : SpotRestApi
+	public static function get_api () : SpotRestApi
 	{
 		$f3 = Base::instance();
 		
@@ -38,13 +38,12 @@ class BinanceSpotApi
 	public static function get_trades_from_api (string $symbol, ?SpotRestApi $spot_api = null) : array
 	{
 		if (empty($spot_api)) {
-			$spot_api = static::get_spot_api();
+			$spot_api = static::get_api();
 		}
 		$response = $spot_api->myTrades($symbol); /** @var ApiResponse $response */
 		$data = Binance::responseData_to_table($response->getData());
 		return $data ["items"];
 	}
-
 
 	private static function store_trades_into_db (array $trades) : void
 	{
@@ -56,11 +55,10 @@ class BinanceSpotApi
 		}
 	}
 
-
 	private static function get_trades_from_db (string $symbol) : array
 	{
 		$ft_wrapper = new SpotTrade();
-		$trades = $ft_wrapper->getAll("time"); #TODO filted symbol
+		$trades = $ft_wrapper->find(["symbol = ?", $symbol], ["order" => "time ASC"]);
 		return $trades->castAll();
 	}
 	
@@ -114,10 +112,9 @@ class BinanceSpotApi
 	}
 	
 	
-	
 	public static function get_order_lists () : array
 	{
-		$spot_api = static::get_spot_api();
+		$spot_api = static::get_api();
 		$response = $spot_api->allOrderList();
 		$items = $response->getData()->getItems();
 		return $items;
@@ -139,7 +136,7 @@ class BinanceSpotApi
 	
 	public static function get_account () : array
 	{
-		$spot_api = static::get_spot_api();
+		$spot_api = static::get_api();
 		$response = $spot_api->getAccount(true);
 		$data = $response->getData(); /** @var GetAccountResponse $data */
 		$res = Binance::responseData_to_table($data);
@@ -168,7 +165,7 @@ class BinanceSpotApi
 	
 	public static function get_exchange_infos (array $symbols, bool $keep_symbols_filters = true) : array
 	{
-		$spot_api = static::get_spot_api();
+		$spot_api = static::get_api();
 		$response = $spot_api->exchangeInfo(null, $symbols, null, false);
 		$data = Binance::responseData_to_table($response->getData());
 		if($keep_symbols_filters === false) {
@@ -190,7 +187,7 @@ class BinanceSpotApi
 	
 	public static function get_ticker_price (array $symbols) : array
 	{
-		$spot_api = static::get_spot_api();
+		$spot_api = static::get_api();
 		$response = $spot_api->tickerPrice (null, $symbols);
 		$data = $response->getData(); /** @var TickerPriceResponse $data */
 		$response2 = $data->getTickerPriceResponse2();

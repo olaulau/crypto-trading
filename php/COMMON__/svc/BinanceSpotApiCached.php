@@ -11,7 +11,7 @@ class BinanceSpotApiCached
 	public static function get_trades (string $symbol, ?SpotRestApi $spot_api = null) : array
 	{
 		if (empty($spot_api)) {
-			$spot_api = BinanceSpotApi::get_spot_api();
+			$spot_api = BinanceSpotApi::get_api();
 		}
 		
 		$cache = Cache::instance();
@@ -39,7 +39,7 @@ class BinanceSpotApiCached
 	private static function get_all_trades () : array
 	{
 		$symbols = static::get_possible_symbols();
-		$spot_api = BinanceSpotApi::get_spot_api();
+		$spot_api = BinanceSpotApi::get_api();
 		
 		$res = [];
 		foreach ($symbols as $symbol) {
