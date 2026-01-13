@@ -133,7 +133,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceSpotApi::get_trades("ETHEUR");
+		$data = BinanceSpotApi::get_trades_cached ("ETHEUR");
 		var_dump($data);
 		
 		die;

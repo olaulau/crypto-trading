@@ -24,11 +24,11 @@ class SpotTrade extends Mdl
 			'unique' => true,
 		],
 		'orderId' => [
-			'type' => Schema::DT_INT,
+			'type' => Schema::DT_BIGINT,
 			'nullable' => false,
 		],
 		'orderListId' => [
-			'type' => Schema::DT_INT,
+			'type' => Schema::DT_BIGINT,
 			'nullable' => false,
 		],
 		'price' => [

@@ -8,6 +8,9 @@ use Binance\Client\Spot\Model\GetAccountResponse;
 use Binance\Client\Spot\Model\TickerPriceResponse;
 use Binance\Client\Spot\SpotRestApiUtil;
 use Binance\Common\Dtos\ApiResponse;
+use COMMON__\mdl\KeyValue;
+use COMMON__\mdl\SpotTrade;
+use DateTime;
 use ErrorException;
 
 
@@ -32,7 +35,7 @@ class BinanceSpotApi
 	}
 	
 	
-	public static function get_trades (string $symbol, ?SpotRestApi $spot_api = null) : array
+	public static function get_trades_from_api (string $symbol, ?SpotRestApi $spot_api = null) : array
 	{
 		if (empty($spot_api)) {
 			$spot_api = static::get_spot_api();
@@ -41,11 +44,71 @@ class BinanceSpotApi
 		$data = Binance::responseData_to_table($response->getData());
 		return $data ["items"];
 	}
+
+
+	private static function store_trades_into_db (array $trades) : void
+	{
+		foreach ($trades as $trade) {
+			$ft = new SpotTrade();
+			$ft->load (["id = ?", $trade ["id"]], []);
+			$ft->copyfrom ($trade);
+			$ft->save ();
+		}
+	}
+
+
+	private static function get_trades_from_db (string $symbol) : array
+	{
+		$ft_wrapper = new SpotTrade();
+		$trades = $ft_wrapper->getAll("time"); #TODO filted symbol
+		return $trades->castAll();
+	}
+	
+	public static function get_trades_cached (string $symbol) : array
+	{
+		$cache_class = "BinanceSpotApi";
+		$cache_function = __FUNCTION__;
+		$cache_key = "{$cache_class}__{$cache_function}__{$symbol}__last_update";
+		$cache_ttl = 60 * 60;
+		
+		# get actual data
+		$trades = static::get_trades_from_db ($symbol);
+		
+		# calculate last_update
+		$last_update_o = new KeyValue();
+		$last_update_o->load (["key = ?", $cache_key]);
+		if($last_update_o->dry()) {
+			# use last trade date
+			$last_trade = end ($trades);
+			$last_update_dt = null;
+			if (!empty($last_trade)) {
+				$last_update_dt = DateTime::createFromTimestamp ($last_trade ["createTime"]/1000);
+			}
+		}
+		else {
+			# use saved last update
+			$last_update_dt = DateTime::createFromFormat (Stuff::datetime_sql_format, $last_update_o->value);
+		}
+		
+		# check if we have to query the API to refresh data
+		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
+			# get trades
+			$trades = static::get_trades_from_api ($symbol);
+			# store them into db
+			static::store_trades_into_db ($trades);
+			# store last update
+			$last_update_o->key = $cache_key;
+			$last_update_o->value = (new DateTime)->format(Stuff::datetime_sql_format);
+			$last_update_o->save();
+		}
+		
+		return $trades;
+	}
 	
 	
 	public static function get_trades_grouped (string $symbol) : array
 	{
-		$data = static::get_trades($symbol);
+		$data = static::get_trades_from_api($symbol);
 		$data = Stuff::array_group_by($data, "orderListId");
 		return $data;
 	}
