@@ -77,10 +77,6 @@ class BinanceCtrl extends PrivateCtrl
 		// $data = Binance::get_trades_stats("ETHEUR");
 		// var_dump($data);
 		
-		# used symbols
-		// $data = BinanceSpotApi::get_used_symbols_from_order_lists();
-		// var_dump($data);
-
 		# average price (last 5 minutes)
 		// $response = $spot_api->avgPrice(IndexCtrl::$crypto_pair);
 		// $data = Binance::responseData_to_table($response->getData());
@@ -133,7 +129,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceSpotApi::get_trades_cached ("ETHEUR");
+		$data = BinanceSpotApi::get_all_trades ();
 		var_dump($data);
 		
 		die;
@@ -145,7 +141,7 @@ class BinanceCtrl extends PrivateCtrl
 		$balances = BinanceSpotApiCached::get_account_balances_consolidated ();
 		// $balance_assets = array_keys($balances);
 		#TODO integrate this as source, so that we don't miss EUR
-		$used_symbols = BinanceSpotApiCached::get_used_symbols_from_order_lists (); #TODO pas fiable du tout !
+		$used_symbols = BinanceSpotApiCached::get_symbols_from_order_lists (); #TODO pas fiable du tout !
 		
 		$symbols_infos = BinanceSpotApiCached::get_all_symbols();
 		$symbols_infos_indexed = Stuff::array_group_by ($symbols_infos, "symbol", false);

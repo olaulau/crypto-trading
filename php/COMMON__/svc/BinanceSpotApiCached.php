@@ -37,41 +37,6 @@ class BinanceSpotApiCached
 	}
 	
 	
-	private static function get_all_trades () : array #TODO move into BinanceSpotApi
-	{
-		$symbols = static::get_used_symbols_from_balance();
-		$spot_api = BinanceSpotApi::get_api();
-		
-		$res = [];
-		foreach ($symbols as $symbol) {
-			$trades = static::get_trades($symbol, $spot_api);
-			$res = array_merge($res, $trades);
-		}
-		
-		$sort = array_column($res, "time");
-		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $res);
-		return $res;
-	}
-	
-	public static function get_all_trades_cached () : array #TODO remove and recode with smart quering
-	{
-		$cache = Cache::instance();
-		$cache_class = "BinanceSpotApiCached";
-		$cache_function = "get_all_trades";
-		$cache_key = "{$cache_class}__{$cache_function}";
-		$cache_ttl = 1 * 60;
-		
-		if ($cache->exists($cache_key) === false) {
-			$data = BinanceSpotApiCached::$cache_function();
-			$cache->set($cache_key, $data, $cache_ttl);
-		}
-		else {
-			$data = $cache->get($cache_key);
-		}
-		return $data;
-	}
-	
-
 	public static function get_account_balances_consolidated () : array #TODO keep
 	{
 		$cache = Cache::instance();
@@ -90,7 +55,7 @@ class BinanceSpotApiCached
 		return $data;
 	}
 	
-	public static function get_used_symbols_from_balance () : array 
+	public static function get_symbols_from_balance () : array #TODO keep
 	{
 		$balances = static::get_account_balances_consolidated();
 		$balances_assets = array_keys ($balances);
@@ -106,7 +71,7 @@ class BinanceSpotApiCached
 	}
 	
 	
-	public static function get_used_symbols_from_order_lists () : array #TODO stop using this
+	public static function get_symbols_from_order_lists () : array #TODO keep
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApi";
@@ -125,7 +90,7 @@ class BinanceSpotApiCached
 	}
 
 
-	#TODO code get_possible_symbols with balance + get_used_symbols_from_order_lists
+	#TODO code get_possible_symbols with balance + get_symbols_from_order_lists + symbols from orders in cache
 	
 	
 	public static function get_all_symbols () : array #TODO put into DB

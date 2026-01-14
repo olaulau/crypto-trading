@@ -62,12 +62,13 @@ class BinanceSpotApi
 		return $trades->castAll();
 	}
 	
-	public static function get_trades_cached (string $symbol) : array
+	public static function get_trades_cached (string $symbol, ?SpotRestApi $spot_api=null) : array
 	{
 		$cache_class = "BinanceSpotApi";
 		$cache_function = __FUNCTION__;
 		$cache_key = "{$cache_class}__{$cache_function}__{$symbol}__last_update";
-		$cache_ttl = 60 * 60;
+		$cache_ttl_short = 60 * 60;
+		$cache_ttl_long = 24 * 60 * 60;
 		
 		# get actual data
 		$trades = static::get_trades_from_db ($symbol);
@@ -87,13 +88,21 @@ class BinanceSpotApi
 			# use saved last update
 			$last_update_dt = DateTime::createFromFormat (Stuff::datetime_sql_format, $last_update_o->value);
 		}
-		
+
+		# symbols with no past trades may not be queried so often
+		$cache_ttl = $cache_ttl_short;
+		if (empty($trades)) {
+			$cache_ttl = $cache_ttl_long;
+		}
+
 		# check if we have to query the API to refresh data
 		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
 			# get trades
-			$trades = static::get_trades_from_api ($symbol);
+			$trades = static::get_trades_from_api ($symbol, $spot_api);
+
 			# store them into db
 			static::store_trades_into_db ($trades);
+
 			# store last update
 			$last_update_o->key = $cache_key;
 			$last_update_o->value = (new DateTime)->format(Stuff::datetime_sql_format);
@@ -101,6 +110,23 @@ class BinanceSpotApi
 		}
 		
 		return $trades;
+	}
+
+
+	public static function get_all_trades () : array #TODO move into BinanceSpotApi
+	{
+		$symbols = BinanceSpotApiCached::get_symbols_from_balance();
+		$spot_api = BinanceSpotApi::get_api();
+		
+		$res = [];
+		foreach ($symbols as $symbol) {
+			$trades = BinanceSpotApi::get_trades_cached($symbol, $spot_api);
+			$res = array_merge($res, $trades);
+		}
+		
+		$sort = array_column($res, "time");
+		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $res);
+		return $res;
 	}
 	
 	
@@ -120,7 +146,7 @@ class BinanceSpotApi
 		return $items;
 	}
 	
-	public static function get_used_symbols_from_order_lists () : array
+	public static function get_symbols_from_order_lists () : array
 	{
 		$items = static::get_order_lists();
 		$symbols = [];

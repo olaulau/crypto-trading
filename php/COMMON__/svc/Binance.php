@@ -123,7 +123,7 @@ class Binance
 	{
 		$f3 = Base::instance();
 		
-		$spot_trades = BinanceSpotApiCached::get_trades ($symbol);
+		$spot_trades = BinanceSpotApi::get_trades_cached ($symbol);
 		
 		$convert_trades = BinanceConvertApi::get_trade_history_large_for_symbol (DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00"), new DateTime, $symbol);
 		
@@ -232,7 +232,7 @@ class Binance
 	{
 		$f3 = Base::instance();
 		
-		$spot_trades = BinanceSpotApiCached::get_all_trades_cached(); #TODO
+		$spot_trades = BinanceSpotApi::get_all_trades(); #TODO
 		$convert_trades = BinanceConvertApi::get_all_trades ();
 		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
 		$fiat_trades = BinanceFiatApi::get_all_trades();

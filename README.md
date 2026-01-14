@@ -30,16 +30,11 @@ default password is 'admin', don't forget to change it
 
 
 # NEXT
-- dashboard : ajouter les order stop loss & take profit en cours pour chaque symbol
+- dashboard
+	- refaire completement lavec la nouvelle compta (Accounting)
+	- ajouter les infos stop loss & take profit en cours pour chaque symbol
 
 
-
-- ajouter la balance
-	FIAT (EUR)
-	stable coin (USDC)
-	compte bancaire externe (virements SEPA)
-	
-- requêter les virements FIAT
 
 
 - aller voir du côté de earn, y'a un peu de USDC dessus aussi
@@ -67,3 +62,7 @@ impacter les 2 parties à chaque trade
 	- trades passés
 - mettre les trades spot en BdD, idem convert
 
+
+- trades update
+	- route CLI pour forcer l'update des symbols sans trades
+	- doc install : crontab vers cette rotue tous les jours
