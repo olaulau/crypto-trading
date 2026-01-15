@@ -94,21 +94,17 @@ abstract class Mdl extends \DB\Cortex
 		$entity = new static(); /* var $entity \DB\Cortex */
 		$order_field = $order_field ?? "name";
 		// if the entity has a property "name", order results with it
-		if(in_array($order_field, $entity->fields()))
-		{
+		if(in_array($order_field, $entity->fields())) {
 			$res = $entity->find("", ["order" => "$order_field ASC"]);
 		}
-		else
-		{
+		else {
 			$res = $entity->find();
 		}
 		
-		if(empty($res))
-		{
+		if(empty($res)) {
 			return new \DB\CortexCollection();
 		}
-		else
-		{
+		else {
 			return $res;
 		}
 	}

@@ -60,7 +60,7 @@ class BinanceSpotApiCached
 		$balances = static::get_account_balances_consolidated();
 		$balances_assets = array_keys ($balances);
 		
-		$all_symbols = BinanceSpotApiCached::get_all_symbols();
+		$all_symbols = BinanceSpotApi::get_symbols_cached();
 		$symbols = [];
 		foreach ($balances_assets as $asset) {
 			$tmp = static::get_symbols_with_asset ($asset, $all_symbols);
@@ -93,29 +93,10 @@ class BinanceSpotApiCached
 	#TODO code get_possible_symbols with balance + get_symbols_from_order_lists + symbols from orders in cache
 	
 	
-	public static function get_all_symbols () : array #TODO put into DB
-	{
-		$cache = Cache::instance();
-		$cache_class = "BinanceSpotApi";
-		$cache_function = __FUNCTION__;
-		$cache_key = "{$cache_class}__{$cache_function}";
-		$cache_ttl = 24 * 60 * 60;
-		
-		if ($cache->exists($cache_key) === false) {
-			$data = BinanceSpotApi::$cache_function();
-			$cache->set($cache_key, $data, $cache_ttl);
-		}
-		else {
-			$data = $cache->get($cache_key);
-		}
-		return $data;
-	}
-	
-	
 	public static function get_symbols_with_asset (string $asset, array $all_symbols=[]) : array #TODO keep
 	{
 		if (empty ($all_symbols)) {
-			$all_symbols = BinanceSpotApiCached::get_all_symbols();
+			$all_symbols = BinanceSpotApi::get_symbols_cached();
 		}
 		
 		$res = [];
@@ -149,7 +130,7 @@ class BinanceSpotApiCached
 	
 	private static function get_all_assets () : array #TODO keep
 	{
-		$symbols = BinanceSpotApiCached::get_all_symbols();
+		$symbols = BinanceSpotApi::get_symbols_cached();
 		$base_assets = array_column($symbols, "baseAsset");
 		$quote_assets = array_column($symbols, "quoteAsset");
 		$assets = array_merge ($base_assets, $quote_assets);

@@ -9,8 +9,10 @@ use Binance\Client\Spot\Model\TickerPriceResponse;
 use Binance\Client\Spot\SpotRestApiUtil;
 use Binance\Common\Dtos\ApiResponse;
 use COMMON__\mdl\KeyValue;
+use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
 use DateTime;
+use DB\SQL;
 use ErrorException;
 
 
@@ -202,11 +204,70 @@ class BinanceSpotApi
 		return $data;
 	}
 	
-	public static function get_all_symbols () : array
+	public static function get_symbols_from_api () : array
 	{
 		$exchange_infos = static::get_exchange_infos([], false);
 		$symbols = $exchange_infos ["symbols"];
 		$symbols = array_combine (array_column($symbols, "symbol"), $symbols);
+		return $symbols;
+	}
+
+	private static function store_symbols_into_db (array $symbols) : void
+	{
+		foreach ($symbols as $symbol) {
+			$elt = new SpotExchangeSymbol();
+			$elt->load (["symbol = ?", $symbol ["symbol"]], []);
+			$elt->copyfrom ($symbol);
+			$elt->save ();
+		}
+	}
+
+	private static function get_symbols_from_db () : array
+	{
+		$data = SpotExchangeSymbol::getAll_fast ();
+		return $data;
+	}
+	
+	public static function get_symbols_cached (?SpotRestApi $spot_api=null) : array
+	{
+		$cache_class = "BinanceSpotApi";
+		$cache_function = __FUNCTION__;
+		$cache_key = "{$cache_class}__{$cache_function}__last_update";
+		$cache_ttl = 60 * 60;
+		
+		# get actual data
+		$symbols = static::get_symbols_from_db ();
+		
+		# calculate last_update
+		$last_update_o = new KeyValue();
+		$last_update_o->load (["key = ?", $cache_key]);
+		if($last_update_o->dry()) {
+			# use last trade date
+			$last_trade = end ($symbols);
+			$last_update_dt = null;
+			if (!empty($last_trade)) {
+				$last_update_dt = DateTime::createFromTimestamp ($last_trade ["createTime"]/1000);
+			}
+		}
+		else {
+			# use saved last update
+			$last_update_dt = DateTime::createFromFormat (Stuff::datetime_sql_format, $last_update_o->value);
+		}
+
+		# check if we have to query the API to refresh data
+		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
+			# get symbols
+			$symbols = static::get_symbols_from_api ();
+
+			# store them into db
+			static::store_symbols_into_db ($symbols);
+
+			# store last update
+			$last_update_o->key = $cache_key;
+			$last_update_o->value = (new DateTime)->format(Stuff::datetime_sql_format);
+			$last_update_o->save();
+		}
+		
 		return $symbols;
 	}
 	

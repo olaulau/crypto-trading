@@ -61,7 +61,7 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 		
 		# all symbols
-		// $data = BinanceSpotApi::get_all_symbols();
+		// $data = BinanceSpotApi::get_symbols_cached();
 		// var_dump($data);
 
 		# orders
@@ -129,7 +129,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceSpotApi::get_all_trades ();
+		$data = BinanceSpotApi::get_symbols_cached ();
 		var_dump($data);
 		
 		die;
@@ -143,7 +143,7 @@ class BinanceCtrl extends PrivateCtrl
 		#TODO integrate this as source, so that we don't miss EUR
 		$used_symbols = BinanceSpotApiCached::get_symbols_from_order_lists (); #TODO pas fiable du tout !
 		
-		$symbols_infos = BinanceSpotApiCached::get_all_symbols();
+		$symbols_infos = BinanceSpotApi::get_symbols_cached();
 		$symbols_infos_indexed = Stuff::array_group_by ($symbols_infos, "symbol", false);
 		
 		$ticker_prices = BinanceSpotApiCached::get_ticker_price ($used_symbols);

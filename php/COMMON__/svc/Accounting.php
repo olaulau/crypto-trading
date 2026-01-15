@@ -10,7 +10,7 @@ class Accounting
 	
 	public function __construct ()
 	{
-		static::$symbols = BinanceSpotApiCached::get_all_symbols();
+		static::$symbols = BinanceSpotApi::get_symbols_cached();
 		static::$symbols [BinanceFiatApi::fiat_bank . Binance::reference_asset] = [
 			"baseAsset"		=> BinanceFiatApi::fiat_bank,
 			"quoteAsset"	=> Binance::reference_asset,

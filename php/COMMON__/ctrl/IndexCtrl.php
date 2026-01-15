@@ -6,6 +6,7 @@ use COMMON__\mdl\ConvertTrade;
 use COMMON__\mdl\FiatTrade;
 use COMMON__\mdl\KeyValue;
 use COMMON__\mdl\Kline;
+use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
@@ -78,6 +79,8 @@ class IndexCtrl extends PrivateCtrl
 		$db->exec($sql);
 		$sql = "DROP TABLE IF EXISTS " . SpotTrade::table;
 		$db->exec($sql);
+		$sql = "DROP TABLE IF EXISTS " . SpotExchangeSymbol::table;
+		$db->exec($sql);
 
 		# create DB struct
 		Kline::setup();
@@ -85,6 +88,7 @@ class IndexCtrl extends PrivateCtrl
 		KeyValue::setup();
 		ConvertTrade::setup();
 		SpotTrade::setup();
+		SpotExchangeSymbol::setup();
 	}
 	
 	
