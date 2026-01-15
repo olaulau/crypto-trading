@@ -64,24 +64,14 @@ class IndexCtrl extends PrivateCtrl
 	
 	public static function resetDbGET (Base $f3, $url, $controler)
 	{
-		# init
-		$db = $f3->get("db");
-		/** @var SQL $db */
-
 		# cleanup
-		$sql = "DROP TABLE IF EXISTS " . Kline::table;
-		$db->exec($sql);
-		$sql = "DROP TABLE IF EXISTS " . FiatTrade::table;
-		$db->exec($sql);
-		$sql = "DROP TABLE IF EXISTS " . KeyValue::table;
-		$db->exec($sql);
-		$sql = "DROP TABLE IF EXISTS " . ConvertTrade::table;
-		$db->exec($sql);
-		$sql = "DROP TABLE IF EXISTS " . SpotTrade::table;
-		$db->exec($sql);
-		$sql = "DROP TABLE IF EXISTS " . SpotExchangeSymbol::table;
-		$db->exec($sql);
-
+		Kline::drop_table();
+		FiatTrade::drop_table();
+		KeyValue::drop_table();
+		ConvertTrade::drop_table();
+		SpotTrade::drop_table();
+		SpotExchangeSymbol::drop_table();
+		
 		# create DB struct
 		Kline::setup();
 		FiatTrade::setup();

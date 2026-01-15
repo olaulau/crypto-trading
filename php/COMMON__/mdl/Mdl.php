@@ -4,6 +4,7 @@ namespace COMMON__\mdl;
 use Base;
 use ErrorException;
 
+
 abstract class Mdl extends \DB\Cortex
 {
 	public const table = null; // each subclass must fill-in this var
@@ -39,7 +40,7 @@ abstract class Mdl extends \DB\Cortex
 	function __construct ()
 	{
 		$f3 = \Base::instance();
-		$db = $f3->get("db"); /* @var $db \DB\SQL */
+		$db = $f3->get("db"); /** @var $db \DB\SQL */
 		parent::__construct($db, static::table);
 	}
 	
@@ -91,7 +92,7 @@ abstract class Mdl extends \DB\Cortex
 	
 	public static function getAll ($order_field=null) : \DB\CortexCollection
 	{
-		$entity = new static(); /* var $entity \DB\Cortex */
+		$entity = new static(); /** @var \DB\Cortex $entity */
 		$order_field = $order_field ?? "name";
 		// if the entity has a property "name", order results with it
 		if(in_array($order_field, $entity->fields())) {
@@ -178,7 +179,7 @@ abstract class Mdl extends \DB\Cortex
 	public function isErasable ()
 	{
 		$f3 = \Base::instance();
-		$db = $f3->get("db"); /* @var $db \DB\SQL */
+		$db = $f3->get("db"); /** @var \DB\SQL $db */
 		
 		$db->begin();
 		try
@@ -198,7 +199,7 @@ abstract class Mdl extends \DB\Cortex
 	public function tryErase ()
 	{
 		$f3 = \Base::instance();
-		$db = $f3->get("db"); /* @var $db \DB\SQL */
+		$db = $f3->get("db"); /** @var \DB\SQL $db */
 		
 		$db->begin();
 		try
@@ -294,7 +295,7 @@ abstract class Mdl extends \DB\Cortex
 
         foreach ($this->fieldConf as $field => $conf) {
             if (!isset($data[$field])) continue;
-            $data[$field] = $this->castTheField($data[$field], $conf['type']);
+            $data[$field] = static::castTheField($data[$field], $conf['type']);
         }
 
         return $data;
@@ -303,7 +304,7 @@ abstract class Mdl extends \DB\Cortex
     /**
      * Conversion d'une valeur selon son type DB
      */
-    protected function castTheField($value, $type)
+    protected static function castTheField ($value, $type)
     {
         if ($value === null) return null;
 
@@ -340,5 +341,19 @@ abstract class Mdl extends \DB\Cortex
         }
     }
 
+	
+	public static function drop_table () : void
+	{
+		$f3 = \Base::instance();
+		$db = $f3->get("db"); /** @var $db \DB\SQL */
+		$db->exec("DROP TABLE " . static::table);
+	}
+	
+	public static function delete_table () : void
+	{
+		$f3 = \Base::instance();
+		$db = $f3->get("db"); /** @var $db \DB\SQL */
+		$db->exec("DELETE FROM " . static::table);
+	}
 	
 }
