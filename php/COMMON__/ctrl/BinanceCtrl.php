@@ -5,10 +5,8 @@ namespace COMMON__\ctrl;
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
-use COMMON__\mdl\ConvertTrade;
 use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
-use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\Stuff;
@@ -131,7 +129,11 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$trades = Binance::get_all_trades ();
+		$data = BinanceSpotApi::get_all_trades();
+		// var_dump($data);
+		die;
+		
+		$data = Binance::get_all_trades ();
 		// var_dump($data);
 		die;
 		
@@ -150,7 +152,7 @@ class BinanceCtrl extends PrivateCtrl
 		#TODO integrate this as source, so that we don't miss EUR
 		$used_symbols = BinanceSpotApiCached::get_symbols_from_order_lists (); #TODO pas fiable du tout !
 		
-		$symbols_infos = BinanceSpotApi::get_symbols_cached();
+		$symbols_infos = BinanceSpotApi::get_all_symbols_cached();
 		$symbols_infos_indexed = Stuff::array_group_by ($symbols_infos, "symbol", false);
 		
 		$ticker_prices = BinanceSpotApiCached::get_ticker_price ($used_symbols);

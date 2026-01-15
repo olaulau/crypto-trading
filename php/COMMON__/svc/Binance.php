@@ -231,7 +231,6 @@ class Binance
 	public static function get_all_trades () : array
 	{
 		$spot_trades = BinanceSpotApi::get_all_trades();
-		die;
 		
 		$convert_trades = BinanceConvertApi::get_all_trades ();
 		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);

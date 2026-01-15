@@ -1,43 +1,16 @@
 <?php
 namespace COMMON__\svc;
 
-use Binance\Client\Spot\Api\SpotRestApi;
 use Cache;
 
 
+/**
+ * methods implementing or depending on f3's FS cache
+ */
 class BinanceSpotApiCached
 {
 
-	#TODO remove in favor of BinanceSpotApi::get_trades_cached($symbol)
-	public static function get_trades (string $symbol, ?SpotRestApi $spot_api = null) : array
-	{
-		if (empty($spot_api)) {
-			$spot_api = BinanceSpotApi::get_api();
-		}
-		
-		$cache = Cache::instance();
-		$cache_class = "BinanceSpotApi";
-		$cache_function = __FUNCTION__;
-		$cache_key = "{$cache_class}__{$cache_function}__{$symbol}";
-		$cache_ttl = 2 * 60;
-		$cache_ttl = 15 * 60; /////////////////////////TODO dev remove
-		
-		if ($cache->exists($cache_key) === false) {
-			$data = BinanceSpotApi::$cache_function($symbol, $spot_api);
-			if ($data === []) {
-				$cache_ttl = 60 * 60; # long cache for symbols without any trade
-				$cache_ttl = 3 * 60 * 60; /////////////////////////TODO dev remove
-			}
-			$cache->set($cache_key, $data, $cache_ttl);
-		}
-		else {
-			$data = $cache->get($cache_key);
-		}
-		return $data;
-	}
-	
-	
-	public static function get_account_balances_consolidated () : array #TODO keep
+	public static function get_account_balances_consolidated () : array
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApi";
@@ -55,12 +28,12 @@ class BinanceSpotApiCached
 		return $data;
 	}
 	
-	public static function get_symbols_from_balance () : array #TODO keep
+	public static function get_symbols_from_balance () : array
 	{
 		$balances = static::get_account_balances_consolidated();
 		$balances_assets = array_keys ($balances);
 		
-		$all_symbols = BinanceSpotApi::get_symbols_cached();
+		$all_symbols = BinanceSpotApi::get_all_symbols_cached();
 		$symbols = [];
 		foreach ($balances_assets as $asset) {
 			$tmp = static::get_symbols_with_asset ($asset, $all_symbols);
@@ -71,7 +44,7 @@ class BinanceSpotApiCached
 	}
 	
 	
-	public static function get_symbols_from_order_lists () : array #TODO keep
+	public static function get_symbols_from_order_lists () : array
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApi";
@@ -93,10 +66,13 @@ class BinanceSpotApiCached
 	#TODO code get_possible_symbols with balance + get_symbols_from_order_lists + symbols from orders in cache
 	
 	
-	public static function get_symbols_with_asset (string $asset, array $all_symbols=[]) : array #TODO keep
+	/**
+	 * get symbols containning asset as base or quote
+	 */
+	public static function get_symbols_with_asset (string $asset, array $all_symbols=[]) : array
 	{
 		if (empty ($all_symbols)) {
-			$all_symbols = BinanceSpotApi::get_symbols_cached();
+			$all_symbols = BinanceSpotApi::get_all_symbols_cached();
 		}
 		
 		$res = [];
@@ -109,7 +85,7 @@ class BinanceSpotApiCached
 	}
 	
 	
-	public static function get_ticker_price (array $used_symbols) : array #TODO keep
+	public static function get_ticker_price (array $used_symbols) : array
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApi";
@@ -128,9 +104,9 @@ class BinanceSpotApiCached
 	}
 	
 	
-	private static function get_all_assets_from_symbols () : array #TODO keep
+	private static function get_all_assets_from_symbols () : array
 	{
-		$symbols = BinanceSpotApi::get_symbols_cached();
+		$symbols = BinanceSpotApi::get_all_symbols_cached();
 		$base_assets = array_column($symbols, "baseAsset");
 		$quote_assets = array_column($symbols, "quoteAsset");
 		$assets = array_merge ($base_assets, $quote_assets);
@@ -139,7 +115,7 @@ class BinanceSpotApiCached
 		return $assets;
 	}
 	
-	public static function get_all_assets_from_symbols_cached () : array #TODO keep
+	public static function get_all_assets_from_symbols_cached () : array
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApiCached";
@@ -162,7 +138,7 @@ class BinanceSpotApiCached
 	 * guess base and quote assets from symbol
 	 * usefull for symbols not listed by exchangeinfo anymore (delisted pair)
 	 */
-	private static function guess_symbol_assets (string $symbol) : ?array #TODO keep
+	private static function guess_symbol_assets (string $symbol) : ?array
 	{
 		$assets = static::get_all_assets_from_symbols_cached ();
 		
@@ -180,7 +156,7 @@ class BinanceSpotApiCached
 	/**
 	 * same as guess_symbol_assets but cached
 	 */
-	public static function guess_symbol_assets_cached (string $symbol) : ?array #TODO keep
+	public static function guess_symbol_assets_cached (string $symbol) : ?array
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApiCached";

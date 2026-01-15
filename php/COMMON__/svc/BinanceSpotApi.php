@@ -12,7 +12,6 @@ use COMMON__\mdl\KeyValue;
 use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
 use DateTime;
-use DB\SQL;
 use ErrorException;
 
 
@@ -120,17 +119,17 @@ class BinanceSpotApi
 	 */
 	public static function get_all_trades () : array
 	{
-		$symbols = BinanceSpotApiCached::get_symbols_from_balance();
-		$spot_api = BinanceSpotApi::get_api();
+		$symbols = BinanceSpotApiCached::get_symbols_from_balance ();
+		$spot_api = BinanceSpotApi::get_api ();
 		
 		$res = [];
 		foreach ($symbols as $symbol) {
-			$trades = BinanceSpotApi::get_trades_cached($symbol, $spot_api);
-			$res = array_merge($res, $trades);
+			$trades = BinanceSpotApi::get_trades_cached ($symbol, $spot_api);
+			$res = array_merge ($res, $trades);
 		}
 		
-		$sort = array_column($res, "time");
-		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $res);
+		$sort = array_column ($res, "time");
+		array_multisort ($sort, SORT_ASC, SORT_NUMERIC, $res);
 		return $res;
 	}
 	#TODO recode  with more global caches (short / long last_update)
@@ -230,7 +229,7 @@ class BinanceSpotApi
 		return $data;
 	}
 	
-	public static function get_symbols_from_api () : array
+	public static function get_all_symbols_from_api () : array
 	{
 		$exchange_infos = static::get_exchange_infos ([], false);
 		$symbols = $exchange_infos ["symbols"];
@@ -248,14 +247,14 @@ class BinanceSpotApi
 		}
 	}
 
-	private static function get_symbols_from_db () : array
+	private static function get_all_symbols_from_db () : array
 	{
 		$symbols = SpotExchangeSymbol::getAll_fast ();
 		$symbols = array_combine (array_column($symbols, "symbol"), $symbols);
 		return $symbols;
 	}
 	
-	public static function get_symbols_cached () : array
+	public static function get_all_symbols_cached () : array
 	{
 		$cache_class = "BinanceSpotApi";
 		$cache_function = __FUNCTION__;
@@ -263,7 +262,7 @@ class BinanceSpotApi
 		$cache_ttl = 60 * 60;
 		
 		# get actual data
-		$symbols = static::get_symbols_from_db ();
+		$symbols = static::get_all_symbols_from_db ();
 		
 		# calculate last_update
 		$last_update_o = new KeyValue();
@@ -284,7 +283,7 @@ class BinanceSpotApi
 		# check if we have to query the API to refresh data
 		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
 			# get symbols
-			$symbols = static::get_symbols_from_api ();
+			$symbols = static::get_all_symbols_from_api ();
 
 			# store them into db
 			static::store_symbols_into_db ($symbols);
