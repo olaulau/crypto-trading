@@ -29,6 +29,10 @@ class ConvertTrade extends Mdl
 			'type' => Schema::DT_VARCHAR128,
 			'nullable' => false,
 		],
+		'fromAmount' => [
+			'type' => Schema::DT_VARCHAR128,
+			'nullable' => false,
+		],
 		'toAsset' => [
 			'type' => Schema::DT_VARCHAR128,
 			'nullable' => false,

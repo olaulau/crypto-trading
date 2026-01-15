@@ -115,6 +115,9 @@ class BinanceSpotApi
 	}
 
 
+	/**
+	 * query all trades by symbols, using DB cache (slow) or API if needed (very very slow)
+	 */
 	public static function get_all_trades () : array
 	{
 		$symbols = BinanceSpotApiCached::get_symbols_from_balance();
@@ -129,6 +132,19 @@ class BinanceSpotApi
 		$sort = array_column($res, "time");
 		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $res);
 		return $res;
+	}
+	#TODO recode  with more global caches (short / long last_update)
+	# short : only queryusefuill symbols
+	# long : query all (including those without any trade)
+	# [very short] : get_all_trades_from_db
+	
+	
+	/**
+	 * query all trades from DB at once (fast)
+	 */
+	public static function get_all_trades_from_db () : array
+	{
+		return SpotTrade::getAll("time")->castAll();
 	}
 	
 	
@@ -158,6 +174,16 @@ class BinanceSpotApi
 				$symbols [] = $symbol;
 			}
 		}
+		return $symbols;
+	}
+	
+	
+	public static function get_symbols_from_trades () : array
+	{
+		$trades = static::get_all_trades_from_db ();
+		$symbols = array_column($trades, "symbol");
+		sort($symbols);
+		$symbols = array_unique($symbols);
 		return $symbols;
 	}
 	

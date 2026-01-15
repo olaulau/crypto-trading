@@ -119,7 +119,7 @@ class Binance
 	}
 	
 	
-	public static function get_all_trades_sorted (string $symbol)
+	public static function get_trades_sorted (string $symbol)
 	{
 		$f3 = Base::instance();
 		
@@ -140,7 +140,7 @@ class Binance
 	{
 		# get trades
 		$symbol = "{$base_asset}{$quote_asset}";
-		$all_trades = static::get_all_trades_sorted ($symbol);
+		$all_trades = static::get_trades_sorted ($symbol);
 		
 		# init
 		$res = [
@@ -230,17 +230,19 @@ class Binance
 	
 	public static function get_all_trades () : array
 	{
-		$f3 = Base::instance();
+		$spot_trades = BinanceSpotApi::get_all_trades();
+		die;
 		
-		$spot_trades = BinanceSpotApi::get_all_trades(); #TODO
 		$convert_trades = BinanceConvertApi::get_all_trades ();
 		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
+		
 		$fiat_trades = BinanceFiatApi::get_all_trades();
 		$fiat_trades = BinanceFiatApi::fiatTrades_to_spotTrades($fiat_trades);
-		$all_trades = array_merge($spot_trades, $convert_trades, $fiat_trades);
 		
-		$sort = array_column($all_trades, "time");
-		array_multisort($sort, SORT_ASC, SORT_NUMERIC, $all_trades);
+		$all_trades = array_merge ($spot_trades, $convert_trades, $fiat_trades);
+		$sort = array_column ($all_trades, "time");
+		array_multisort ($sort, SORT_ASC, SORT_NUMERIC, $all_trades);
+		
 		return $all_trades;
 	}
 	
