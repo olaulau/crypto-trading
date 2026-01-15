@@ -48,8 +48,8 @@ class Accounting
 	{
 		$symbol = $trade ["symbol"];
 
-		if(!isset(static::$symbols [$symbol])) {
-			$assets = BinanceSpotApiCached::guess_symbol_assets_cached($symbol);
+		if(!isset(static::$symbols [$symbol])) { # symbol not listed by binance anymore, but we need to handle it anyway
+			$assets = BinanceSpotApiCached::guess_symbol_assets_cached ($symbol);
 			if (empty($assets)) {
 				echo "$symbol not in current symbols and couldn't be guessed <br/>" . PHP_EOL;
 				return; #TODO find why !

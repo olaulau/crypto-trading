@@ -5,6 +5,7 @@ namespace COMMON__\ctrl;
 use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
+use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceSpotApi;
@@ -129,8 +130,11 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceSpotApiCached::get_all_assets_from_symbols_cached ();
-		var_dump($data);
+		$trades = BinanceSpotApi::get_all_trades ();
+		var_dump($trades);
+		
+		// $ac = new Accounting;
+		// $ac->execute_trades($trades);
 		
 		die;
 	}

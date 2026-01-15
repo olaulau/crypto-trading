@@ -158,6 +158,10 @@ class BinanceSpotApiCached
 	}
 	
 	
+	/**
+	 * guess base and quote assets from symbol
+	 * usefull for symbols not listed by exchangeinfo anymore (delisted pair)
+	 */
 	private static function guess_symbol_assets (string $symbol) : ?array #TODO keep
 	{
 		$assets = static::get_all_assets_from_symbols_cached ();
@@ -173,7 +177,10 @@ class BinanceSpotApiCached
 		return null;
 	}
 	
-	public static function guess_symbol_assets_cached (string $symbol) : ?array #TODO keep ?
+	/**
+	 * same as guess_symbol_assets but cached
+	 */
+	public static function guess_symbol_assets_cached (string $symbol) : ?array #TODO keep
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApiCached";

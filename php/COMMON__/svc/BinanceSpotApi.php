@@ -115,7 +115,7 @@ class BinanceSpotApi
 	}
 
 
-	public static function get_all_trades () : array #TODO move into BinanceSpotApi
+	public static function get_all_trades () : array
 	{
 		$symbols = BinanceSpotApiCached::get_symbols_from_balance();
 		$spot_api = BinanceSpotApi::get_api();
@@ -206,7 +206,7 @@ class BinanceSpotApi
 	
 	public static function get_symbols_from_api () : array
 	{
-		$exchange_infos = static::get_exchange_infos([], false);
+		$exchange_infos = static::get_exchange_infos ([], false);
 		$symbols = $exchange_infos ["symbols"];
 		$symbols = array_combine (array_column($symbols, "symbol"), $symbols);
 		return $symbols;
@@ -224,11 +224,12 @@ class BinanceSpotApi
 
 	private static function get_symbols_from_db () : array
 	{
-		$data = SpotExchangeSymbol::getAll_fast ();
-		return $data;
+		$symbols = SpotExchangeSymbol::getAll_fast ();
+		$symbols = array_combine (array_column($symbols, "symbol"), $symbols);
+		return $symbols;
 	}
 	
-	public static function get_symbols_cached (?SpotRestApi $spot_api=null) : array
+	public static function get_symbols_cached () : array
 	{
 		$cache_class = "BinanceSpotApi";
 		$cache_function = __FUNCTION__;
