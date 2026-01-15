@@ -125,7 +125,7 @@ class Binance
 		
 		$spot_trades = BinanceSpotApi::get_trades_cached ($symbol);
 		
-		$convert_trades = BinanceConvertApi::get_trade_history_large_for_symbol (DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00"), new DateTime, $symbol);
+		$convert_trades = BinanceConvertApi::get_trade_history_large_for_symbol ($symbol);
 		
 		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
 		$all_trades = array_merge($spot_trades, $convert_trades);
@@ -243,6 +243,13 @@ class Binance
 		array_multisort ($sort, SORT_ASC, SORT_NUMERIC, $all_trades);
 		
 		return $all_trades;
+	}
+	
+	
+	public static function get_start_date () : DateTimeInterface
+	{
+		$f3 = Base::instance();
+		return DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00");
 	}
 	
 }

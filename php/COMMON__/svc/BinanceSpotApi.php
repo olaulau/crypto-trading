@@ -115,13 +115,49 @@ class BinanceSpotApi
 
 
 	/**
-	 * query all trades by symbols, using DB cache (slow) or API if needed (very very slow)
+	 * query all trades, query depends of cache ttl :
+	 * - very short : get_all_trades_from_db
+	 * - short : only query known symbols
+	 * - long : query all (including those without any trade)
 	 */
 	public static function get_all_trades () : array
 	{
-		$symbols = BinanceSpotApiCached::get_symbols_from_balance ();
-		$spot_api = BinanceSpotApi::get_api ();
+		$cache_class = "BinanceSpotApi";
+		$cache_function = __FUNCTION__;
+		$cache_key = "{$cache_class}__{$cache_function}__last_update";
+		$cache_ttl_short = 15;
+		$cache_ttl_long = 24 * 60 * 60;
 		
+		# calculate last_update
+		$last_update_o = new KeyValue();
+		$last_update_o->load (["key = ?", $cache_key]);
+		if(!$last_update_o->dry()) {
+			# use saved last update
+			$last_update_dt = DateTime::createFromFormat (Stuff::datetime_sql_format, $last_update_o->value);
+		}
+
+		# check if we have to query the API to refresh data
+		if (!empty($last_update_dt)) {
+			if ((time() - $last_update_dt->getTimestamp()) < $cache_ttl_short) {
+				# get direct from db
+				$trades = BinanceSpotApi::get_all_trades_from_db ();
+				return $trades;
+			}
+			elseif ((time() - $last_update_dt->getTimestamp()) < $cache_ttl_long) {
+				$symbols = static::get_known_symbols ();
+			}
+			else { # > $cache_ttl_long
+				$symbols = BinanceSpotApi::get_all_symbols_cached ();
+				$symbols = array_keys($symbols);
+			}
+		}
+		else {
+			$symbols = BinanceSpotApi::get_all_symbols_cached ();
+			$symbols = array_keys($symbols);
+		}
+		
+		# query
+		$spot_api = BinanceSpotApi::get_api ();
 		$res = [];
 		foreach ($symbols as $symbol) {
 			$trades = BinanceSpotApi::get_trades_cached ($symbol, $spot_api);
@@ -130,12 +166,32 @@ class BinanceSpotApi
 		
 		$sort = array_column ($res, "time");
 		array_multisort ($sort, SORT_ASC, SORT_NUMERIC, $res);
+		
+		# store last update
+		$last_update_o->key = $cache_key;
+		$last_update_o->value = (new DateTime)->format(Stuff::datetime_sql_format);
+		$last_update_o->save();
+		
 		return $res;
 	}
-	#TODO recode  with more global caches (short / long last_update)
-	# short : only queryusefuill symbols
-	# long : query all (including those without any trade)
-	# [very short] : get_all_trades_from_db
+	
+	
+	public static function get_known_symbols (bool $with_balance = false) : array
+	{
+		if ($with_balance) {
+			$symbols = BinanceSpotApiCached::get_symbols_from_balance (); # too much symbols;
+		}
+		else {
+			$symbols = [];
+		}
+		$order_lists_symbols = BinanceSpotApiCached::get_symbols_from_order_lists ();
+		$spot_trades_symbols = BinanceSpotApi::get_symbols_from_trades ();
+		
+		$symbols = array_merge ($symbols, $order_lists_symbols, $spot_trades_symbols);
+		sort ($symbols);
+		$symbols = array_unique ($symbols);
+		return $symbols;
+	}
 	
 	
 	/**
@@ -261,21 +317,10 @@ class BinanceSpotApi
 		$cache_key = "{$cache_class}__{$cache_function}__last_update";
 		$cache_ttl = 60 * 60;
 		
-		# get actual data
-		$symbols = static::get_all_symbols_from_db ();
-		
 		# calculate last_update
 		$last_update_o = new KeyValue();
 		$last_update_o->load (["key = ?", $cache_key]);
-		if($last_update_o->dry()) {
-			# use last trade date
-			$last_trade = end ($symbols);
-			$last_update_dt = null;
-			if (!empty($last_trade)) {
-				$last_update_dt = DateTime::createFromTimestamp ($last_trade ["createTime"]/1000);
-			}
-		}
-		else {
+		if(!$last_update_o->dry()) {
 			# use saved last update
 			$last_update_dt = DateTime::createFromFormat (Stuff::datetime_sql_format, $last_update_o->value);
 		}
@@ -292,6 +337,9 @@ class BinanceSpotApi
 			$last_update_o->key = $cache_key;
 			$last_update_o->value = (new DateTime)->format(Stuff::datetime_sql_format);
 			$last_update_o->save();
+		}
+		else {
+			$symbols = static::get_all_symbols_from_db ();
 		}
 		
 		return $symbols;

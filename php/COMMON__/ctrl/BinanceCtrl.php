@@ -7,6 +7,7 @@ use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
 use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
+use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\Stuff;
@@ -102,7 +103,7 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 		
 		# convert trades
-		// $trade_history = BinanceConvertApi::get_trade_history_large(DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00"), new DateTime);
+		// $trade_history = BinanceConvertApi::get_trade_history_large(Binance::get_start_date(), new DateTime);
 		// var_dump($trade_history);
 		
 		die;

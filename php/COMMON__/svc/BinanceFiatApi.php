@@ -104,13 +104,11 @@ class BinanceFiatApi
 
 	private static function get_all_trades_from_api (?int $start_timestamp = null) : array
 	{
-		$f3 = Base::instance();
-		
 		if(!empty($start_timestamp)) {
 			$start = DateTime::createFromTimestamp($start_timestamp);
 		}
 		else {
-			$start = DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00");
+			$start = Binance::get_start_date();
 		}
 		$now = new DateTimeImmutable ();
 		

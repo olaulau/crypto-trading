@@ -39,8 +39,10 @@ class BinanceSpotApiCached
 			$tmp = static::get_symbols_with_asset ($asset, $all_symbols);
 			$symbols = array_merge($symbols, $tmp);
 		}
+		
 		sort($symbols);
-		return array_unique($symbols);
+		$symbols = array_unique($symbols);
+		return $symbols;
 	}
 	
 	
@@ -63,11 +65,8 @@ class BinanceSpotApiCached
 	}
 
 
-	#TODO code get_possible_symbols with balance + get_symbols_from_order_lists + symbols from orders in cache
-	
-	
 	/**
-	 * get symbols containning asset as base or quote
+	 * get symbols containing asset as base or quote
 	 */
 	public static function get_symbols_with_asset (string $asset, array $all_symbols=[]) : array
 	{
