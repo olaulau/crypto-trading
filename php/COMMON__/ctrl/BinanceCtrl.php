@@ -53,8 +53,8 @@ class BinanceCtrl extends PrivateCtrl
 
 		# server time
 		$response = $spot_api->time();
-		$data = Binance::responseData_to_table($response->getData());
-		var_dump($data);
+		// $data = Binance::responseData_to_table($response->getData());
+		// var_dump($data);
 
 		# exchange infos
 		// $data = BinanceSpotApi::get_exchange_infos(["ETHEUR", "BNBUSDC"], false);
@@ -129,7 +129,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceSpotApi::get_symbols_cached ();
+		$data = BinanceSpotApiCached::get_all_assets_from_symbols_cached ();
 		var_dump($data);
 		
 		die;

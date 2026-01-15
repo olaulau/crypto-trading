@@ -272,6 +272,11 @@ class BinanceSpotApi
 	}
 	
 	
+	/**
+	 * get actual price for each symbols
+	 * @param array $symbols
+	 * @return array
+	 */
 	public static function get_ticker_price (array $symbols) : array
 	{
 		$spot_api = static::get_api();

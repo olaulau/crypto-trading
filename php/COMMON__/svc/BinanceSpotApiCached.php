@@ -109,7 +109,7 @@ class BinanceSpotApiCached
 	}
 	
 	
-	public static function get_ticker_price (array $used_symbols) : array #TODO what is this ?
+	public static function get_ticker_price (array $used_symbols) : array #TODO keep
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApi";
@@ -128,7 +128,7 @@ class BinanceSpotApiCached
 	}
 	
 	
-	private static function get_all_assets () : array #TODO keep
+	private static function get_all_assets_from_symbols () : array #TODO keep
 	{
 		$symbols = BinanceSpotApi::get_symbols_cached();
 		$base_assets = array_column($symbols, "baseAsset");
@@ -139,16 +139,16 @@ class BinanceSpotApiCached
 		return $assets;
 	}
 	
-	public static function get_all_assets_cached () : array #TODO put into DB
+	public static function get_all_assets_from_symbols_cached () : array #TODO keep
 	{
 		$cache = Cache::instance();
 		$cache_class = "BinanceSpotApiCached";
-		$cache_function = "get_all_assets";
+		$cache_function = "get_all_assets_from_symbols";
 		$cache_key = "{$cache_class}__{$cache_function}";
 		$cache_ttl = 24 * 60 * 60;
 		
 		if ($cache->exists($cache_key) === false) {
-			$data = BinanceSpotApiCached::$cache_function();
+			$data = BinanceSpotApiCached::$cache_function ();
 			$cache->set($cache_key, $data, $cache_ttl);
 		}
 		else {
@@ -160,7 +160,7 @@ class BinanceSpotApiCached
 	
 	private static function guess_symbol_assets (string $symbol) : ?array #TODO keep
 	{
-		$assets = static::get_all_assets_cached();
+		$assets = static::get_all_assets_from_symbols_cached ();
 		
 		foreach ($assets as $base_asset) {
 			foreach ($assets as $quote_asset) {
