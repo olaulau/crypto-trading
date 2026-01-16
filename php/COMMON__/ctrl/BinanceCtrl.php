@@ -130,16 +130,12 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = BinanceSpotApi::get_all_trades();
-		// var_dump($data);
-		die;
-		
 		$data = Binance::get_all_trades ();
 		// var_dump($data);
-		die;
+		// die;
 		
 		$ac = new Accounting;
-		$ac->execute_trades($trades);
+		$ac->execute_trades($data);
 		var_dump($ac);
 		
 		die;
