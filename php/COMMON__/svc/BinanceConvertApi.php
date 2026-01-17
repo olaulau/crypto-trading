@@ -157,22 +157,14 @@ class BinanceConvertApi
 	
 	public static function conversionTrades_to_spotTrades (array $convertion_trades) : array
 	{
+		$symbols = BinanceSpotApi::get_all_symbols_cached();
+		$symbols_str = array_keys ($symbols);
+		
 		$res = [];
 		foreach ($convertion_trades as $convertion_trade) {
-			if ($convertion_trade ["toAsset"] === Binance::reference_asset) { #TODO maybe no one of the assets is EUR
-				$base_asset = $convertion_trade ["fromAsset"];
-				$quote_asset = $convertion_trade ["toAsset"];
-				$is_buyer = false;
-			}
-			else {
-				$base_asset = $convertion_trade ["toAsset"]; #TODO so maybe this pair doesn't exist, but the opposite does
-				$quote_asset = $convertion_trade ["fromAsset"];
-				$is_buyer = true;
-			}
-			$symbol = "{$base_asset}{$quote_asset}";
-			
+			$symbol = "{$convertion_trade ["toAsset"]}{$convertion_trade ["fromAsset"]}";
 			$res [] = [
-				'symbol'			=> $symbol, #TODO may not be a valid pair (especially converting from a crypto to another one)
+				'symbol'			=> $symbol,
 				'id'				=> $convertion_trade ["quoteId"],
 				'orderId'			=> $convertion_trade ["orderId"],
 				'orderListId'		=> -1,
@@ -182,7 +174,7 @@ class BinanceConvertApi
 				'commission'		=> 0, 
 				'commissionAsset'	=> 'EUR',
 				'time'				=> $convertion_trade ["createTime"],
-				'isBuyer'			=> $is_buyer,
+				'isBuyer'			=> true,
 				'isMaker'			=> false,
 				'isBestMatch'		=> true,
 			];

@@ -252,4 +252,52 @@ class Binance
 		return DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00");
 	}
 	
+	
+	private static function find_symbol_for_assets (string $start, string $end) : ?string
+	{
+		if ($start === $end) {
+			throw new ErrorException("start is same as end");
+		}
+		
+		$symbols = BinanceSpotApi::get_all_symbols_cached();
+		$symbols_str = array_keys ($symbols);
+		
+		# direct
+		$symbol = "{$start}{$end}";
+		if (in_array($symbol, $symbols_str) ) {
+			return $symbols [$symbol] ["symbol"];
+		}
+		
+		# direct opposite
+		$symbol = "{$end}{$start}";
+		if (in_array($symbol, $symbols_str)) {
+			return $symbols [$symbol] ["symbol"];
+		}
+		
+		return null;
+	}
+	
+	public static function find_symbol_path_for_assets (string $start, string $end) : array
+	{
+		if ($start === $end) {
+			throw new ErrorException("start is same as end");
+		}
+		
+		# direct (and oposite)
+		$symbol = static::find_symbol_for_assets($start, $end);
+		if (!empty($symbol)) {
+			return [$symbol];
+		}
+		
+		# try to pass through USDC
+		$symbol1 = static::find_symbol_for_assets($start, "USDC");
+		$symbol2 = static::find_symbol_for_assets("USDC", $end);
+		if (!empty($symbol1) && !empty($symbol2)) {
+			return [$symbol1, $symbol2];
+		}
+		
+		# more complex case, need real path search
+		throw new ErrorException("complex case not implementer yet");
+	}
+	
 }
