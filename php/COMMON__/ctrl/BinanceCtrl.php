@@ -145,39 +145,13 @@ class BinanceCtrl extends PrivateCtrl
 	public static function dashboardGET (Base $f3, $url, $controler)
 	{
 		$balances = BinanceSpotApiCached::get_account_balances_consolidated ();
-		// $balance_assets = array_keys($balances);
-		#TODO integrate this as source, so that we don't miss EUR
-		$used_symbols = BinanceSpotApiCached::get_symbols_from_order_lists (); #TODO pas fiable du tout !
+		$f3->set("balances", $balances);
 		
-		$symbols_infos = BinanceSpotApi::get_all_symbols_cached();
-		$symbols_infos_indexed = Stuff::array_group_by ($symbols_infos, "symbol", false);
+		$trades = Binance::get_all_trades ();
+		$accounting = new Accounting;
+		$accounting->execute_trades($trades);
+		$f3->set("accounting", $accounting);
 		
-		$ticker_prices = BinanceSpotApiCached::get_ticker_price ($used_symbols);
-		
-		$trades_stats = [];
-		foreach ($used_symbols as $symbol) {
-			$symbol_infos = $symbols_infos_indexed [$symbol];
-			$base_asset = $symbol_infos ["baseAsset"];
-			$quote_asset = $symbol_infos ["quoteAsset"];
-			
-			$balance = $balances [$base_asset] ?? null;
-			$quote_balance = isset($balances [$base_asset]) ? ($balances [$base_asset] * $ticker_prices [$symbol] ["price"]) : null;
-			
-			if ($quote_balance > Binance::quote_dust_threashold) {
-				$trade_stats = Binance::get_trades_stats ($base_asset, $quote_asset);
-				$trades_stats [$symbol] = $trade_stats;
-			}
-			$trades_stats [$symbol] ["base_asset"] = $base_asset;
-			$trades_stats [$symbol] ["quote_asset"] = $quote_asset;
-			$trades_stats [$symbol] ["price"] = $ticker_prices [$symbol] ["price"];
-			$trades_stats [$symbol] ["balance"] = $balance;
-			$trades_stats [$symbol] ["quote_balance"] = $quote_balance;
-		}
-		
-		$sort = array_column($trades_stats, "quote_balance");
-		array_multisort($sort, SORT_DESC, SORT_NUMERIC, $trades_stats);
-		
-		$f3->set("trades_stats", $trades_stats);
 
 		$page = [
 			"module"	=>	"COMMON__",

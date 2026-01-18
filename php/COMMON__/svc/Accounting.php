@@ -28,14 +28,19 @@ class Accounting
 		$this->accounts [$asset] = new Account ($asset);
 	}
 	
-	public function get_account (string $asset) : ?Account
-	{
-		return $this->accounts [$asset] ?? null;
-	}
-	
 	public function add_to_account(string $asset, float $amount)
 	{
 		$this->get_account($asset)->add($amount);
+	}
+	
+	public function get_accounts_assets () : array
+	{
+		return array_keys ($this->accounts);
+	}
+	
+	public function get_account (string $asset) : ?Account
+	{
+		return $this->accounts [$asset] ?? null;
 	}
 	
 	public function get_account_quantity (string $asset)
