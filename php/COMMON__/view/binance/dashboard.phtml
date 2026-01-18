@@ -1,5 +1,6 @@
 <?php
 use COMMON__\svc\Binance;
+use COMMON__\svc\Stuff;
 
 ?>
 		<h1><?= $page["title"] ?></h1>
@@ -9,18 +10,17 @@ use COMMON__\svc\Binance;
 				<tr>
 					<th colspan=3 class="text-center align-middle">balance</th>
 					<th colspan=2 class="text-center align-middle">accounting</th>
-					
-					
-					<th rowspan=2 class="text-center align-middle">price</th>
-					<th rowspan=2 class="text-center align-middle">margin</th>
+					<th colspan=2 class="text-center align-middle">trades</th>
 					<th colspan=2 class="text-center">orders</th>
 				</tr>
 				<tr>
-					<th class="text-end">quantity</th>
-					<th class="text-start">asset</th>
+					<th class="text-end">asset</th>
+					<th class="text-start">quantity</th>
 					<th class="text-center">price</th>
 					<th class="text-end">quantity</th>
 					<th class="text-start">asset</th>
+					<th class="text-center">cost</th>
+					<th class="text-center">margin</th>
 					<th class="text-center">Take Profit</th>
 					<th class="text-center">Stop Loss</th>
 				</tr>
@@ -35,16 +35,16 @@ use COMMON__\svc\Binance;
 						if (!empty($balances [$asset])) {
 							?>
 							<td class="text-end">
-								<?= $balances [$asset] ?> <br/>
-								<span class="text-secondary"><?= $balance_reference_prices [$asset] ?></span>
-							</td>
-							<td class="">
 								<?= $asset ?> <br/>
 								<span class="text-secondary"><?= Binance::reference_asset ?></span>
 							</td>
-							<td class="">
-								1 <?= $asset ?> = <br/>
-								<?= $assets_reference_price [$asset] ?> <?= Binance::reference_asset ?>
+							<td class="text-start">
+								<?= Stuff::format_crypto ($balances [$asset]) ?> <br/>
+								<span class="text-secondary"><?= Stuff::format_fiat ($balance_reference_prices [$asset]) ?></span>
+							</td>
+							<td class="text-center">
+								1 = <br/>
+								<?= Stuff::format_crypto ($assets_reference_price [$asset]) ?>
 							</td>
 							<?php
 						}
@@ -55,13 +55,10 @@ use COMMON__\svc\Binance;
 						}
 						?>
 						<td class="text-end">
-							<?= $account->get_quantity() ?>
+							<?= Stuff::format_crypto ($account->get_quantity()) ?>
 						</td>
 						<td class="">
 							<?= $account->get_asset() ?>
-						</td>
-						<td class="">
-							<?= "" ?>
 						</td>
 						<td class="">
 							<?= "" ?>
@@ -85,7 +82,7 @@ use COMMON__\svc\Binance;
 				</tr>
 				<tr>
 					<th class="text-end">
-						<?= array_sum($balance_reference_prices) ?>
+						<?= stuff::format_fiat (array_sum ($balance_reference_prices)) ?>
 					</th>
 					<th class="">
 						<?= Binance::reference_asset ?>

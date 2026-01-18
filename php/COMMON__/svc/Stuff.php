@@ -59,7 +59,8 @@ class Stuff
 	{
 		list("mantisse" => $mantisse, "exposant" => $exposant) = self::float_parts ($value);
 		if ($exposant <= -3) { # pseudo scientific decimal notation for very small numbers
-			return "0,0<sub>" . abs($exposant+1) . "</sub>" . str_replace(".", "", (string)($mantisse));
+			$mantisse = static::format_float_significative ($mantisse, $significative_numbers, $force_sign); # round mantisse
+			return "0,0<sub>" . abs($exposant+1) . "</sub>" . str_replace(",", "", (string)($mantisse));
 		}
 		else {
 			$decimals = $significative_numbers - $exposant - 1;
@@ -67,14 +68,24 @@ class Stuff
 		}
 	}
 	
-	
-	public static function percent_format ($value)
+	public static function format_crypto (float $value) : string
 	{
-		return self::number_format_french ($value, 2, true) . " %";
+		return static::format_float_significative($value, 6, false);
+	}
+	
+	public static function format_fiat (float $value) : string
+	{
+		return static::number_format_french ($value, 2, false);
 	}
 	
 	
-	public static function EUR_format ($value)
+	public static function format_percent ($value)
+	{
+		return static::number_format_french ($value, 2, true) . " %";
+	}
+	
+	
+	public static function format_EUR ($value)
 	{
 		return self::number_format_french ($value, 2, true) . " €";
 	}

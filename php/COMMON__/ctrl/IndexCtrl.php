@@ -272,7 +272,7 @@ class IndexCtrl extends PrivateCtrl
 								$low = $high = $reference_price = $price;
 								$last_sell_assets = $sell_assets_history [array_key_last($sell_assets_history)];
 								$delta_pct = ($EUR - $last_sell_assets) / $last_sell_assets * 100;
-								$delta_pct_formated = stuff::percent_format($delta_pct);
+								$delta_pct_formated = stuff::format_percent($delta_pct);
 								$sell_assets_history [] = $EUR;
 								echo "[{$timestamp_formated}] ({$price_formated}) : selling --> {$EUR_formated} € ({$delta_pct_formated})" . PHP_EOL;
 								?>
@@ -292,7 +292,7 @@ class IndexCtrl extends PrivateCtrl
 							$low = $high = $reference_price = $price;
 							$last_buy_assets = $buy_assets_history [array_key_last($buy_assets_history)];
 							$delta_pct = ($ETH - $last_buy_assets) / $last_buy_assets * 100;
-							$delta_pct_formated = stuff::percent_format($delta_pct);
+							$delta_pct_formated = stuff::format_percent($delta_pct);
 							$buy_assets_history [] = $ETH;
 							echo "[{$timestamp_formated}] ({$price_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated}) <br/>" . PHP_EOL;
 						}
@@ -332,9 +332,9 @@ class IndexCtrl extends PrivateCtrl
 		
 		$end_total = $ETH * $price + $EUR;
 		$PandL = ($end_total - $start_total); # Profit and Loss
-		$PandL_formated = Stuff::EUR_format($PandL);
+		$PandL_formated = Stuff::format_EUR($PandL);
 		$ROI = $PandL / $start_total; # Return On Investment
-		$ROI_formated = Stuff::percent_format($ROI * 100, 2);
+		$ROI_formated = Stuff::format_percent($ROI * 100, 2);
 		echo "<b>==> ROI = {$ROI_formated} ({$PandL_formated})</b> <br/>" . PHP_EOL;
 	}
 	
