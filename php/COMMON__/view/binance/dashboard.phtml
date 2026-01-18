@@ -1,9 +1,13 @@
+<?php
+use COMMON__\svc\Binance;
+
+?>
 		<h1><?= $page["title"] ?></h1>
 
 		<table class="table table-bordered">
 			<thead>
 				<tr>
-					<th colspan=2 class="text-center align-middle">balance</th>
+					<th colspan=3 class="text-center align-middle">balance</th>
 					<th colspan=2 class="text-center align-middle">accounting</th>
 					
 					
@@ -14,6 +18,7 @@
 				<tr>
 					<th class="text-end">quantity</th>
 					<th class="text-start">asset</th>
+					<th class="text-center">price</th>
 					<th class="text-end">quantity</th>
 					<th class="text-start">asset</th>
 					<th class="text-center">Take Profit</th>
@@ -31,17 +36,21 @@
 							?>
 							<td class="text-end">
 								<?= $balances [$asset] ?> <br/>
-								<span class="text-secondary"><?= "xxx" ?></span>
+								<span class="text-secondary"><?= $balance_reference_prices [$asset] ?></span>
 							</td>
 							<td class="">
 								<?= $asset ?> <br/>
-								<span class="text-secondary"><?= "EUR" ?></span>
+								<span class="text-secondary"><?= Binance::reference_asset ?></span>
+							</td>
+							<td class="">
+								1 <?= $asset ?> = <br/>
+								<?= $assets_reference_price [$asset] ?> <?= Binance::reference_asset ?>
 							</td>
 							<?php
 						}
 						else {
 							?>
-							<td colspan=2>&nbsp;</td>
+							<td colspan=3>&nbsp;</td>
 							<?php
 						}
 						?>
@@ -69,9 +78,19 @@
 				?>
 			</tbody>
 			<tfoot>
-				<!-- <tr>
-					<th></th>
-				</tr> -->
+				<tr>
+					<th colspan=2 class="text-center">
+						TOTAL
+					</th>
+				</tr>
+				<tr>
+					<th class="text-end">
+						<?= array_sum($balance_reference_prices) ?>
+					</th>
+					<th class="">
+						<?= Binance::reference_asset ?>
+					</th>
+				</tr>
 			</tfoot>
 		</table>
 		

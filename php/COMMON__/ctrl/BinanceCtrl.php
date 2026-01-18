@@ -147,12 +147,47 @@ class BinanceCtrl extends PrivateCtrl
 		$balances = BinanceSpotApiCached::get_account_balances_consolidated ();
 		$f3->set("balances", $balances);
 		
+		$balances_assets = array_keys ($balances);
+		$tickers_query = [];
+		$assets_paths = [];
+		foreach ($balances_assets as $asset) {
+			if ($asset !== Binance::reference_asset) {
+				$assets_paths [$asset] = Binance::find_symbol_path_for_assets($asset, Binance::reference_asset);
+				foreach ($assets_paths [$asset] as $path) {
+					$tickers_query [] = $path ["symbol"];
+				}
+			}
+		}
+		$tickers = BinanceSpotApi::get_ticker_prices($tickers_query); #TODO put into cache for 60 seconds
+		
+		$assets_reference_price = [];
+		foreach ($assets_paths as $asset => $path) {
+			$price = 1;
+			foreach ($path as $step) {
+				if ($step ["direction"] === "normal") {
+					$price *= $tickers [$step ["symbol"]] ["price"];
+				}
+				else {
+					$price /= $tickers [$step ["symbol"]] ["price"];
+				}
+			}
+			$assets_reference_price [$asset] = $price;
+		}
+		$assets_reference_price [Binance::reference_asset] = 1;
+		$f3->set("assets_reference_price", $assets_reference_price);
+		
+		$balance_reference_prices = [];
+		foreach ($balances_assets as $asset) {
+			$balance_reference_prices [$asset] = $balances [$asset] * $assets_reference_price [$asset];
+		}
+		$f3->set("balance_reference_prices", $balance_reference_prices);
+		
+		
 		$trades = Binance::get_all_trades ();
 		$accounting = new Accounting;
 		$accounting->execute_trades($trades);
 		$f3->set("accounting", $accounting);
 		
-
 		$page = [
 			"module"	=>	"COMMON__",
 			"layout"	=>	"default",

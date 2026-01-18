@@ -253,7 +253,7 @@ class Binance
 	}
 	
 	
-	private static function find_symbol_for_assets (string $start, string $end) : ?string
+	private static function find_symbol_for_assets (string $start, string $end) : ?array
 	{
 		if ($start === $end) {
 			throw new ErrorException("start is same as end");
@@ -265,13 +265,19 @@ class Binance
 		# direct
 		$symbol = "{$start}{$end}";
 		if (in_array($symbol, $symbols_str) ) {
-			return $symbols [$symbol] ["symbol"];
+			return [
+				"direction"	=>	"normal",
+				"symbol"	=> $symbols [$symbol] ["symbol"],
+			];
 		}
 		
 		# direct opposite
 		$symbol = "{$end}{$start}";
 		if (in_array($symbol, $symbols_str)) {
-			return $symbols [$symbol] ["symbol"];
+			return [
+				"direction"	=>	"opposite",
+				"symbol"	=> $symbols [$symbol] ["symbol"],
+			];
 		}
 		
 		return null;
@@ -280,24 +286,24 @@ class Binance
 	public static function find_symbol_path_for_assets (string $start, string $end) : array
 	{
 		if ($start === $end) {
-			throw new ErrorException("start is same as end");
+			throw new ErrorException ("start is same as end");
 		}
 		
 		# direct (and oposite)
-		$symbol = static::find_symbol_for_assets($start, $end);
+		$symbol = static::find_symbol_for_assets ($start, $end);
 		if (!empty($symbol)) {
 			return [$symbol];
 		}
 		
 		# try to pass through USDC
-		$symbol1 = static::find_symbol_for_assets($start, "USDC");
-		$symbol2 = static::find_symbol_for_assets("USDC", $end);
+		$symbol1 = static::find_symbol_for_assets ($start, "USDC");
+		$symbol2 = static::find_symbol_for_assets ("USDC", $end);
 		if (!empty($symbol1) && !empty($symbol2)) {
 			return [$symbol1, $symbol2];
 		}
 		
 		# more complex case, need real path search
-		throw new ErrorException("complex case not implementer yet");
+		throw new ErrorException("complex case not implemented");
 	}
 	
 }

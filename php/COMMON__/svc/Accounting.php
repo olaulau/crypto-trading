@@ -11,8 +11,8 @@ class Accounting
 	public function __construct ()
 	{
 		static::$symbols = BinanceSpotApi::get_all_symbols_cached();
-		static::$symbols [BinanceFiatApi::fiat_bank . Binance::reference_asset] = [
-			"baseAsset"		=> BinanceFiatApi::fiat_bank,
+		static::$symbols [BinanceFiatApi::fiat_asset . Binance::reference_asset] = [
+			"baseAsset"		=> BinanceFiatApi::fiat_asset,
 			"quoteAsset"	=> Binance::reference_asset,
 		];
 	}
@@ -67,6 +67,7 @@ class Accounting
 			$quote_asset = $symbol_infos ["quoteAsset"];
 		}
 		
+		# create missing accounts
 		if (!$this->exists_account($base_asset)) {
 			$this->create_account($base_asset);
 		}
@@ -74,6 +75,7 @@ class Accounting
 			$this->create_account($quote_asset);
 		}
 		
+		# trade quantities
 		if ($trade ["isBuyer"] === true) {
 			$this->add_to_account($base_asset, $trade ["qty"]);
 			$this->add_to_account($quote_asset, -$trade ["quoteQty"]);
@@ -82,6 +84,8 @@ class Accounting
 			$this->add_to_account($base_asset, -$trade ["qty"]);
 			$this->add_to_account($quote_asset, $trade ["quoteQty"]);
 		}
+		
+		#TODO trade commissions
 	}
 	
 	public function execute_trades(array $trades)

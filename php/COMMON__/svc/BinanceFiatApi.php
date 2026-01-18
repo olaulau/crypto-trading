@@ -22,7 +22,7 @@ class BinanceFiatApi
 		"withdraw"	=> 1,
 	];
 	
-	public final const fiat_bank = "FIATBANK";
+	public final const fiat_asset = "EUR_FIAT_BANK";
 	
 	public final const max_history_days = 30;
 
@@ -195,7 +195,7 @@ class BinanceFiatApi
 		$res = [];
 		foreach ($fiat_trades as $fiat_trade) {
 			if ($fiat_trade ["status"] === "Successful") {
-				$base_asset = static::fiat_bank;
+				$base_asset = static::fiat_asset;
 				$quote_asset = $fiat_trade ["fiatCurrency"];
 				if ($fiat_trade ["transactionType"] === BinanceFiatApi::transaction_types ["deposit"]) {
 					$is_buyer = false;

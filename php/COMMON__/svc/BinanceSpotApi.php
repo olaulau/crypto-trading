@@ -351,14 +351,30 @@ class BinanceSpotApi
 	 * @param array $symbols
 	 * @return array
 	 */
-	public static function get_ticker_price (array $symbols) : array
+	public static function get_ticker_prices (array $symbols) : array
 	{
+		$symbols = array_unique($symbols);
+		sort($symbols);
+		
 		$spot_api = static::get_api();
 		$response = $spot_api->tickerPrice (null, $symbols);
 		$data = $response->getData(); /** @var TickerPriceResponse $data */
 		$response2 = $data->getTickerPriceResponse2();
 		$res = Binance::responseData_to_table ($response2);
 		$res = Stuff::array_group_by($res ["items"], "symbol", false);
+		return $res;
+	}
+	
+	/**
+	 * same for only one symbol
+	 */
+	public static function get_ticker_price (string $symbol) : array
+	{
+		$spot_api = static::get_api();
+		$response = $spot_api->tickerPrice ($symbol);
+		$data = $response->getData(); /** @var TickerPriceResponse $data */
+		$response1 = $data->getTickerPriceResponse1();
+		$res = Binance::responseData_to_table ($response1);
 		return $res;
 	}
 	
