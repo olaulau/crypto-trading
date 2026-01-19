@@ -14,15 +14,21 @@ use COMMON__\svc\Stuff;
 					<th colspan=2 class="text-center">orders</th>
 				</tr>
 				<tr>
-					<th class="text-end">asset</th>
-					<th class="text-start">quantity</th>
-					<th class="text-center">price</th>
-					<th class="text-end">quantity</th>
-					<th class="text-start">asset</th>
-					<th class="text-center">cost</th>
-					<th class="text-center">margin</th>
-					<th class="text-center">Take Profit</th>
-					<th class="text-center">Stop Loss</th>
+					<th class="text-end">
+						asset <br>
+						<span class="text-secondary fw-normal">reference asset</span>
+					</th>
+					<th class="text-start">
+						quantity <br>
+						<span class="text-secondary fw-normal">reference quantity</span>
+					</th>
+					<th class="text-center align-middle">price</th>
+					<th class="text-end align-middle">quantity</th>
+					<th class="text-start align-middle">asset</th>
+					<th class="text-center align-middle">cost</th>
+					<th class="text-center align-middle">margin</th>
+					<th class="text-center align-middle">Take Profit</th>
+					<th class="text-center align-middle">Stop Loss</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -82,10 +88,10 @@ use COMMON__\svc\Stuff;
 				</tr>
 				<tr>
 					<th class="text-end">
-						<?= stuff::format_fiat (array_sum ($balance_reference_prices)) ?>
+						<?= Binance::reference_asset ?>
 					</th>
 					<th class="">
-						<?= Binance::reference_asset ?>
+						<?= stuff::format_fiat (array_sum ($balance_reference_prices)) ?>
 					</th>
 				</tr>
 			</tfoot>
