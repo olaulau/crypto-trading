@@ -8,23 +8,17 @@ use COMMON__\svc\Stuff;
 		<table class="table table-bordered">
 			<thead>
 				<tr>
-					<th colspan=3 class="text-center align-middle">balance</th>
-					<th colspan=2 class="text-center align-middle">accounting</th>
+					<th rowspan=2 class="text-end">
+						asset <br>
+						<span class="text-secondary fw-normal">reference asset</span>
+					</th>
+					<th rowspan=2 class="text-center align-middle">accounting</th>
+					<th rowspan=2 class="text-center align-middle">balance</th>
+					<th rowspan=2 class="text-center align-middle">price</th>
 					<th colspan=2 class="text-center align-middle">trades</th>
 					<th colspan=2 class="text-center">orders</th>
 				</tr>
 				<tr>
-					<th class="text-end">
-						asset <br>
-						<span class="text-secondary fw-normal">reference asset</span>
-					</th>
-					<th class="text-start">
-						quantity <br>
-						<span class="text-secondary fw-normal">reference quantity</span>
-					</th>
-					<th class="text-center align-middle">price</th>
-					<th class="text-end align-middle">quantity</th>
-					<th class="text-start align-middle">asset</th>
 					<th class="text-center align-middle">cost</th>
 					<th class="text-center align-middle">margin</th>
 					<th class="text-center align-middle">Take Profit</th>
@@ -37,17 +31,34 @@ use COMMON__\svc\Stuff;
 					$account = $accounting->get_account($asset);
 					?>
 					<tr>
+						<td class="text-end">
+							<?= $account->get_asset() ?> <br/>
+							<span class="text-secondary"><?= Binance::reference_asset ?></span>
+						</td>
+						
+						<td class="text-start">
+							<?= Stuff::format_crypto ($account->get_quantity()) ?>
+						</td>
+
 						<?php
 						if (!empty($balances [$asset])) {
 							?>
-							<td class="text-end">
-								<?= $asset ?> <br/>
-								<span class="text-secondary"><?= Binance::reference_asset ?></span>
-							</td>
 							<td class="text-start">
 								<?= Stuff::format_crypto ($balances [$asset]) ?> <br/>
 								<span class="text-secondary"><?= Stuff::format_fiat ($balance_reference_prices [$asset]) ?></span>
 							</td>
+							<?php
+						}
+						else {
+							?>
+							<td>&nbsp;</td>
+							<?php
+						}
+						?>
+
+						<?php
+						if (!empty($assets_reference_price [$asset])) {
+							?>
 							<td class="text-center">
 								1 = <br/>
 								<?= Stuff::format_crypto ($assets_reference_price [$asset]) ?>
@@ -56,22 +67,19 @@ use COMMON__\svc\Stuff;
 						}
 						else {
 							?>
-							<td colspan=3>&nbsp;</td>
+							<td>&nbsp;</td>
 							<?php
 						}
 						?>
-						<td class="text-end">
-							<?= Stuff::format_crypto ($account->get_quantity()) ?>
-						</td>
-						<td class="">
-							<?= $account->get_asset() ?>
-						</td>
+						
 						<td class="">
 							<?= "" ?>
 						</td>
+
 						<td class="">
 							<?= "" ?>
 						</td>
+
 						<td class="">
 							<?= "" ?>
 						</td>
@@ -82,16 +90,17 @@ use COMMON__\svc\Stuff;
 			</tbody>
 			<tfoot>
 				<tr>
-					<th colspan=2 class="text-center">
-						TOTAL
-					</th>
-				</tr>
-				<tr>
 					<th class="text-end">
 						<?= Binance::reference_asset ?>
 					</th>
+					<th class="text-start">
+						&nbsp;
+					</th>
 					<th class="">
 						<?= stuff::format_fiat (array_sum ($balance_reference_prices)) ?>
+					</th>
+					<th colspan=5 class="text-start">
+						&nbsp;
 					</th>
 				</tr>
 			</tfoot>

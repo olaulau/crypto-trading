@@ -158,7 +158,7 @@ class BinanceCtrl extends PrivateCtrl
 				}
 			}
 		}
-		$tickers = BinanceSpotApiCached::get_ticker_prices ($tickers_query);
+		$tickers = BinanceSpotApiCached::get_ticker_prices ($tickers_query); #TODO query also assets with past trades but no balance
 		
 		$assets_reference_price = [];
 		foreach ($assets_paths as $asset => $path) {
