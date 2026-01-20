@@ -200,17 +200,7 @@ class BinanceSpotApi
 	 */
 	public static function get_all_trades_from_db () : array
 	{
-		$f3 = Base::instance();
-		$db = $f3->get("db"); /** @var SQL $db */
-
-		$sql = "
-			SELECT *
-			FROM " . SpotTrade::table . "
-			ORDER BY time ASC";
-		$params = [];
-
-		$data = $db->exec($sql, $params);
-		return $data;
+		return SpotTrade::getAllFast("time");
 	}
 	
 	
