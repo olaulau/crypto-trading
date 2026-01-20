@@ -253,13 +253,15 @@ class Binance
 	}
 	
 	
-	private static function find_symbol_for_assets (string $start, string $end) : ?array
+	private static function find_symbol_for_assets (string $start, string $end, ?array $symbols=null) : ?array
 	{
 		if ($start === $end) {
 			throw new ErrorException("start is same as end");
 		}
 		
-		$symbols = BinanceSpotApi::get_all_symbols_cached();
+		if(empty($symbols)) {
+			$symbols = BinanceSpotApi::get_all_symbols_cached();
+		}
 		$symbols_str = array_keys ($symbols);
 		
 		# direct
@@ -283,21 +285,21 @@ class Binance
 		return null;
 	}
 	
-	public static function find_symbol_path_for_assets (string $start, string $end) : array
+	public static function find_symbol_path_for_assets (string $start, string $end, ?array $symbols=null) : array
 	{
 		if ($start === $end) {
 			throw new ErrorException ("start is same as end");
 		}
 		
-		# direct (and oposite)
-		$symbol = static::find_symbol_for_assets ($start, $end);
+		# direct (and opposite)
+		$symbol = static::find_symbol_for_assets ($start, $end, $symbols);
 		if (!empty($symbol)) {
 			return [$symbol];
 		}
 		
 		# try to pass through USDC
-		$symbol1 = static::find_symbol_for_assets ($start, "USDC");
-		$symbol2 = static::find_symbol_for_assets ("USDC", $end);
+		$symbol1 = static::find_symbol_for_assets ($start, "USDC", $symbols);
+		$symbol2 = static::find_symbol_for_assets ("USDC", $end, $symbols);
 		if (!empty($symbol1) && !empty($symbol2)) {
 			return [$symbol1, $symbol2];
 		}

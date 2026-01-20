@@ -130,13 +130,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		$data = Binance::get_all_trades ();
-		// var_dump($data);
-		// die;
 		
-		$ac = new Accounting;
-		$ac->execute_trades($data);
-		var_dump($ac);
 		
 		die;
 	}
@@ -147,12 +141,13 @@ class BinanceCtrl extends PrivateCtrl
 		$balances = BinanceSpotApiCached::get_account_balances_consolidated ();
 		$f3->set("balances", $balances);
 		
+		$symbols = BinanceSpotApi::get_all_symbols_cached();
 		$balances_assets = array_keys ($balances);
 		$tickers_query = [];
 		$assets_paths = [];
 		foreach ($balances_assets as $asset) {
 			if ($asset !== Binance::reference_asset) {
-				$assets_paths [$asset] = Binance::find_symbol_path_for_assets($asset, Binance::reference_asset);
+				$assets_paths [$asset] = Binance::find_symbol_path_for_assets($asset, Binance::reference_asset, $symbols);
 				foreach ($assets_paths [$asset] as $path) {
 					$tickers_query [] = $path ["symbol"];
 				}
@@ -181,7 +176,6 @@ class BinanceCtrl extends PrivateCtrl
 			$balance_reference_prices [$asset] = $balances [$asset] * $assets_reference_price [$asset];
 		}
 		$f3->set("balance_reference_prices", $balance_reference_prices);
-		
 		
 		$trades = Binance::get_all_trades ();
 		$accounting = new Accounting;

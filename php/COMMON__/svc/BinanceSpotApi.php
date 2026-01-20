@@ -12,6 +12,7 @@ use COMMON__\mdl\KeyValue;
 use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
 use DateTime;
+use DB\SQL;
 use ErrorException;
 
 
@@ -199,7 +200,17 @@ class BinanceSpotApi
 	 */
 	public static function get_all_trades_from_db () : array
 	{
-		return SpotTrade::getAll("time")->castAll();
+		$f3 = Base::instance();
+		$db = $f3->get("db"); /** @var SQL $db */
+
+		$sql = "
+			SELECT *
+			FROM " . SpotTrade::table . "
+			ORDER BY time ASC";
+		$params = [];
+
+		$data = $db->exec($sql, $params);
+		return $data;
 	}
 	
 	
