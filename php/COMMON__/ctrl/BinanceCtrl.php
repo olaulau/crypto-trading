@@ -158,7 +158,7 @@ class BinanceCtrl extends PrivateCtrl
 				}
 			}
 		}
-		$tickers = BinanceSpotApi::get_ticker_prices($tickers_query); #TODO put into cache for 60 seconds
+		$tickers = BinanceSpotApiCached::get_ticker_prices ($tickers_query);
 		
 		$assets_reference_price = [];
 		foreach ($assets_paths as $asset => $path) {
