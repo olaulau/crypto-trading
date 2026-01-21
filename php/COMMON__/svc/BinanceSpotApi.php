@@ -42,7 +42,7 @@ class BinanceSpotApi
 		if (empty($spot_api)) {
 			$spot_api = static::get_api();
 		}
-		$response = $spot_api->myTrades($symbol); /** @var ApiResponse $response */
+		$response = $spot_api->myTrades($symbol, null, null, null, null, null, Binance::recv_window); /** @var ApiResponse $response */
 		$data = Binance::responseData_to_table($response->getData());
 		return $data ["items"];
 	}

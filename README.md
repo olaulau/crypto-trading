@@ -66,3 +66,15 @@ impacter les 2 parties à chaque trade
 - trades update
 	- route CLI pour forcer l'update des symbols sans trades
 	- doc install : crontab vers cette rotue tous les jours
+
+
+
+
+
+test
+- user.ini
+	- présent
+	- infos mysq
+	- infos binance api key
+- db initialized
+- vendor & node modules

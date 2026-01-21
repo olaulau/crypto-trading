@@ -17,6 +17,8 @@ class Binance
 	
 	public final const quote_dust_threashold = 10;
 	
+	public final const recv_window = 20000;
+	
 	public final static $kline_format = [
 		"open_time",
 		"open",
