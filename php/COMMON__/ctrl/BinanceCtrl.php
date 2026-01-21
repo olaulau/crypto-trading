@@ -74,10 +74,6 @@ class BinanceCtrl extends PrivateCtrl
 		// $data = BinanceSpotApi::get_order_lists();
 		// var_dump($data);
 		
-		# trades stats
-		// $data = Binance::get_trades_stats("ETHEUR");
-		// var_dump($data);
-		
 		# average price (last 5 minutes)
 		// $response = $spot_api->avgPrice(IndexCtrl::$crypto_pair);
 		// $data = Binance::responseData_to_table($response->getData());

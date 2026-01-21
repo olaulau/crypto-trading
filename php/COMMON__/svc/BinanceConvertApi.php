@@ -174,9 +174,9 @@ class BinanceConvertApi
 				'commission'		=> 0, 
 				'commissionAsset'	=> 'EUR',
 				'time'				=> $convertion_trade ["createTime"],
-				'isBuyer'			=> true,
-				'isMaker'			=> false,
-				'isBestMatch'		=> true,
+				'isBuyer'			=> 1,
+				'isMaker'			=> 0,
+				'isBestMatch'		=> 1,
 			];
 		} 
 		return $res;

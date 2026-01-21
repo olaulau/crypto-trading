@@ -76,7 +76,7 @@ class Accounting
 		}
 		
 		# trade quantities
-		if ($trade ["isBuyer"] === true) {
+		if ($trade ["isBuyer"] === 1) {
 			$this->add_to_account($base_asset, $trade ["qty"]);
 			$this->add_to_account($quote_asset, -$trade ["quoteQty"]);
 		}

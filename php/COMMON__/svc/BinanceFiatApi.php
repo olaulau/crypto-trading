@@ -198,10 +198,10 @@ class BinanceFiatApi
 				$base_asset = static::fiat_asset;
 				$quote_asset = $fiat_trade ["fiatCurrency"];
 				if ($fiat_trade ["transactionType"] === BinanceFiatApi::transaction_types ["deposit"]) {
-					$is_buyer = false;
+					$is_buyer = 0;
 				}
 				else {
-					$is_buyer = true;
+					$is_buyer = 1;
 				}
 				
 				$res [] = [
@@ -216,8 +216,8 @@ class BinanceFiatApi
 					'commissionAsset'	=> $fiat_trade ["fiatCurrency"],
 					'time'				=> $fiat_trade ["createTime"],
 					'isBuyer'			=> $is_buyer,
-					'isMaker'			=> false,
-					'isBestMatch'		=> true,
+					'isMaker'			=> 0,
+					'isBestMatch'		=> 1,
 				];
 			}
 		}
