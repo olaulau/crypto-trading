@@ -79,6 +79,8 @@ class IndexCtrl extends PrivateCtrl
 		ConvertTrade::setup();
 		SpotTrade::setup();
 		SpotExchangeSymbol::setup();
+		
+		echo "Ok.";
 	}
 	
 	

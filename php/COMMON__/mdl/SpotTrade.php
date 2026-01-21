@@ -56,15 +56,15 @@ class SpotTrade extends Mdl
 			'nullable' => false,
 		],
 		'isBuyer' => [
-			'type' => Schema::DT_BOOL,
+			'type' => Schema::DT_INT1,
 			'nullable' => false,
 		],
 		'isMaker' => [
-			'type' => Schema::DT_BOOL,
+			'type' => Schema::DT_INT1,
 			'nullable' => false,
 		],
 		'isBestMatch' => [
-			'type' => Schema::DT_BOOL,
+			'type' => Schema::DT_INT1,
 			'nullable' => false,
 		],
 	];

@@ -12,7 +12,6 @@ use COMMON__\mdl\KeyValue;
 use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
 use DateTime;
-use DB\SQL;
 use ErrorException;
 
 
