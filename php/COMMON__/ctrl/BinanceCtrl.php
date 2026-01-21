@@ -167,11 +167,11 @@ class BinanceCtrl extends PrivateCtrl
 		$assets_reference_price [Binance::reference_asset] = 1;
 		$f3->set("assets_reference_price", $assets_reference_price);
 		
-		$balance_reference_prices = [];
+		$balance_reference_qty = [];
 		foreach ($balances_assets as $asset) {
-			$balance_reference_prices [$asset] = $balances [$asset] * $assets_reference_price [$asset];
+			$balance_reference_qty [$asset] = $balances [$asset] * $assets_reference_price [$asset];
 		}
-		$f3->set("balance_reference_prices", $balance_reference_prices);
+		$f3->set("balance_reference_qty", $balance_reference_qty);
 		
 		$trades = Binance::get_all_trades ();
 		$accounting = new Accounting;

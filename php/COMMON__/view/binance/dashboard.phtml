@@ -27,6 +27,7 @@ use COMMON__\svc\Stuff;
 			</thead>
 			<tbody>
 				<?php
+				$accounting_total = 0;
 				foreach ($accounting->get_accounts_assets() as $asset) {
 					$account = $accounting->get_account($asset);
 					?>
@@ -37,7 +38,16 @@ use COMMON__\svc\Stuff;
 						</td>
 						
 						<td class="text-start">
-							<?= Stuff::format_crypto ($account->get_quantity()) ?>
+							<?= Stuff::format_crypto ($account->get_quantity()) ?> <br/>
+						<?php
+						if(!empty($assets_reference_price [$asset])) {
+							$account_reference_qty = $account->get_quantity() * $assets_reference_price [$asset];
+							$accounting_total += $account_reference_qty;
+							?>
+							<span class="text-secondary"><?= Stuff::format_fiat ( $account_reference_qty ) ?></span>
+							<?php
+						}
+						?>
 						</td>
 
 						<?php
@@ -45,7 +55,7 @@ use COMMON__\svc\Stuff;
 							?>
 							<td class="text-start">
 								<?= Stuff::format_crypto ($balances [$asset]) ?> <br/>
-								<span class="text-secondary"><?= Stuff::format_fiat ($balance_reference_prices [$asset]) ?></span>
+								<span class="text-secondary"><?= Stuff::format_fiat ($balance_reference_qty [$asset]) ?></span>
 							</td>
 							<?php
 						}
@@ -59,7 +69,7 @@ use COMMON__\svc\Stuff;
 						<?php
 						if (!empty($assets_reference_price [$asset])) {
 							?>
-							<td class="text-center">
+							<td class="text-start">
 								1 = <br/>
 								<?= Stuff::format_crypto ($assets_reference_price [$asset]) ?>
 							</td>
@@ -94,10 +104,10 @@ use COMMON__\svc\Stuff;
 						<?= Binance::reference_asset ?>
 					</th>
 					<th class="text-start">
-						&nbsp;
+						<?= stuff::format_fiat ($accounting_total) ?>
 					</th>
 					<th class="">
-						<?= stuff::format_fiat (array_sum ($balance_reference_prices)) ?>
+						<?= stuff::format_fiat (array_sum ($balance_reference_qty)) ?>
 					</th>
 					<th colspan=5 class="text-start">
 						&nbsp;
