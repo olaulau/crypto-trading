@@ -2,12 +2,14 @@
 namespace COMMON__\mdl;
 
 use Base;
+use DB\Cortex;
+use DB\CortexCollection;
 use DB\SQL;
 use ErrorException;
 use Exception;
 
 
-abstract class Mdl extends \DB\Cortex
+abstract class Mdl extends Cortex
 {
 	public const table = null; // each subclass must fill-in this var
 	
@@ -35,23 +37,23 @@ abstract class Mdl extends \DB\Cortex
 	// this method can lead to fatal error when the data is not foud, combining F3 with cortex ORM
 	public function findone ($filter = null, ?array $options = null, $ttl = 0)
 	{
-		throw new ErrorException("findone() method shoud not be used (class : " . get_called_class() . ")");
+		throw new ErrorException("findone() method should not be used (class : " . get_called_class() . ")");
 	}
 	
 	
 	function __construct ()
 	{
 		$f3 = Base::instance();
-		$db = $f3->get("db"); /** @var $db \DB\SQL */
+		$db = $f3->get("db"); /** @var SQL $db */
 		parent::__construct($db, static::table);
 	}
 	
 	
-	public function find($filter = NULL, ?array $options = NULL, $ttl = 0) : \DB\CortexCollection
+	public function find($filter = NULL, ?array $options = NULL, $ttl = 0) : CortexCollection
 	{
 		$res = parent::find($filter, $options, $ttl);
 		if(empty($res)) {
-			return new \DB\CortexCollection();
+			return new CortexCollection();
 		}
 		else {
 			return $res;
@@ -65,7 +67,7 @@ abstract class Mdl extends \DB\Cortex
 		$entity = new static();
 		
 		$f3 = Base::instance();
-		$db = $f3->get("db"); /** @var \DB\SQL $db DataBase */
+		$db = $f3->get("db"); /** @var SQL $db */
 		
 		// check $key is valid to avoid SQL injection
 		$table = $entity->getTable();
@@ -92,20 +94,20 @@ abstract class Mdl extends \DB\Cortex
 	}
 	
 	
-	public static function getAll ($order_field=null) : \DB\CortexCollection
+	public static function getAll ($order_field=null) : CortexCollection
 	{
-		$entity = new static(); /** @var \DB\Cortex $entity */
+		$entity = new static(); /** @var Cortex $entity */
 		$order_field = $order_field ?? "name";
 		// if the entity has a property "name", order results with it
 		if(in_array($order_field, $entity->fields())) {
-			$res = $entity->find("", ["order" => "$order_field ASC"]);
+			$res = $entity->find([], ["order" => "$order_field ASC"]);
 		}
 		else {
 			$res = $entity->find();
 		}
 		
 		if(empty($res)) {
-			return new \DB\CortexCollection();
+			return new CortexCollection();
 		}
 		else {
 			return $res;
@@ -131,7 +133,7 @@ abstract class Mdl extends \DB\Cortex
 	/**
 	 *	key -> object
 	 */
-	public static function objectsIndexed (\DB\CortexCollection $objects, $key="id")
+	public static function objectsIndexed (CortexCollection $objects, $key="id")
 	{
 		$values = [];
 		foreach ($objects as $row) {
@@ -145,7 +147,7 @@ abstract class Mdl extends \DB\Cortex
 	/**
 	 * id -> name
 	 */
-	public static function objectsAsList (\DB\CortexCollection $objects) : array
+	public static function objectsAsList (CortexCollection $objects) : array
 	{
 		$res = [];
 		foreach ($objects as $row) {
@@ -170,10 +172,11 @@ abstract class Mdl extends \DB\Cortex
 	 *	},
 	 * ]
 	 */
-	public static function objectsAsAjaxList (\DB\CortexCollection $objects) : array
+	public static function objectsAsAjaxList (CortexCollection $objects) : array
 	{
 		$res = [];
-		foreach ($objects as $row) 	$res [] = [
+		foreach ($objects as $row) {
+			$res [] = [
 				"value" => $row->id,
 				"label" => $row->__toString(),
 			];
@@ -193,7 +196,7 @@ abstract class Mdl extends \DB\Cortex
 	public function isErasable ()
 	{
 		$f3 = Base::instance();
-		$db = $f3->get("db"); /** @var \DB\SQL $db */
+		$db = $f3->get("db"); /** @var SQL $db */
 		
 		$db->begin();
 		try {
@@ -211,7 +214,7 @@ abstract class Mdl extends \DB\Cortex
 	public function tryErase ()
 	{
 		$f3 = Base::instance();
-		$db = $f3->get("db"); /** @var \DB\SQL $db */
+		$db = $f3->get("db"); /** @var SQL $db */
 		
 		$db->begin();
 		try {
@@ -353,14 +356,14 @@ abstract class Mdl extends \DB\Cortex
 	public static function drop_table () : void
 	{
 		$f3 = Base::instance();
-		$db = $f3->get("db"); /** @var $db \DB\SQL */
+		$db = $f3->get("db"); /** @var SQL $db */
 		$db->exec("DROP TABLE IF EXISTS " . static::table);
 	}
 	
 	public static function delete_table () : void
 	{
 		$f3 = Base::instance();
-		$db = $f3->get("db"); /** @var $db \DB\SQL */
+		$db = $f3->get("db"); /** @var SQL $db */
 		$db->exec("DELETE FROM " . static::table);
 	}
 	
