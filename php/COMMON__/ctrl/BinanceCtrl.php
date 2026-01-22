@@ -125,16 +125,16 @@ class BinanceCtrl extends PrivateCtrl
 	}
 	
 	
-	public static function testGET (Base $f3, $url, $controler)
+	public static function testGET (Base $f3, $url, $controler) : void
 	{
-		$data = BinanceCustomApi::get_capital_config ();
-		var_dump($data);
+		$data = BinanceCustomApi::get_capital_configs_cached ();
+		// var_dump($data);
 		
 		die;
 	}
 	
 	
-	public static function dashboardGET (Base $f3, $url, $controler)
+	public static function dashboardGET (Base $f3, $url, $controler) : void
 	{
 		$balances = BinanceSpotApiCached::get_account_balances_consolidated ();
 		$f3->set("balances", $balances);

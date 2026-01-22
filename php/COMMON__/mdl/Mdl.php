@@ -119,6 +119,9 @@ abstract class Mdl extends Cortex
 		$f3 = Base::instance();
 		$db = $f3->get("db"); /** @var SQL $db */
 
+		if (empty($order_field)) {
+			$order_field = "id";
+		}
 		$sql = "
 			SELECT *
 			FROM " . static::table . "

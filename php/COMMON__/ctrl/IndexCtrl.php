@@ -2,6 +2,7 @@
 namespace COMMON__\ctrl;
 
 use Base;
+use COMMON__\mdl\CapitalConfig;
 use COMMON__\mdl\ConvertTrade;
 use COMMON__\mdl\FiatTrade;
 use COMMON__\mdl\KeyValue;
@@ -65,12 +66,13 @@ class IndexCtrl extends PrivateCtrl
 	public static function dbCleanGET (Base $f3, $url, $controler)
 	{
 		# cleanup
-		Kline::drop_table();
+		CapitalConfig::drop_table();
+		ConvertTrade::drop_table();
 		FiatTrade::drop_table();
 		KeyValue::drop_table();
-		ConvertTrade::drop_table();
-		SpotTrade::drop_table();
+		Kline::drop_table();
 		SpotExchangeSymbol::drop_table();
+		SpotTrade::drop_table();
 		
 		echo "Ok.";
 	}
@@ -78,12 +80,13 @@ class IndexCtrl extends PrivateCtrl
 	public static function dbSetupGET (Base $f3, $url, $controler)
 	{
 		# create DB struct
-		Kline::setup();
+		CapitalConfig::setup();
+		ConvertTrade::setup();
 		FiatTrade::setup();
 		KeyValue::setup();
-		ConvertTrade::setup();
-		SpotTrade::setup();
+		Kline::setup();
 		SpotExchangeSymbol::setup();
+		SpotTrade::setup();
 		
 		echo "Ok.";
 	}
