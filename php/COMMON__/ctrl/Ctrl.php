@@ -1,7 +1,12 @@
 <?php
 namespace COMMON__\ctrl;
 
+use Base;
 use COMMON__\svc\CSRF;
+use DB\SQL;
+use Log;
+use PDO;
+use Session;
 
 
 abstract class Ctrl
@@ -9,6 +14,11 @@ abstract class Ctrl
 	
 	public static function beforeRoute ()
 	{
+		# check npm
+		if (! file_exists(__DIR__ . "/../../../node_modules/")) {
+			die("no '/node_modules/' directory : please run 'npm install' before using this web app");
+		}
+		
 		// extend display of xdebug's var_dump
 		ini_set("xdebug.var_display_max_children", 1024);
 		ini_set("xdebug.var_display_max_data", 2048);
@@ -19,16 +29,16 @@ abstract class Ctrl
 		$f3->set("f3", $f3);
 		
 		// initialise logger
-		$log = new \Log('logs.log');
+		$log = new Log('logs.log');
 		$f3->set("log", $log);
 		
 		// initialise DB
 		if(!empty($f3->get("db.user"))) {
-			$db = new \DB\SQL(
+			$db = new SQL(
 				$f3->get("db.type").":host=".$f3->get("db.host").";port=".$f3->get("db.port").";dbname=".$f3->get("db.name"),
 				$f3->get("db.user"), $f3->get("db.password"),
 				[
-					\PDO::ATTR_PERSISTENT => true,
+					PDO::ATTR_PERSISTENT => true,
 				]
 			);
 			$db->log(false);
@@ -36,8 +46,8 @@ abstract class Ctrl
 		}
 		
 		// initialise session (ignores suspect session : change in IP / useragent)
-		$session = new \Session(
-			function(\Session $session, $id) // onsuspeect
+		$session = new Session(
+			function(Session $session, $id) // onsuspeect
 			{
 				return true;
 			}
@@ -63,7 +73,7 @@ abstract class Ctrl
 	
 	public static function renderPage ($page)
 	{
-		$f3 = \Base::instance();
+		$f3 = Base::instance();
 		$f3->set("page", $page);
 		
 		$view = new \View();
@@ -73,20 +83,20 @@ abstract class Ctrl
 	
 	private static function pathDepth ($page)
 	{
-		$nb = \substr_count($page["name"], "/");
+		$nb = substr_count($page["name"], "/");
 		return $nb;
 	}
 
 	public static function relativePath ($page)
 	{
-		return \str_repeat("../", self::pathDepth($page));
+		return str_repeat("../", self::pathDepth($page));
 	}
 	
 	
 	//TODO usefull ?
 	public static function refreshPage ()
 	{
-		$f3 = \Base::instance();
+		$f3 = Base::instance();
 		$referer = $f3->get("SERVER.HTTP_REFERER");
 		if(!empty($referer))
 		{
@@ -101,8 +111,8 @@ abstract class Ctrl
 	
 	public static function renderAjax($data)
 	{
-		\header("content-type:application/json");
-		echo \json_encode($data);
+		header("content-type:application/json");
+		echo json_encode($data);
 		die;
 	}
 	
