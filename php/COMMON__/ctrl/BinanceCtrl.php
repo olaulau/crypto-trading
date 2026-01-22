@@ -8,6 +8,7 @@ use Binance\Client\Spot\SpotRestApiUtil;
 use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceConvertApi;
+use COMMON__\svc\BinanceCustomApi;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\Stuff;
@@ -126,7 +127,8 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		
+		$data = BinanceCustomApi::get_capital_config ();
+		var_dump($data);
 		
 		die;
 	}
