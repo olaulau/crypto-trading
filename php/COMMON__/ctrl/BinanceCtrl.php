@@ -127,8 +127,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
-		$data = BinanceCustomApi::get_capital_configs_cached ();
-		// var_dump($data);
+		
 		
 		die;
 	}
@@ -138,6 +137,9 @@ class BinanceCtrl extends PrivateCtrl
 	{
 		$balances = BinanceSpotApiCached::get_account_balances_consolidated ();
 		$f3->set("balances", $balances);
+		
+		$capital_configs = BinanceCustomApi::get_capital_configs_cached ();
+		$f3->set("capital_configs", $capital_configs);
 		
 		$symbols = BinanceSpotApi::get_all_symbols_cached();
 		$balances_assets = array_keys ($balances);

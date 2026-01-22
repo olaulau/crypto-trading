@@ -82,6 +82,7 @@ class BinanceCustomApi
 			$configs = static::get_capital_configs_from_db ();
 		}
 		
+		$configs = array_combine (array_column ($configs, "coin"),  $configs);
 		return $configs;
 	}
 	

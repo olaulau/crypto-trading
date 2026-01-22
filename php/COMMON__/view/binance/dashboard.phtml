@@ -10,7 +10,7 @@ use COMMON__\svc\Stuff;
 				<tr>
 					<th rowspan=2 class="text-end">
 						asset <br>
-						<span class="text-secondary fw-normal">reference asset</span>
+						<span class="text-secondary fw-normal">name</span>
 					</th>
 					<th rowspan=2 class="text-center align-middle">accounting</th>
 					<th rowspan=2 class="text-center align-middle">balance</th>
@@ -34,7 +34,7 @@ use COMMON__\svc\Stuff;
 					<tr>
 						<td class="text-end">
 							<?= $account->get_asset() ?> <br/>
-							<span class="text-secondary"><?= Binance::reference_asset ?></span>
+							<span class="text-secondary"><?= $capital_configs [$asset] ["name"] ?? "" ?></span>
 						</td>
 						
 						<td class="text-start">
@@ -44,7 +44,7 @@ use COMMON__\svc\Stuff;
 							$account_reference_qty = $account->get_quantity() * $assets_reference_price [$asset];
 							$accounting_total += $account_reference_qty;
 							?>
-							<span class="text-secondary"><?= Stuff::format_fiat ( $account_reference_qty ) ?></span>
+							<span class="text-secondary"><?= Stuff::format_fiat ( $account_reference_qty ) ?> <?= Binance::reference_asset ?></span>
 							<?php
 						}
 						?>
@@ -55,7 +55,7 @@ use COMMON__\svc\Stuff;
 							?>
 							<td class="text-start">
 								<?= Stuff::format_crypto ($balances [$asset]) ?> <br/>
-								<span class="text-secondary"><?= Stuff::format_fiat ($balance_reference_qty [$asset]) ?></span>
+								<span class="text-secondary"><?= Stuff::format_fiat ($balance_reference_qty [$asset]) ?> <?= Binance::reference_asset ?></span>
 							</td>
 							<?php
 						}
