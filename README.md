@@ -72,8 +72,4 @@ impacter les 2 parties à chaque trade
 
 
 test
-- user.ini
-	- présent
-	- infos mysql
-	- infos binance api key
 - db initialized
