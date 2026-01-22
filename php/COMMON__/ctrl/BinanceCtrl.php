@@ -11,6 +11,7 @@ use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceCustomApi;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
+use COMMON__\svc\BreadCrumb;
 use COMMON__\svc\Stuff;
 use ErrorException;
 
@@ -182,12 +183,14 @@ class BinanceCtrl extends PrivateCtrl
 		$accounting->execute_trades($trades);
 		$f3->set("accounting", $accounting);
 		
+		$breadcrumbs = static::breadcrumbs();
+		$breadcrumbs [] = new BreadCrumb("Dashboard", $f3->get("BASE").$f3->alias("binanceDashboard"), "Dashboard");
 		$page = [
-			"module"	=>	"COMMON__",
-			"layout"	=>	"default",
-			"name"		=>	"binance/dashboard",
-			"title"		=>	"Dashboard",
-			"breadcrumbs" => static::breadcrumbs(),
+			"module"		=> "COMMON__",
+			"layout"		=> "default",
+			"name"			=> "binance/dashboard",
+			"title"			=> "Dashboard",
+			"breadcrumbs"	=> $breadcrumbs,
 		];
 		self::renderPage($page);
 	}
