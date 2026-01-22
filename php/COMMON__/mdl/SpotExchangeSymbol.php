@@ -115,18 +115,4 @@ class SpotExchangeSymbol extends Mdl
 		// $db->exec($sql);
 	}
 
-	public static function getAll_fast () : array
-	{
-		$f3 = Base::instance();
-		$db = $f3->get("db"); /** @var SQL $db */
-
-		$sql = "
-			SELECT	*
-			FROM	" . SpotExchangeSymbol::table . "
-			ORDER BY	symbol ASC
-		";
-		$data = $db->exec($sql);
-		return $data;
-	}
-	
 }

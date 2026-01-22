@@ -305,7 +305,7 @@ class BinanceSpotApi
 
 	private static function get_all_symbols_from_db () : array
 	{
-		$symbols = SpotExchangeSymbol::getAll_fast ();
+		$symbols = SpotExchangeSymbol::getAllFast ("symbol");
 		$symbols = array_combine (array_column($symbols, "symbol"), $symbols);
 		return $symbols;
 	}

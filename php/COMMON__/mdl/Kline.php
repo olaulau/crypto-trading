@@ -2,6 +2,8 @@
 namespace COMMON__\mdl;
 
 use Base;
+use DB\SQL;
+
 
 class Kline extends Mdl
 {
@@ -74,7 +76,7 @@ class Kline extends Mdl
 	];
 	
 	
-	public static function setup($db = null, $table = null, $fields = null)
+	public static function setup ($db = null, $table = null, $fields = null) 
 	{
 		parent::setup (); # auto create table
 		
@@ -85,8 +87,9 @@ class Kline extends Mdl
 
 		# add indexes
 		$sql = "
+			DROP INDEX IF EXISTS uniq__crypto_pair__candle_size__open_time ON " . Kline::table . ";
 			ALTER TABLE " . Kline::table . "
-			ADD CONSTRAINT uniq__crypto_pair__candle_size__open_time UNIQUE (crypto_pair, candle_size, open_time); ";
+				ADD CONSTRAINT uniq__crypto_pair__candle_size__open_time UNIQUE (crypto_pair, candle_size, open_time); ";
 		$db->exec($sql);
 	}
 	

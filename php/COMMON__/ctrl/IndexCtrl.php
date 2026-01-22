@@ -62,7 +62,7 @@ class IndexCtrl extends PrivateCtrl
 
 
 	
-	public static function resetDbGET (Base $f3, $url, $controler)
+	public static function dbCleanGET (Base $f3, $url, $controler)
 	{
 		# cleanup
 		Kline::drop_table();
@@ -72,6 +72,11 @@ class IndexCtrl extends PrivateCtrl
 		SpotTrade::drop_table();
 		SpotExchangeSymbol::drop_table();
 		
+		echo "Ok.";
+	}
+
+	public static function dbSetupGET (Base $f3, $url, $controler)
+	{
 		# create DB struct
 		Kline::setup();
 		FiatTrade::setup();
