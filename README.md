@@ -68,8 +68,3 @@ impacter les 2 parties à chaque trade
 	- doc install : crontab vers cette rotue tous les jours
 
 
-
-
-
-test
-- db initialized

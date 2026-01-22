@@ -2,12 +2,14 @@
 namespace COMMON__\ctrl;
 
 use Base;
+use COMMON__\mdl\KeyValue;
 use COMMON__\svc\CSRF;
 use DB\SQL;
 use Log;
 use PDO;
 use Session;
 use View;
+
 
 abstract class Ctrl
 {
@@ -45,7 +47,7 @@ abstract class Ctrl
 		$log = new Log('logs.log');
 		$f3->set("log", $log);
 		
-		// initialise DB
+		// connect DB
 		if(!empty($f3->get("db.user"))) {
 			$db = new SQL(
 				$f3->get("db.type").":host=".$f3->get("db.host").";port=".$f3->get("db.port").";dbname=".$f3->get("db.name"),
@@ -55,8 +57,32 @@ abstract class Ctrl
 				]
 			);
 			$db->log(false);
+			
+			# check DB
+			$sql = "
+				SELECT	1
+				FROM	information_schema.tables
+				WHERE	table_schema = ?
+				AND		table_name = ?
+				LIMIT	1;
+			";
+			$params = [
+				$f3->get("db.name"),
+				KeyValue::table,
+			];
+			$res = $db->exec ($sql, $params);
+			$alias = $f3->get("ALIAS");
+			if ($alias !== "dbSetup") {
+				if (empty($res [0] [1]) || $res [0] [1] !== 1) {
+					$f3->reroute("@dbSetup");
+					die;
+				}
+			}
+			
 			$f3->set("db", $db);
 		}
+		
+		
 		
 		// initialise session (ignores suspect session : change in IP / useragent)
 		$session = new Session(
