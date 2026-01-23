@@ -142,11 +142,14 @@ class BinanceCtrl extends PrivateCtrl
 		$capital_configs = BinanceCustomApi::get_capital_configs_cached ();
 		$f3->set("capital_configs", $capital_configs);
 		
-		$symbols = BinanceSpotApi::get_all_symbols_cached();
+		$known_assets = BinanceSpotApi::get_known_assets ();
 		$balances_assets = array_keys ($balances);
+		$assets = array_unique(array_merge ($known_assets, $balances_assets));
+		
+		$symbols = BinanceSpotApi::get_all_symbols_cached();
 		$tickers_query = [];
 		$assets_paths = [];
-		foreach ($balances_assets as $asset) {
+		foreach ($assets as $asset) {
 			if ($asset !== Binance::reference_asset) {
 				$assets_paths [$asset] = Binance::find_symbol_path_for_assets($asset, Binance::reference_asset, $symbols);
 				foreach ($assets_paths [$asset] as $path) {
@@ -154,7 +157,8 @@ class BinanceCtrl extends PrivateCtrl
 				}
 			}
 		}
-		$tickers = BinanceSpotApiCached::get_ticker_prices ($tickers_query); #TODO query also assets with past trades but no balance
+		$tickers_query = array_unique($tickers_query);
+		$tickers = BinanceSpotApiCached::get_ticker_prices ($tickers_query);
 		
 		$assets_reference_price = [];
 		foreach ($assets_paths as $asset => $path) {

@@ -192,6 +192,19 @@ class BinanceSpotApi
 		$symbols = array_unique ($symbols);
 		return $symbols;
 	}
+
+
+	public static function get_known_assets () : array
+	{
+		$assets = [];
+		$symbols = static::get_known_symbols();
+		foreach ($symbols as $symbol) {
+			$symbol_assets = BinanceSpotApiCached::guess_symbol_assets_cached($symbol);
+			$assets [] = $symbol_assets ["base_asset"];
+			$assets [] = $symbol_assets ["quote_asset"];
+		}
+		return array_unique($assets);
+	}
 	
 	
 	/**
