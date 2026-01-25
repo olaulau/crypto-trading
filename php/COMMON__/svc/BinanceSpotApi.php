@@ -68,7 +68,7 @@ class BinanceSpotApi
 		$cache_class = "BinanceSpotApi";
 		$cache_function = __FUNCTION__;
 		$cache_key = "{$cache_class}__{$cache_function}__{$symbol}__last_update";
-		$cache_ttl_short = 60 * 60;
+		$cache_ttl_short = 5 * 60;
 		$cache_ttl_long = 24 * 60 * 60;
 		
 		# get actual data
