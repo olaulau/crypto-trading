@@ -8,9 +8,15 @@ use COMMON__\svc\Stuff;
 		<div class="d-flex justify-content-between mb-1">
 			<div></div>
 			<div></div>
-			<div class="form-check">
-				<input type="checkbox" class="form-check-input" id="hide_dust" checked>
-				<label class="form-check-label" for="hide_dust">hide dust ( < <?= Binance::quote_dust_threashold ?> €)</label>
+			<div>
+				<span class="">
+					<input type="checkbox" class="form-check-input" id="auto_refresh" checked>
+					<label class="form-check-label" for="auto_refresh">auto refresh</label>
+				</span> &nbsp; 
+				<span class="">
+					<input type="checkbox" class="form-check-input" id="hide_dust" checked>
+					<label class="form-check-label" for="hide_dust">hide dust ( < <?= Binance::quote_dust_threashold ?> €)</label>
+				</span>
 			</div>
 		</div>
 		
