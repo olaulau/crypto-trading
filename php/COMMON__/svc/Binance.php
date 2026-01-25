@@ -14,6 +14,7 @@ class Binance
 {
 	
 	public final const reference_asset = "EUR";
+	public final const pivot_asset = "USDC";
 	
 	public final const quote_dust_threashold = 10;
 	

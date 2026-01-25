@@ -1,8 +1,10 @@
 <?php
+use COMMON__\svc\Account;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Stuff;
 
 ?>
+
 		<table class="table table-bordered table-sm">
 			<thead>
 				<tr>
@@ -26,9 +28,45 @@ use COMMON__\svc\Stuff;
 			<tbody>
 				<?php
 				$accounting_total = 0;
-				foreach ($accounting->get_accounts_assets() as $asset) {
-					$account = $accounting->get_account($asset);
+				foreach ($assets_groups_to_display as $asset_group_name => $assets) {
+					foreach ($assets as $asset) {
+						$account = $accounting->get_account ($asset);
+						dashboard_row ($account, $assets_reference_price, $balances, $accounting_total, $balance_reference_qty);
+					}
 					?>
+					<tr>
+						<td colspan="8" class=""></td>
+					</tr>
+					<?php
+				}
+				?>
+			</tbody>
+			<tfoot>
+				<tr>
+					<th class="text-end">
+						<?= Binance::reference_asset ?>
+					</th>
+					<th class="text-start">
+						<?= stuff::format_fiat ($accounting_total) ?>
+					</th>
+					<th class="">
+						<?= stuff::format_fiat (array_sum ($balance_reference_qty)) ?>
+					</th>
+					<th colspan=5 class="text-start">
+						&nbsp;
+					</th>
+				</tr>
+			</tfoot>
+		</table>
+		
+		</main>
+		
+<?php
+
+function dashboard_row (Account $account, $assets_reference_price, $balances, &$accounting_total, $balance_reference_qty)
+{
+	$asset = $account->get_asset();
+	?>
 					<tr>
 						<td class="text-end">
 							<?= $account->get_asset() ?> <br/>
@@ -92,26 +130,6 @@ use COMMON__\svc\Stuff;
 							<?= "" ?>
 						</td>
 					</tr>
-				<?php
-				}
-				?>
-			</tbody>
-			<tfoot>
-				<tr>
-					<th class="text-end">
-						<?= Binance::reference_asset ?>
-					</th>
-					<th class="text-start">
-						<?= stuff::format_fiat ($accounting_total) ?>
-					</th>
-					<th class="">
-						<?= stuff::format_fiat (array_sum ($balance_reference_qty)) ?>
-					</th>
-					<th colspan=5 class="text-start">
-						&nbsp;
-					</th>
-				</tr>
-			</tfoot>
-		</table>
-		
-		</main>
+	<?php
+}
+?>

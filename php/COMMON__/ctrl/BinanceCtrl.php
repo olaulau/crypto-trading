@@ -7,12 +7,11 @@ use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
 use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
-use COMMON__\svc\BinanceConvertApi;
 use COMMON__\svc\BinanceCustomApi;
+use COMMON__\svc\BinanceFiatApi;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\BreadCrumb;
-use COMMON__\svc\Stuff;
 use ErrorException;
 
 
@@ -144,14 +143,14 @@ class BinanceCtrl extends PrivateCtrl
 		
 		$known_assets = BinanceSpotApi::get_known_assets ();
 		$balances_assets = array_keys ($balances);
-		$assets = array_unique(array_merge ($known_assets, $balances_assets));
+		$assets = array_unique (array_merge ($known_assets, $balances_assets));
 		
 		$symbols = BinanceSpotApi::get_all_symbols_cached();
 		$tickers_query = [];
 		$assets_paths = [];
 		foreach ($assets as $asset) {
 			if ($asset !== Binance::reference_asset) {
-				$assets_paths [$asset] = Binance::find_symbol_path_for_assets($asset, Binance::reference_asset, $symbols);
+				$assets_paths [$asset] = Binance::find_symbol_path_for_assets ($asset, Binance::reference_asset, $symbols); #TODO put in DB (long cache)
 				foreach ($assets_paths [$asset] as $path) {
 					$tickers_query [] = $path ["symbol"];
 				}
@@ -171,7 +170,7 @@ class BinanceCtrl extends PrivateCtrl
 					$price /= $tickers [$step ["symbol"]] ["price"];
 				}
 			}
-			$assets_reference_price [$asset] = $price;
+			$assets_reference_price [$asset] = $price; #TODO put in FS cache (small duration)
 		}
 		$assets_reference_price [Binance::reference_asset] = 1;
 		$f3->set("assets_reference_price", $assets_reference_price);
@@ -180,12 +179,25 @@ class BinanceCtrl extends PrivateCtrl
 		foreach ($balances_assets as $asset) {
 			$balance_reference_qty [$asset] = $balances [$asset] * $assets_reference_price [$asset];
 		}
+		arsort($balance_reference_qty);
 		$f3->set("balance_reference_qty", $balance_reference_qty);
 		
 		$trades = Binance::get_all_trades ();
 		$accounting = new Accounting;
 		$accounting->execute_trades($trades);
 		$f3->set("accounting", $accounting);
+		
+		$accounting_assets = $accounting->get_accounts_assets();
+		$balance_assets = array_keys ($balance_reference_qty);
+		$all_assets_to_display = array_unique (array_merge ($accounting_assets, $balance_assets));
+		$top_assets = [BinanceFiatApi::fiat_asset, Binance::reference_asset, Binance::pivot_asset];
+		$assets_groups_to_display = [
+			"bank"		=> [BinanceFiatApi::fiat_asset],
+			"liquid"	=> [Binance::reference_asset, Binance::pivot_asset],
+			"balance"	=> array_diff ($balance_assets, $top_assets),
+			"remaining"	=> array_diff ($all_assets_to_display, $top_assets, $balance_assets),
+		];
+		$f3->set("assets_groups_to_display", $assets_groups_to_display);
 		
 		$breadcrumbs = static::breadcrumbs();
 		$breadcrumbs [] = new BreadCrumb("Dashboard", $f3->get("BASE").$f3->alias("binanceDashboard"), "Dashboard");
