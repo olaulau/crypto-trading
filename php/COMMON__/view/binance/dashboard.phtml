@@ -4,7 +4,16 @@ use COMMON__\svc\Binance;
 use COMMON__\svc\Stuff;
 
 ?>
-
+		
+		<div class="d-flex justify-content-between mb-1">
+			<div></div>
+			<div></div>
+			<div class="form-check">
+				<input type="checkbox" class="form-check-input" id="hide_dust" checked>
+				<label class="form-check-label" for="hide_dust">hide dust ( < <?= Binance::quote_dust_threashold ?> €)</label>
+			</div>
+		</div>
+		
 		<table class="table table-bordered table-sm">
 			<thead>
 				<tr>
@@ -31,7 +40,8 @@ use COMMON__\svc\Stuff;
 				foreach ($assets_groups_to_display as $asset_group_name => $assets) {
 					foreach ($assets as $asset) {
 						$account = $accounting->get_account ($asset);
-						dashboard_row ($account, $assets_reference_price, $balances, $accounting_total, $balance_reference_qty);
+						$can_hide = $asset_group_name !== "bank" && $asset_group_name !== "liquid";
+						dashboard_row ($account, $assets_reference_price, $balances, $accounting_total, $balance_reference_qty, $can_hide);
 					}
 					?>
 					<tr>
@@ -63,11 +73,12 @@ use COMMON__\svc\Stuff;
 		
 <?php
 
-function dashboard_row (Account $account, $assets_reference_price, $balances, &$accounting_total, $balance_reference_qty)
+function dashboard_row (Account $account, $assets_reference_price, $balances, &$accounting_total, $balance_reference_qty, bool $can_hide)
 {
 	$asset = $account->get_asset();
+	$account_reference_qty = $account->get_quantity() * ($assets_reference_price [$asset] ?? 0); #TODO integrate into accounting
 	?>
-					<tr>
+					<tr class="<?= ($can_hide && $account_reference_qty < Binance::quote_dust_threashold) ? "dust visually-hidden" : "" ?>">
 						<td class="text-end">
 							<?= $account->get_asset() ?> <br/>
 							<span class="text-secondary"><?= $capital_configs [$asset] ["name"] ?? "" ?></span>
@@ -77,7 +88,6 @@ function dashboard_row (Account $account, $assets_reference_price, $balances, &$
 							<?= Stuff::format_crypto ($account->get_quantity()) ?> <br/>
 						<?php
 						if(!empty($assets_reference_price [$asset])) {
-							$account_reference_qty = $account->get_quantity() * $assets_reference_price [$asset];
 							$accounting_total += $account_reference_qty;
 							?>
 							<span class="text-secondary"><?= Stuff::format_fiat ( $account_reference_qty ) ?> <?= Binance::reference_asset ?></span>

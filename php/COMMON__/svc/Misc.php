@@ -2,6 +2,7 @@
 
 namespace COMMON__\svc;
 
+
 class Misc
 {
 	
@@ -12,7 +13,7 @@ class Misc
 	}
 	
 	
-	public static function load_asset(string $module, string $path, string $type, bool $fail=false)
+	public static function load_asset (string $module, string $path, string $type, bool $fail=false)
 	{
 		$f3 = \Base::instance();
 		$BASE = $f3->get("BASE");
@@ -20,10 +21,8 @@ class Misc
 		
 		$page = $f3->get("page");
 		
-		if(file_exists($filename))
-		{
-			switch ($type)
-			{
+		if (file_exists($filename)) {
+			switch ($type) {
 				case "css" :
 					$page ["css"] [] = "$BASE/php/$module/assets/$path.css";
 					?>
@@ -42,10 +41,8 @@ class Misc
 			}
 			$f3->set("page", $page);
 		}
-		else
-		{
-			if($fail)
-			{
+		else {
+			if($fail) {
 				die("required asset not found : $filename");
 			}
 		}

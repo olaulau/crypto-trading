@@ -12,8 +12,7 @@ use COMMON__\svc\Misc;
 	
 	<?php
 	Misc::load_asset("COMMON__", "index", "js");
-	foreach ($paths as $path)
-	{
+	foreach ($paths as $path) {
 		Misc::load_asset($page["module"], $page["name"], "js");
 		Misc::load_asset($page["module"], $page["name"]."/index", "js");
 	}

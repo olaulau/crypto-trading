@@ -28,22 +28,19 @@ use COMMON__\svc\Misc;
 	// import assets from previous directories
 	$path = $page["name"];
 	$paths = [];
-	while($path !== ".")
-	{
+	while ($path !== ".") {
 		array_unshift($paths, $path);
 		$path = dirname($path);
 	}
 	
 	Misc::load_asset("COMMON__", "index", "css");
-	foreach ($paths as $path)
-	{
+	foreach ($paths as $path) {
 		Misc::load_asset($page["module"], $page["name"], "css");
 		Misc::load_asset($page["module"], $page["name"]."/index", "css");
 	}
 	
 	$css = array_unique($f3->get("page.css"));
-	foreach ($css as $file)
-	{
+	foreach ($css as $file) {
 		?>
 		<link href="<?= $file ?>" rel="stylesheet">
 		<?php
