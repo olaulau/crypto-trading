@@ -156,7 +156,7 @@ class BinanceCtrl extends PrivateCtrl
 				}
 			}
 		}
-		$tickers_query = array_unique($tickers_query);
+		$tickers_query = array_unique ($tickers_query);
 		$tickers = BinanceSpotApiCached::get_ticker_prices ($tickers_query);
 		
 		$assets_reference_price = [];
