@@ -14,7 +14,7 @@ $(function() {
 			refreshTimeout = setTimeout(function () {
 					location.reload();
 				},
-				5 * 60 * 1000 // 5 minutes
+				5 * 60 * 1000 // 5 minuts in millisecondes
 			);
 		}
 		else {

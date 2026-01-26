@@ -75,6 +75,11 @@ trait BinanceSpotApiTrade
 		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
 			# get trades
 			$trades = static::get_trades_from_api ($symbol, $spot_api);
+			
+			# fix boolean support
+			foreach ($trades as &$trade) {
+				static::api_trade_to_db_trade($trade);
+			}
 
 			# store them into db
 			static::store_trades_into_db ($trades);
@@ -86,6 +91,16 @@ trait BinanceSpotApiTrade
 		}
 		
 		return $trades;
+	}
+	
+	/**
+	 * convert boolean to tiny int
+	 */
+	public static function api_trade_to_db_trade (array &$trade) : void
+	{
+		$trade ["isBuyer"] = $trade ["isBuyer"] === true ? 1 : 0;
+		$trade ["isMaker"] = $trade ["isMaker"] === true ? 1 : 0;
+		$trade ["isBestMatch"] = $trade ["isBestMatch"] === true ? 1 : 0;
 	}
 
 
@@ -119,7 +134,7 @@ trait BinanceSpotApiTrade
 				return $trades;
 			}
 			elseif ((time() - $last_update_dt->getTimestamp()) < $cache_ttl_long) {
-				$symbols = static::get_known_symbols ();
+				$symbols = BinanceSpotApi::get_known_symbols ();
 			}
 			else { # > $cache_ttl_long
 				$symbols = BinanceSpotApi::get_all_symbols_cached ();

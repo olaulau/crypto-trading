@@ -84,7 +84,7 @@ function dashboard_row (Account $account, $assets_reference_price, $balances, &$
 	$asset = $account->get_asset();
 	$account_reference_qty = $account->get_quantity() * ($assets_reference_price [$asset] ?? 0); #TODO integrate into accounting
 	?>
-					<tr class="<?= ($can_hide && $account_reference_qty < Binance::quote_dust_threashold) ? "dust visually-hidden" : "" ?>">
+					<tr class="<?= ($can_hide && $account_reference_qty >= 0 && $account_reference_qty < Binance::quote_dust_threashold) ? "dust visually-hidden" : "" ?>">
 						<td class="text-end">
 							<?= $account->get_asset() ?> <br/>
 							<span class="text-secondary"><?= $capital_configs [$asset] ["name"] ?? "" ?></span>
