@@ -167,7 +167,7 @@ class IndexCtrl extends PrivateCtrl
 				# write into DB
 				$kline = new Kline;
 				$kline->copyfrom($row);
-				$kline->crypto_pair = static::$symbol;
+				$kline->symbol = static::$symbol;
 				$kline->candle_size = static::$small_candle_size;
 				$kline->open_time = Binance::timestamp_to_datetime($row ["open_time"])->format("Y-m-d H:i:s");
 				$kline->close_time = Binance::timestamp_to_datetime($row ["close_time"])->format("Y-m-d H:i:s");
@@ -213,7 +213,7 @@ class IndexCtrl extends PrivateCtrl
 		$offset = 0;
 		$price_window = [];
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
+		while ($kline_wrapper->load(["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
 		["limit" => static::$sql_read_limit, "offset" => $offset])) {
 			if ($offset === 0) {
 				# start variables
@@ -361,7 +361,7 @@ class IndexCtrl extends PrivateCtrl
 		$buffer = new Buffer ($buffer_size);
 		$offset = 0;
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load(["crypto_pair = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
+		while ($kline_wrapper->load(["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
 		["limit" => static::$sql_read_limit, "offset" => $offset])) {
 			do {
 				$open_time = $kline_wrapper->open_time; /** @var DateTime $open_time */
@@ -384,7 +384,7 @@ class IndexCtrl extends PrivateCtrl
 	private static function candles_aggregate (Buffer $candles, string $big_candle_size) : Kline
 	{
 		$res = new Kline;
-		$res->crypto_pair = static::$symbol;
+		$res->symbol = static::$symbol;
 		$res->candle_size = $big_candle_size;
 		
 		$first_candle = $candles->first();
@@ -443,7 +443,7 @@ class IndexCtrl extends PrivateCtrl
 		$sql = "
 			SELECT		candle_size, COUNT(*) as nb
 			FROM		kline
-			WHERE		crypto_pair = ?
+			WHERE		symbol = ?
 			AND			? <= open_time
 			AND			open_time <= ?
 			GROUP BY	candle_size
@@ -464,7 +464,7 @@ class IndexCtrl extends PrivateCtrl
 			$sql = "
 				SELECT		candle_size, COUNT(*) as nb
 				FROM		kline
-				WHERE		crypto_pair = ?
+				WHERE		symbol = ?
 				AND			? <= open_time
 				AND			open_time <= ?
 				GROUP BY	candle_size
@@ -490,7 +490,7 @@ class IndexCtrl extends PrivateCtrl
 		$sql = "
 			SELECT	open_time AS x, open AS y
 			FROM	kline
-			WHERE	crypto_pair = ?
+			WHERE	symbol = ?
 			AND		candle_size = ?
 			AND		? <= open_time
 			AND		open_time <= ?

@@ -67,7 +67,7 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 
 		# orders
-		// $response = $spot_api->allOrders(IndexCtrl::$crypto_pair);
+		// $response = $spot_api->allOrders(IndexCtrl::$symbol);
 		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 
@@ -76,7 +76,7 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 		
 		# average price (last 5 minutes)
-		// $response = $spot_api->avgPrice(IndexCtrl::$crypto_pair);
+		// $response = $spot_api->avgPrice(IndexCtrl::$symbol);
 		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 		
@@ -95,7 +95,7 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 		
 		# klines
-		// $response = $spot_api->klines(IndexCtrl::$crypto_pair, "1d");
+		// $response = $spot_api->klines(IndexCtrl::$symbol, "1d");
 		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 		
@@ -109,7 +109,7 @@ class BinanceCtrl extends PrivateCtrl
 
 	public static function tradesGET (Base $f3, $url, $controler)
 	{
-		// $symbol = IndexCtrl::$crypto_pair;
+		// $symbol = IndexCtrl::$symbol;
 		$symbol = "DOGEEUR"; ///////////////////
 		$data = BinanceSpotApi::get_trades_grouped($symbol);
 		$f3->set("data", $data);

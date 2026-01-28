@@ -2,6 +2,7 @@
 namespace COMMON__\ctrl;
 
 use Base;
+use Binance\API;
 
 
 class CliCtrl extends Ctrl
@@ -34,7 +35,7 @@ class CliCtrl extends Ctrl
 		$binance_conf = $f3->get("binance");
 
 		# get prices
-		$api = new \Binance\API ($binance_conf ["key"], $binance_conf ["secret"]);
+		$api = new API ($binance_conf ["key"], $binance_conf ["secret"]);
 
 		$api->miniTicker(function($api, $ticker) {
 			print_r($ticker);

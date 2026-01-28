@@ -11,7 +11,7 @@ class Kline extends Mdl
 	public const table = "kline";
 	
 	protected $fieldConf = [
-		'crypto_pair' => [
+		'symbol' => [
 			'type' => 'VARCHAR128',
 			'nullable' => false,
 			// 'index' => true,
@@ -87,9 +87,9 @@ class Kline extends Mdl
 
 		# add indexes
 		$sql = "
-			DROP INDEX IF EXISTS uniq__crypto_pair__candle_size__open_time ON " . Kline::table . ";
+			DROP INDEX IF EXISTS uniq__symbol__candle_size__open_time ON " . Kline::table . ";
 			ALTER TABLE " . Kline::table . "
-				ADD CONSTRAINT uniq__crypto_pair__candle_size__open_time UNIQUE (crypto_pair, candle_size, open_time); ";
+				ADD CONSTRAINT uniq__symbol__candle_size__open_time UNIQUE (symbol, candle_size, open_time); ";
 		$db->exec($sql);
 	}
 	
