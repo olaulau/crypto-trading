@@ -21,7 +21,7 @@ class Binance
 	
 	public final const recv_window = 20000;
 	
-	public final static $kline_format = [
+	public final const kline_format = [
 		"open_time",
 		"open",
 		"high",
@@ -36,7 +36,7 @@ class Binance
 		"ignore",
 	];
 	
-	public final static $candles = [
+	public final const candles = [
 		"1s"	 => 1,
 		"1m"	 => 60,
 		"3m"	 => 3 * 60,

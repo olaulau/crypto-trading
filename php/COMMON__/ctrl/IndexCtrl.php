@@ -162,7 +162,7 @@ class IndexCtrl extends PrivateCtrl
 			# read CSV rows
 			$db->begin();
 			while (false !== ($row = fgetcsv($fh, null, ",", '"', '\\'))) {
-				$row = array_combine(Binance::$kline_format, $row);
+				$row = array_combine(Binance::kline_format, $row);
 				
 				# write into DB
 				$kline = new Kline;
@@ -356,8 +356,8 @@ class IndexCtrl extends PrivateCtrl
 		$big_candle_size = "4h";
 		
 		# start reading data
-		$candle_seconds = Binance::$candles [$big_candle_size];
-		$buffer_size = $candle_seconds / Binance::$candles [static::$small_candle_size];
+		$candle_seconds = Binance::candles [$big_candle_size];
+		$buffer_size = $candle_seconds / Binance::candles [static::$small_candle_size];
 		$buffer = new Buffer ($buffer_size);
 		$offset = 0;
 		$kline_wrapper = new Kline;
