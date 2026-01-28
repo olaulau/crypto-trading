@@ -92,7 +92,30 @@ class CliCtrl extends Ctrl
 		});
 		
 		#TODO purge after 1h max
-		#TODO handle connexion error : retry in an infinite loop
+	}
+	
+	
+	public static function wsMiniTickerLoop (Base $f3, $url, $controler) : void
+	{
+		# empty buffers
+		while (ob_get_level () > 0) {
+			ob_end_flush ();
+		}
+		
+		# prepare
+		$route = $f3->alias("cliWsMiniTicker");
+		$cmd = "php index.php {$route} 2>&1";
+		
+		# run in loop
+		while (true) {
+			echo PHP_EOL;
+			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : START LOOP" . PHP_EOL; 
+			passthru($cmd, $result_code);
+			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : script exited with code : $result_code" . PHP_EOL;
+			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : END LOOP" . PHP_EOL; 
+			echo PHP_EOL;
+			sleep (1);
+		}
 	}
 	
 }
