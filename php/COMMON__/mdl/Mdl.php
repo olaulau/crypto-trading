@@ -2,6 +2,8 @@
 namespace COMMON__\mdl;
 
 use Base;
+use DateTime;
+use DateTimeInterface;
 use DB\Cortex;
 use DB\CortexCollection;
 use DB\SQL;
@@ -244,21 +246,22 @@ abstract class Mdl extends Cortex
     /**
      * __get : retourne la valeur typée
      */
-    public function &__get($key)
+    public function &__get ($key)
     {
         $value = parent::__get($key);
-        if (!isset($this->fieldConf[$key])) return $value;
+        if (!isset ($this->fieldConf [$key])) return $value;
 
-        return $this->castTheField($value, $this->fieldConf[$key]['type']);
+		$res = $this->castTheField ($value, $this->fieldConf [$key] ['type']);
+        return $res;
     }
 
     /**
      * __set : accepte des objets / types natifs et convertit pour DB
      */
-    public function __set($key, $value)
+    public function __set ($key, $value)
     {
-        if (!isset($this->fieldConf[$key])) {
-            parent::__set($key, $value);
+        if (!isset ($this->fieldConf [$key])) {
+            parent::__set ($key, $value);
             return;
         }
 
@@ -267,7 +270,7 @@ abstract class Mdl extends Cortex
             case 'DATETIME':
             case 'TIMESTAMP':
             case 'DATE':
-                if ($value instanceof \DateTimeInterface) {
+                if ($value instanceof DateTimeInterface) {
                     $value = $value->format('Y-m-d H:i:s');
                 }
                 break;
@@ -326,7 +329,7 @@ abstract class Mdl extends Cortex
             case 'DATETIME':
             case 'TIMESTAMP':
             case 'DATE':
-                return new \DateTime($value);
+                return new DateTime ($value);
 
             case 'INT':
             case 'INTEGER':

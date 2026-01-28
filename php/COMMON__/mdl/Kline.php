@@ -3,6 +3,7 @@ namespace COMMON__\mdl;
 
 use Base;
 use DB\SQL;
+use DB\SQL\Schema;
 
 
 class Kline extends Mdl
@@ -12,65 +13,62 @@ class Kline extends Mdl
 	
 	protected $fieldConf = [
 		'symbol' => [
-			'type' => 'VARCHAR128',
+			'type' => Schema::DT_VARCHAR128,
 			'nullable' => false,
-			// 'index' => true,
 		],
 		'candle_size' => [
-			'type' => 'VARCHAR128',
+			'type' => Schema::DT_VARCHAR128,
 			'nullable' => false,
-			// 'index' => true,
 		],
 		
 		'open_time' => [
-			'type' => 'DATETIME',
-			'nullable' => false,
-			// 'index' => true,
+			'type'		=> Schema::DT_DATETIME,
+			'nullable'	=> false,
 		],
 		'open' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 			// 'index' => true,
 		],
 		
 		'high' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 		'low' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 		'close' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 		'volume' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 		'close_time' => [
-			'type' => 'DATETIME',
+			'type' => Schema::DT_DATETIME,
 			'nullable' => false,
 		],
 		'quote_asset_volume' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 		'number_of_trades' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 		'taker_buy_base_asset_volume' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 		'taker_buy_quote_asset_volume' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 		'ignore' => [
-			'type' => 'FLOAT',
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 	];

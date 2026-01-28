@@ -15,7 +15,7 @@ use COMMON__\svc\Stuff;
 				</span> &nbsp; 
 				<span class="">
 					<input type="checkbox" class="form-check-input" id="hide_dust" checked>
-					<label class="form-check-label" for="hide_dust">hide dust ( < <?= Binance::quote_dust_threashold ?> €)</label>
+					<label class="form-check-label" for="hide_dust">hide dust ( < <?= Binance::reference_dust_threashold ?> €)</label>
 				</span>
 			</div>
 		</div>
@@ -84,7 +84,7 @@ function dashboard_row (Account $account, $assets_reference_price, $balances, &$
 	$asset = $account->get_asset();
 	$account_reference_qty = $account->get_quantity() * ($assets_reference_price [$asset] ?? 0); #TODO integrate into accounting
 	?>
-					<tr class="<?= ($can_hide && $account_reference_qty >= 0 && $account_reference_qty < Binance::quote_dust_threashold) ? "dust visually-hidden" : "" ?>">
+					<tr class="<?= ($can_hide && $account_reference_qty >= 0 && $account_reference_qty < Binance::reference_dust_threashold) ? "dust visually-hidden" : "" ?>">
 						<td class="text-end">
 							<?= $account->get_asset() ?> <br/>
 							<span class="text-secondary"><?= $capital_configs [$asset] ["name"] ?? "" ?></span>

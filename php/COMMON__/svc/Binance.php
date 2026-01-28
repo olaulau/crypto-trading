@@ -6,6 +6,7 @@ use Base;
 use Binance\Common\Dtos\ModelInterface;
 use DateTime;
 use DateTimeInterface;
+use DateTimeZone;
 use ErrorException;
 use ReflectionObject;
 
@@ -16,7 +17,7 @@ class Binance
 	public final const reference_asset = "EUR";
 	public final const pivot_asset = "USDC";
 	
-	public final const quote_dust_threashold = 10;
+	public final const reference_dust_threashold = 10;
 	
 	public final const recv_window = 20000;
 	
@@ -62,24 +63,23 @@ class Binance
 	public static function to_real_timestamp (int $timestamp) : float
 	{
 		if(strlen($timestamp) === 16) {
-			$timestamp = $timestamp / 1000000;
+			return $timestamp / 1000000;
 		}
 		elseif(strlen($timestamp) === 13) {
-			$timestamp = $timestamp / 1000;
+			return $timestamp / 1000;
 		}
 		elseif(strlen($timestamp) === 0) {
-			# do nothing
+			return $timestamp;
 		}
 		else {
 			throw new ErrorException("unknown timestamp format : {$timestamp}");
 		}
-		return $timestamp;
 	}
 	
 	public static function timestamp_to_datetime (int $timestamp) : DateTimeInterface
 	{
 		$timestamp = static::to_real_timestamp($timestamp);
-		$res = DateTime::createFromFormat("U.u", $timestamp); #TODO timezone europe/paris ?
+		$res = DateTime::createFromFormat("U.u", number_format($timestamp, 6, ".", ""), new DateTimeZone ("Europe/Paris"));
 		return $res;
 	}
 	
