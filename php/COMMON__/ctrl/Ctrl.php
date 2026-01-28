@@ -82,8 +82,6 @@ abstract class Ctrl
 			$f3->set("db", $db);
 		}
 		
-		
-		
 		// initialise session (ignores suspect session : change in IP / useragent)
 		$session = new Session(
 			function(Session $session, $id) // onsuspeect
