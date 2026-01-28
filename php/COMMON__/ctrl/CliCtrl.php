@@ -47,13 +47,14 @@ class CliCtrl extends Ctrl
 		$f3 = Base::instance();
 		$db = $f3->get("db"); /** @var SQL $db */
 		$binance_conf = $f3->get("binance");
-
+		
 		# get prices
 		$api = new API ($binance_conf ["key"], $binance_conf ["secret"]);
-
 		$api->miniTicker(function ($api, $tickers) use ($db) {
 			$start = microtime(true);
+			
 			$db->begin();
+			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] ";
 			foreach ($tickers as $ticker) {
 				$dt = Binance::timestamp_to_datetime($ticker["eventTime"]);
 				$kline = new Kline;
@@ -71,7 +72,7 @@ class CliCtrl extends Ctrl
 					$kline->save();
 				}
 				catch (Throwable $th) {
-					if (str_contains($th->getMessage(), "uniq__crypto_pair__candle_size__open_time")) {
+					if (str_contains($th->getMessage(), "uniq__symbol__candle_size__open_time")) {
 						echo " [duplicate key ignore] ";
 					}
 					else {
@@ -81,13 +82,17 @@ class CliCtrl extends Ctrl
 				echo ".";
 			}
 			$db->commit();
+			
 			$end = microtime(true);
 			$duration = $end - $start;
 			$duration = $duration * 1000;
 			$duration = number_format($duration, 3, ",", " ");
-			echo " {$duration} ms";
+			echo " : " . count($tickers) . " tickers in {$duration} ms";
 			echo PHP_EOL;
 		});
+		
+		#TODO purge after 1h max
+		#TODO handle connexion error : retry in an infinite loop
 	}
 	
 }
