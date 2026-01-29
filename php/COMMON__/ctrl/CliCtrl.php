@@ -59,18 +59,25 @@ class CliCtrl extends Ctrl
 			$db->begin();
 			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] ";
 			foreach ($tickers as $ticker) {
-				$dt = Binance::timestamp_to_datetime($ticker["eventTime"]);
+				$dt = Binance::timestamp_to_datetime ($ticker["eventTime"]);
 				$kline = new Kline;
-				$kline->copyfrom($ticker);
+				
+				// $kline->copyfrom($ticker);
+				$kline->symbol = $ticker ["symbol"];
 				$kline->candle_size = "1s";
 				$kline->open_time = $dt;
-				$kline->close = 0;
+				$kline->open = 0;
+				$kline->high = 0;
+				$kline->low = 0;
+				$kline->close = $ticker ["close"];
+				$kline->volume = 0;
 				$kline->close_time = $dt;
-				$kline->quote_asset_volume = $ticker["quoteVolume"];
+				$kline->quote_asset_volume = 0;
 				$kline->number_of_trades = 0;
 				$kline->taker_buy_base_asset_volume = 0;
 				$kline->taker_buy_quote_asset_volume = 0;
 				$kline->ignore = 0;
+				
 				try {
 					$kline->save();
 				}
@@ -93,8 +100,6 @@ class CliCtrl extends Ctrl
 			echo " : " . count($tickers) . " tickers in {$duration} ms";
 			echo PHP_EOL;
 		});
-		
-		#TODO purge after 1h max
 	}
 	
 	
