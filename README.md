@@ -3,10 +3,17 @@ git clone
 composer install
 cp conf/user.dist.ini user.ini
 vim user.ini
+	fill-in values
+crontab -e
+	*	*	*	*	*	{cd webdir/; /usr/bin/date; php index.php cli cron} >> cron.log 2>&1
+screen -S crypto-trading_ws_miniTicker
+	php index.php cli ws miniTickerLoop >> ws_MiniTicker.log 2>&1
+
+
 
 
 # config
-default password is 'admin', don't forget to change it
+default password is 'admin', don't forget to change it (see user[.dist].ini)
 
 
 
