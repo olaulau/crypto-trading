@@ -79,8 +79,10 @@ class Binance
 	public static function timestamp_to_datetime (int $timestamp) : DateTimeInterface
 	{
 		$timestamp = static::to_real_timestamp($timestamp);
-		$res = DateTime::createFromFormat("U.u", number_format($timestamp, 6, ".", ""), new DateTimeZone ("Europe/Paris"));
-		return $res;
+		$dt = DateTime::createFromFormat("U.u", number_format($timestamp, 6, ".", ""));
+		$dtz = new DateTimeZone ("Europe/Paris");
+		$dt->setTimezone($dtz);
+		return $dt;
 	}
 	
 	
