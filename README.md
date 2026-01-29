@@ -5,9 +5,10 @@ cp conf/user.dist.ini user.ini
 vim user.ini
 	fill-in values
 crontab -e
-	*	*	*	*	*	{cd webdir/; /usr/bin/date; php index.php cli cron} >> cron.log 2>&1
+	*   *   *   *   *   cd crypto-trading/ || exit 1; { /usr/bin/date; /usr/bin/php index.php cli cron; } >> tmp/log/cron.log 2>&1
 screen -S crypto-trading_ws_miniTicker
-	php index.php cli ws miniTickerLoop >> ws_MiniTicker.log 2>&1
+	cd crypto-trading/
+	php index.php cli ws miniTickerLoop 2>&1 |& tee -a tmp/log/ws_miniTicker.log
 
 
 
