@@ -74,3 +74,8 @@ impacter les 2 parties à chaque trade
 	- doc install : crontab vers cette rotue tous les jours
 
 
+
+
+- new binance env conf system
+	- apply to testGET (new WS trades)
+	- recorde wsMiniTicker with the same lib and conf handling
