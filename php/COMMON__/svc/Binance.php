@@ -220,5 +220,14 @@ class Binance
 		# more complex case, need real path search
 		throw new ErrorException("complex case not implemented");
 	}
+
 	
+	public static function get_conf () : array
+	{
+		$f3 = Base::instance();
+		
+		$env = $f3->get("binance.env");
+		$binance_conf = $f3->get("binance.envs.$env");
+		return $binance_conf;
+	}
 }

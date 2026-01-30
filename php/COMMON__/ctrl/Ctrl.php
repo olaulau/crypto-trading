@@ -31,7 +31,7 @@ abstract class Ctrl
 			die("'db' conf in 'conf/user.ini' is missing : please fill-in values");
 		}
 		$binance = $f3->get("binance");
-		if (empty($binance ["key"]) || empty($binance ["secret"])) {
+		if (empty($binance ["env"]) && empty($binance ["envs"] [$binance ["env"] ["key"]]) && empty($binance ["envs"] [$binance ["env"]] ["secret"])) {
 			die("'binance' conf in 'conf/user.ini' is missing : please fill-in values");
 		}
 		

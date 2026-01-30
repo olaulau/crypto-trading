@@ -1,7 +1,6 @@
 <?php
 namespace COMMON__\svc;
 
-use Base;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\Model\AllOrderListResponseInner;
 use Binance\Client\Spot\Model\GetAccountResponse;
@@ -19,16 +18,16 @@ class BinanceSpotApi
 	
 	public static function get_api () : SpotRestApi
 	{
-		$f3 = Base::instance();
-		
-		$binance_key = $f3->get("binance.key");
-		$binance_secret = $f3->get("binance.secret");
+		$binance_conf = Binance::get_conf ();
+		$binance_key = $binance_conf ["key"];
+		$binance_secret = $binance_conf ["secret"];
 		if (empty($binance_key) || empty($binance_secret)) {
 			throw new ErrorException("no binance api key provided");
 		}
 
 		$configurationBuilder = SpotRestApiUtil::getConfigurationBuilder();
 		$configurationBuilder->apiKey($binance_key)->secretKey($binance_secret);
+		$configurationBuilder->url($binance_conf ["rest_url"]);
 		$spot_api = new SpotRestApi($configurationBuilder->build());
 
 		return $spot_api;
