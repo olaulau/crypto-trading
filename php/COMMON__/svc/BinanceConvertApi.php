@@ -1,7 +1,6 @@
 <?php
 namespace COMMON__\svc;
 
-use Base;
 use Binance\Client\Convert\Api\ConvertRestApi;
 use Binance\Client\Convert\ConvertRestApiUtil;
 use COMMON__\mdl\ConvertTrade;
@@ -18,16 +17,16 @@ class BinanceConvertApi
 	
 	public static function get_api () : ConvertRestApi
 	{
-		$f3 = Base::instance();
-		
-		$binance_key = $f3->get("binance.key");
-		$binance_secret = $f3->get("binance.secret");
+		$binance_conf = Binance::get_conf ();
+		$binance_key = $binance_conf ["key"];
+		$binance_secret = $binance_conf ["secret"];
 		if (empty($binance_key) || empty($binance_secret)) {
 			throw new ErrorException("no binance api key provided");
 		}
-		
+
 		$configurationBuilder = ConvertRestApiUtil::getConfigurationBuilder();
 		$configurationBuilder->apiKey($binance_key)->secretKey($binance_secret);
+		$configurationBuilder->url($binance_conf ["rest_url"]);
 		$api = new ConvertRestApi($configurationBuilder->build());
 		
 		return $api;

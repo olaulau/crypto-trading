@@ -10,7 +10,7 @@ use DateTime;
 class BinanceCustomApi
 {
 
-	public static function get_capital_config_from_api () : array
+	public static function get_capital_configs_from_api () : array
 	{
 		$f3 = Base::instance();
 		
@@ -67,7 +67,7 @@ class BinanceCustomApi
 		# check if we have to query the API to refresh data
 		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
 			# get trades
-			$configs = static::get_capital_config_from_api ();
+			$configs = static::get_capital_configs_from_api ();
 
 			# store them into db
 			static::store_capital_configs_into_db ($configs);

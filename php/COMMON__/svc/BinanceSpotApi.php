@@ -28,9 +28,9 @@ class BinanceSpotApi
 		$configurationBuilder = SpotRestApiUtil::getConfigurationBuilder();
 		$configurationBuilder->apiKey($binance_key)->secretKey($binance_secret);
 		$configurationBuilder->url($binance_conf ["rest_url"]);
-		$spot_api = new SpotRestApi($configurationBuilder->build());
+		$api = new SpotRestApi($configurationBuilder->build());
 
-		return $spot_api;
+		return $api;
 	}
 	
 	
