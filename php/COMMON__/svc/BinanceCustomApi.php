@@ -12,19 +12,18 @@ class BinanceCustomApi
 
 	public static function get_capital_configs_from_api () : array
 	{
-		$f3 = Base::instance();
-		
 		$query = http_build_query([
 			'timestamp' => (int)(microtime(true) * 1000),
 			'recvWindow' => 5000
 		]);
-		$signature = hash_hmac('sha256', $query, $f3->get("binance.secret"));
-		$url = 'https://api.binance.com/sapi/v1/capital/config/getall' . '?' . $query . '&signature=' . $signature;
+		$binance_conf = Binance::get_conf();
+		$signature = hash_hmac('sha256', $query, $binance_conf ["secret"]);
+		$url = $binance_conf ["rest_url"] . '/sapi/v1/capital/config/getall' . '?' . $query . '&signature=' . $signature;
 		
 		$ch = curl_init($url);
 		curl_setopt_array($ch, [
 			CURLOPT_HTTPHEADER => [
-				'X-MBX-APIKEY: ' . $f3->get("binance.key")
+				'X-MBX-APIKEY: ' . $binance_conf ["key"],
 			],
 			CURLOPT_RETURNTRANSFER => true
 		]);

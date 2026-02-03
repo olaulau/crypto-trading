@@ -78,4 +78,5 @@ impacter les 2 parties à chaque trade
 
 - new binance env conf system
 	- apply to testGET (new WS trades)
-	- recorde wsMiniTicker with the same lib and conf handling
+	- recode wsMiniTicker with the same lib and conf handling
+	- look for remaining occurences of "binance.key" conf string
