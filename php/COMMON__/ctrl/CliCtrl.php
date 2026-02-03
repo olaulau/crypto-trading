@@ -6,13 +6,12 @@ use Binance\API;
 use Cache;
 use COMMON__\mdl\Kline;
 use COMMON__\svc\Binance;
+use COMMON__\svc\BinanceWsAPI;
 use COMMON__\svc\Stuff;
 use DateInterval;
 use DateTime;
 use DB\SQL;
-use RuntimeException;
 use Throwable;
-use WebSocket\Client;
 
 
 class CliCtrl extends Ctrl
@@ -32,109 +31,15 @@ class CliCtrl extends Ctrl
 
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
-		error_reporting(E_ALL & ~E_DEPRECATED);
-		
+		# ignore deprecated
+		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 		# empty buffers
 		while (ob_get_level () > 0) {
 			ob_end_flush ();
 		}
 
-		$API_KEY = $f3->get("binance.key");
-		$TESTNET = true; // false = mainnet
-
-		// --- fonctions REST ---
-		function createListenKey(string $apiKey, bool $testnet = false): string {
-			$url = $testnet
-				? 'https://testnet.binance.vision/api/v3/userDataStream'
-				: 'https://api.binance.com/api/v3/userDataStream';
-			$ch = curl_init($url);
-			curl_setopt_array($ch, [
-				CURLOPT_POST => true,
-				CURLOPT_RETURNTRANSFER => true,
-				CURLOPT_HTTPHEADER => ["X-MBX-APIKEY: $apiKey"],
-			]);
-			$res = curl_exec($ch);
-			$data = json_decode($res, true);
-			curl_close($ch);
-			if (!isset($data['listenKey'])) {
-				var_dump($data);
-				throw new RuntimeException('Impossible de créer listenKey');
-			}
-			return $data['listenKey'];
-		}
-
-		function keepAliveListenKey(string $apiKey, string $listenKey, bool $testnet = false): void {
-			$url = ($testnet ? 'https://testnet.binance.vision/api/v3/userDataStream' : 'https://api.binance.com/api/v3/userDataStream')
-				. "?listenKey=$listenKey";
-			$ch = curl_init($url);
-			curl_setopt_array($ch, [
-				CURLOPT_CUSTOMREQUEST => 'PUT',
-				CURLOPT_RETURNTRANSFER => true,
-				CURLOPT_HTTPHEADER => ["X-MBX-APIKEY: $apiKey"],
-			]);
-			curl_exec($ch);
-			curl_close($ch);
-		}
-
-		// --- setup WS ---
-		$listenKey = createListenKey($API_KEY, $TESTNET);
-		$wsUrl = $TESTNET
-			? "wss://stream.testnet.binance.vision/ws/$listenKey"
-			: "wss://stream.binance.com:9443/ws/$listenKey";
-
-			
-		$keepAliveInterval = 30 * 60; // 30 min
-		$lastKeepAlive = time();
-		
-		while (true) {
-			echo "[OK] ListenKey créé : $listenKey\n";
-			echo "[OK] WS : $wsUrl\n";
-			try {
-				$ws = new Client($wsUrl, ['timeout' => 1]); // timeout court pour check keep-alive
-
-				while (true) {
-					// --- keep-alive
-					if (time() - $lastKeepAlive >= $keepAliveInterval) {
-						keepAliveListenKey($API_KEY, $listenKey, $TESTNET);
-						$lastKeepAlive = time();
-						echo "[KEEPALIVE]\n";
-					}
-
-					// --- lire WS
-					$msg = $ws->receive(); // timeout = 5s max
-					$data = json_decode($msg, true);
-					if (!$data || !isset($data['e'])) continue;
-
-					// --- TES TRADES
-					if ($data['e'] === 'executionReport' &&
-						in_array($data['X'], ['FILLED', 'PARTIALLY_FILLED'])) {
-
-						$symbol = $data['s'];
-						$side   = $data['S'];
-						$price  = $data['L'];
-						$qty    = $data['l'];
-						$time   = date('H:i:s', $data['T']/1000);
-
-						echo "[$time] $symbol $side $qty @ $price\n";
-
-						// --- INSERT DB ici si besoin
-					}
-				}
-
-			} catch (Throwable $e) {
-				echo $e::class ." " . $e->getCode() . " : " . $e->getMessage() . PHP_EOL;
-				echo "[WS ERROR] {$e->getMessage()}\n";
-				echo "[RECONNECT] dans 5s...\n";
-				sleep(5);
-
-				// --- recréer listenKey si nécessaire
-				$listenKey = createListenKey($API_KEY, $TESTNET);
-				$wsUrl = $TESTNET
-					? "wss://stream.testnet.binance.vision/ws/$listenKey"
-					: "wss://stream.binance.com:9443/ws/$listenKey";
-			}
-		}
-
+		BinanceWsAPI::testance ();
 	}
 	
 	
@@ -217,7 +122,7 @@ class CliCtrl extends Ctrl
 		$cmd = "php index.php {$route} 2>&1";
 		
 		# run in loop
-		while (true) {
+		while (1 === 1) {
 			echo PHP_EOL;
 			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : START LOOP" . PHP_EOL; 
 			passthru($cmd, $result_code);
