@@ -31,6 +31,14 @@ class CliCtrl extends Ctrl
 
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
+
+
+		die;
+	}
+
+
+	public static function trades (Base $f3, $url, $controler) : void
+	{
 		# ignore deprecated
 		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
@@ -39,11 +47,25 @@ class CliCtrl extends Ctrl
 			ob_end_flush ();
 		}
 
-		BinanceWsAPI::testance ();
+		BinanceWsAPI::userDataStream ();
+	}
+
+
+	public static function miniTickers (Base $f3, $url, $controler) : void
+	{
+		# ignore deprecated
+		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+		# empty buffers
+		while (ob_get_level () > 0) {
+			ob_end_flush ();
+		}
+
+		BinanceWsAPI::miniTicker (); #TODO
 	}
 	
 	
-	public static function wsMiniTicker (Base $f3, $url, $controler) : void
+	public static function wsMiniTicker (Base $f3, $url, $controler) : void #TODO remove this code and the associated lib
 	{
 		# ignore deprecated
 		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
@@ -55,16 +77,16 @@ class CliCtrl extends Ctrl
 
 		# initiate
 		$f3 = Base::instance();
-		$db = $f3->get("db"); /** @var SQL $db */
-		$binance_conf = $f3->get("binance");
+		$db = $f3->get ("db"); /** @var SQL $db */
+		$binance_conf = Binance::get_conf();
 		
 		# get prices
 		$api = new API ($binance_conf ["key"], $binance_conf ["secret"]);
-		$api->miniTicker(function ($api, $tickers) use ($db) {
+		$api->miniTicker (function ($api, $tickers) use ($db) {
 			$start = microtime(true);
 			
 			$db->begin();
-			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] ";
+			echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] ";
 			foreach ($tickers as $ticker) {
 				$dt = Binance::timestamp_to_datetime ($ticker["eventTime"]);
 				$kline = new Kline;
@@ -133,7 +155,7 @@ class CliCtrl extends Ctrl
 		}
 	}
 
-	public static function cronGET (Base $f3, $url, $controler) : void
+	public static function cron (Base $f3, $url, $controler) : void
 	{
 		echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : cron controller" . PHP_EOL;
 		static::cronMinutely ();

@@ -45,7 +45,10 @@ class BinanceWsAPI
 	}
 	
 
-	public static function testance ()
+	/**
+	 * get my trades
+	 */
+	public static function userDataStream ()
 	{
 		$binance_conf = Binance::get_conf ();
 
@@ -77,13 +80,13 @@ class BinanceWsAPI
 
 					// --- TES TRADES
 					if ($data['e'] === 'executionReport' &&
-						in_array($data['X'], ['FILLED', 'PARTIALLY_FILLED'])) {
+						in_array ($data['X'], ['FILLED', 'PARTIALLY_FILLED'])) {
 
-						$symbol = $data['s'];
-						$side   = $data['S'];
-						$price  = $data['L'];
-						$qty    = $data['l'];
-						$time   = date('H:i:s', $data['T']/1000);
+						$symbol = $data ['s'];
+						$side   = $data ['S'];
+						$price  = $data ['L'];
+						$qty    = $data ['l'];
+						$time   = date ('H:i:s', $data['T']/1000);
 
 						echo "[$time] $symbol $side $qty @ $price\n";
 
@@ -103,5 +106,24 @@ class BinanceWsAPI
 			}
 		}
 	}
+	
+	
+	public static function miniTicker ()
+	{
+		$binance_conf = Binance::get_conf ();
+		$url = $binance_conf ["ws_url"] . "/!miniTicker@arr";
+			
+		$ws = new Client ($url);
+
+		while (1 === 1) {
+			// --- lire WS
+			$msg = $ws->receive();
+			$data = json_decode($msg, true);
+
+			var_dump($data); #TODO insert into DB
+		}
+	}
+
+	#TODO refactor WS
 
 }
