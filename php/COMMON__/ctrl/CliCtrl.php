@@ -91,7 +91,6 @@ class CliCtrl extends Ctrl
 				$dt = Binance::timestamp_to_datetime ($ticker["eventTime"]);
 				$kline = new Kline;
 				
-				// $kline->copyfrom($ticker);
 				$kline->symbol = $ticker ["symbol"];
 				$kline->candle_size = "1s";
 				$kline->open_time = $dt;

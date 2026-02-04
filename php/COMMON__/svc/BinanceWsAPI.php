@@ -1,7 +1,10 @@
 <?php
 namespace COMMON__\svc;
 
+use Base;
 use COMMON__\mdl\Kline;
+use DateTime;
+use DB\SQL;
 use ErrorException;
 use RuntimeException;
 use Throwable;
@@ -112,37 +115,65 @@ class BinanceWsAPI
 	
 	public static function miniTicker ()
 	{
+		$f3 = Base::instance();
+		$db = $f3->get ("db"); /** @var SQL $db */
+
 		$binance_conf = Binance::get_conf ();
 		$url = $binance_conf ["ws_url"] . "/!miniTicker@arr";
 		$ws = new Client ($url);
 
 		while (1 === 1) {
-			// --- lire WS
+			# read message
 			$msg = $ws->receive();
-			$data = json_decode($msg, true);
-			foreach ($data as $row) {
-				if ($row ["e"] !== "24hrMiniTicker") {
-					throw new ErrorException ("WS miniTicker : unhandled message type : {$row ["e"]}");
+			$tickers = json_decode($msg, true);
+
+			$start = microtime(true);
+			$db->begin();
+			echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] ";
+			foreach ($tickers as $ticker) {
+				if ($ticker ["e"] !== "24hrMiniTicker") {
+					throw new ErrorException ("WS miniTicker : unhandled message type : {$ticker ["e"]}");
 				}
 
 				# insert into DB
 				$kline = new Kline;
-				$kline->symbol = $row ["s"];
+				$kline->symbol = $ticker ["s"];
 				$kline->candle_size = "1s";
-				$kline->open_time = Binance::timestamp_to_datetime ($row ["E"]);
+				$kline->open_time = Binance::timestamp_to_datetime ($ticker ["E"]);
 				$kline->open = 0;
 				$kline->high = 0;
 				$kline->low = 0;
 				$kline->close = 0;
 				$kline->volume = 0;
-				$kline->close_time = Binance::timestamp_to_datetime ($row ["E"]);
+				$kline->close_time = Binance::timestamp_to_datetime ($ticker ["E"]);
 				$kline->quote_asset_volume = 0;
 				$kline->number_of_trades = 0;
 				$kline->taker_buy_base_asset_volume = 0;
 				$kline->taker_buy_quote_asset_volume = 0;
 				$kline->ignore = 0;
-				$kline->save();
+				
+				try {
+					$kline->save();
+				}
+				catch (Throwable $th) {
+					if (str_contains($th->getMessage(), "uniq__symbol__candle_size__open_time")) {
+						echo " [duplicate key ignore] ";
+					}
+					else {
+						var_dump($ticker);
+						throw $th;
+					}
+				}
+				echo ".";
 			}
+			$db->commit();
+
+			$end = microtime(true);
+			$duration = $end - $start;
+			$duration = $duration * 1000;
+			$duration = number_format($duration, 3, ",", " ");
+			echo " : " . count($tickers) . " tickers in {$duration} ms";
+			echo PHP_EOL;
 		}
 	}
 
