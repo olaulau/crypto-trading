@@ -37,7 +37,6 @@ default password is 'admin', don't forget to change it (see user[.dist].ini)
 
 # NEXT
 - accounting
-	- calculate fees
 	- calculate avg cost
 		- historical value : GET /api/v3/klines?symbol=XXX&interval=1m&startTime=T&endTime=T
 - dashboard

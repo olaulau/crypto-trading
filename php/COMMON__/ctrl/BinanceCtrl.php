@@ -183,7 +183,7 @@ class BinanceCtrl extends PrivateCtrl
 		$f3->set("balance_reference_qty", $balance_reference_qty);
 		
 		$trades = Binance::get_all_trades ();
-		$accounting = new Accounting;
+		$accounting = new Accounting ($assets_reference_price);
 		$accounting->execute_trades($trades);
 		$f3->set("accounting", $accounting);
 		

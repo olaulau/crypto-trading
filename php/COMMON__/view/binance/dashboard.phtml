@@ -60,13 +60,27 @@ use COMMON__\svc\Stuff;
 			<tfoot>
 				<tr>
 					<th class="text-end">
-						<?= Binance::reference_asset ?>
+						TOTAL
 					</th>
 					<th class="text-start">
-						<?= stuff::format_fiat ($accounting_total) ?>
+						<?= Stuff::format_fiat ($accounting->get_reference_total()) ?> <?= Binance::reference_asset ?>
 					</th>
 					<th class="">
-						<?= stuff::format_fiat (array_sum ($balance_reference_qty)) ?>
+					<?= Stuff::format_fiat (array_sum ($balance_reference_qty)) ?>
+					</th>
+					<th colspan=5 class="text-start">
+						&nbsp;
+					</th>
+				</tr>
+				<tr>
+					<th class="text-end">
+						FEES
+					</th>
+					<th class="text-start">
+						<?= Stuff::format_fiat ($accounting->get_reference_fees()) ?> <?= Binance::reference_asset ?>
+					</th>
+					<th class="">
+						&nbsp;
 					</th>
 					<th colspan=5 class="text-start">
 						&nbsp;
@@ -77,7 +91,9 @@ use COMMON__\svc\Stuff;
 		
 		</main>
 		
+		
 <?php
+
 
 function dashboard_row (Account $account, $assets_reference_price, $balances, &$accounting_total, $balance_reference_qty, bool $can_hide)
 {

@@ -282,7 +282,7 @@ class IndexCtrl extends PrivateCtrl
 								$low = $high = $reference_price = $price;
 								$last_sell_assets = $sell_assets_history [array_key_last($sell_assets_history)];
 								$delta_pct = ($EUR - $last_sell_assets) / $last_sell_assets * 100;
-								$delta_pct_formated = stuff::format_percent($delta_pct);
+								$delta_pct_formated = Stuff::format_percent($delta_pct);
 								$sell_assets_history [] = $EUR;
 								echo "[{$timestamp_formated}] ({$price_formated}) : selling --> {$EUR_formated} € ({$delta_pct_formated})" . PHP_EOL;
 								?>
@@ -302,7 +302,7 @@ class IndexCtrl extends PrivateCtrl
 							$low = $high = $reference_price = $price;
 							$last_buy_assets = $buy_assets_history [array_key_last($buy_assets_history)];
 							$delta_pct = ($ETH - $last_buy_assets) / $last_buy_assets * 100;
-							$delta_pct_formated = stuff::format_percent($delta_pct);
+							$delta_pct_formated = Stuff::format_percent($delta_pct);
 							$buy_assets_history [] = $ETH;
 							echo "[{$timestamp_formated}] ({$price_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated}) <br/>" . PHP_EOL;
 						}
