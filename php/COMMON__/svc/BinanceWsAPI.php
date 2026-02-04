@@ -1,6 +1,8 @@
 <?php
 namespace COMMON__\svc;
 
+use COMMON__\mdl\Kline;
+use ErrorException;
 use RuntimeException;
 use Throwable;
 use WebSocket\Client;
@@ -112,17 +114,38 @@ class BinanceWsAPI
 	{
 		$binance_conf = Binance::get_conf ();
 		$url = $binance_conf ["ws_url"] . "/!miniTicker@arr";
-			
 		$ws = new Client ($url);
 
 		while (1 === 1) {
 			// --- lire WS
 			$msg = $ws->receive();
 			$data = json_decode($msg, true);
+			foreach ($data as $row) {
+				if ($row ["e"] !== "24hrMiniTicker") {
+					throw new ErrorException ("WS miniTicker : unhandled message type : {$row ["e"]}");
+				}
 
-			var_dump($data); #TODO insert into DB
+				# insert into DB
+				$kline = new Kline;
+				$kline->symbol = $row ["s"];
+				$kline->candle_size = "1s";
+				$kline->open_time = Binance::timestamp_to_datetime ($row ["E"]);
+				$kline->open = 0;
+				$kline->high = 0;
+				$kline->low = 0;
+				$kline->close = 0;
+				$kline->volume = 0;
+				$kline->close_time = Binance::timestamp_to_datetime ($row ["E"]);
+				$kline->quote_asset_volume = 0;
+				$kline->number_of_trades = 0;
+				$kline->taker_buy_base_asset_volume = 0;
+				$kline->taker_buy_quote_asset_volume = 0;
+				$kline->ignore = 0;
+				$kline->save();
+			}
 		}
 	}
+
 
 	#TODO refactor WS
 
