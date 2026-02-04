@@ -177,7 +177,4 @@ class BinanceWsAPI
 		}
 	}
 
-
-	#TODO refactor WS
-
 }

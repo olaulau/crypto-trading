@@ -8,7 +8,7 @@ crontab -e
 	*   *   *   *   *   cd crypto-trading/ || exit 1; { /usr/bin/date; /usr/bin/php index.php cli cron; } >> tmp/log/cron.log 2>&1
 screen -S crypto-trading_ws_miniTicker
 	cd crypto-trading/
-	php index.php cli ws miniTickerLoop 2>&1 |& tee -a tmp/log/ws_miniTicker.log
+	php index.php ws tickers 2>&1 |& tee -a tmp/log/ws_tickers.log
 
 
 
@@ -31,14 +31,17 @@ default password is 'admin', don't forget to change it (see user[.dist].ini)
 	- click to buy / sell (date AJAX)
 
 - calculate many indicators
-- better algorythm
+- better algorithm
 
 
 
 # NEXT
+- accounting
+	- calculate fees
+	- calculate avg cost
+		- historical value : GET /api/v3/klines?symbol=XXX&interval=1m&startTime=T&endTime=T
 - dashboard
-	- refaire completement lavec la nouvelle compta (Accounting)
-	- ajouter les infos stop loss & take profit en cours pour chaque symbol
+	- add stop loss & take profit infos
 
 
 
@@ -48,35 +51,16 @@ default password is 'admin', don't forget to change it (see user[.dist].ini)
 
 
 
-- pb calcul ETH : un trade DASHETH n'est pas récupéré (04/11)
-getusedsymbols n'est pas fiable (basé sur orderlists, donc exclue les orders non groupés avec orderList=-1)
-aucun moyen n'existe pour récupérer TOUS les orders via l'API, ni les symbols utilisés
-il faut partir de la balance, et trouver tous les symboles associés, et récupérer les trades de chaque symbole
-[on pourra optimiser ca à l'aide des websockets, pour alléger le live]
-la contrepartie de la vente d'ETH en DASH est complexe, il faut passer par USDC pour arriver en EUR
-il faut se basser sur les assets, pas les symbols
-faire la compta globale de tous les trades de tous les symbols
-impacter les 2 parties à chaque trade
-- calculer les commissions
-- pour calculer la contrepartie en reference_asset, il faudra parfois convertir. obtenir le taux historique via GET /api/v3/klines?symbol=XXX&interval=1m&startTime=T&endTime=T
-
-
-
 - récupérer les trades en live avec un WS
+	=> tester en demo
 - forcer l'actualisation périodique des trades pour les symboles / assets pertinents
 	- balance > 0
 	- trades passés
-- mettre les trades spot en BdD, idem convert
 
 
 - trades update
-	- route CLI pour forcer l'update des symbols sans trades
-	- doc install : crontab vers cette rotue tous les jours
+	- route CLI pour forcer l'update des symbols sans trades => cron daily
 
 
 
 
-- new binance env conf system
-	- apply to testGET (new WS trades)
-	- recode wsMiniTicker with the same lib and conf handling
-	- look for remaining occurences of "binance.key" conf string
