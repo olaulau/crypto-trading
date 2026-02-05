@@ -9,17 +9,19 @@ use DateTime;
 class BinanceRestApi
 {
 	
-	#TODO refactore custom rest query send
-
-	public static function get_capital_configs_from_api () : array
+	/**
+	 * generic rest query
+	 */
+	public static function query (string $path) : array
 	{
+		$binance_conf = Binance::get_conf();
+
 		$query = http_build_query([
 			'timestamp' => (int)(microtime(true) * 1000),
 			'recvWindow' => 5000
 		]);
-		$binance_conf = Binance::get_conf();
 		$signature = hash_hmac('sha256', $query, $binance_conf ["secret"]);
-		$url = $binance_conf ["rest_url"] . '/sapi/v1/capital/config/getall' . '?' . $query . '&signature=' . $signature;
+		$url = $binance_conf ["rest_url"] . $path . '?' . $query . '&signature=' . $signature;
 		
 		$ch = curl_init($url);
 		curl_setopt_array($ch, [
@@ -32,6 +34,15 @@ class BinanceRestApi
 		$response = curl_exec ($ch);
 		$data = json_decode ($response, true);
 		return $data;
+	}
+
+	/**
+	 * get assets infos
+	 */
+	public static function get_capital_configs_from_api () : array
+	{
+		$path = '/sapi/v1/capital/config/getall';
+		return static::query($path);
 	}
 
 	private static function store_capital_configs_into_db (array $configs) : void
@@ -85,5 +96,12 @@ class BinanceRestApi
 		$configs = array_combine (array_column ($configs, "coin"),  $configs);
 		return $configs;
 	}
+
+
+	#TODO crypto deposit & withdraw
+	/*
+	Dépôt BTC / USDT	/sapi/v1/capital/deposit/hisrec
+	Retrait crypto	/sapi/v1/capital/withdraw/history
+	*/
 	
 }
