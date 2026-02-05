@@ -4,10 +4,14 @@ namespace COMMON__\svc;
 use COMMON__\mdl\CapitalConfig;
 use COMMON__\mdl\KeyValue;
 use DateTime;
+use ErrorException;
 
 
 class BinanceRestApi
 {
+
+	public final const dividendes_asset = "DIVIDENDES";
+
 	
 	/**
 	 * generic rest query
@@ -35,6 +39,51 @@ class BinanceRestApi
 		$data = json_decode ($response, true);
 		return $data;
 	}
+
+
+	public static function getAssetDividend () : array
+	{
+		// 'type' => 'BNB_VAULT', // ou LAUNCHPOOL
+		$path = '/sapi/v1/asset/assetDividend';
+		return static::query($path) ["rows"];
+	}
+
+
+	public static function assetDividend_to_spotTrades (array $asset_dividendes) : array
+	{
+		$res = [];
+		foreach ($asset_dividendes as $dividende) {
+			$base_asset = static::dividendes_asset;
+			$quote_asset = $dividende ["asset"];
+			if ($dividende ["direction"] !== 1) {
+				$is_buyer = 0;
+			}
+			else {
+				$is_buyer = 1;
+			}
+			
+			$res [] = [
+				'symbol'			=> "{$base_asset}{$quote_asset}",
+				'id'				=> $dividende ["tranId"],
+				'orderId'			=> $dividende ["id"],
+				'orderListId'		=> -1,
+				'price'				=> 1,
+				'qty'				=> $dividende ["amount"],
+				'quoteQty'			=> 0, #TODO calculate
+				'commission'		=> 0, 
+				'commissionAsset'	=> "EUR", #TODO use constant
+				'time'				=> $dividende ["divTime"],
+				'isBuyer'			=> $is_buyer,
+				'isMaker'			=> 0,
+				'isBestMatch'		=> 1,
+			];
+		}
+		return $res;
+	}
+
+
+
+	#TODO move those to a separate trait
 
 	/**
 	 * get assets infos

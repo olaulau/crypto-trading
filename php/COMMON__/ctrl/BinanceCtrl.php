@@ -7,8 +7,6 @@ use Binance\Client\SimpleEarn\Api\SimpleEarnRestApi;
 use Binance\Client\SimpleEarn\SimpleEarnRestApiUtil;
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\SpotRestApiUtil;
-use Binance\Client\Wallet\Api\WalletRestApi;
-use Binance\Client\Wallet\WalletRestApiUtil;
 use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceRestApi;
@@ -107,6 +105,55 @@ class BinanceCtrl extends PrivateCtrl
 		# convert trades
 		// $trade_history = BinanceConvertApi::get_trade_history_large(Binance::get_start_date(), new DateTime);
 		// var_dump($trade_history);
+
+
+		$binance_conf = Binance::get_conf();
+
+		$builder = SimpleEarnRestApiUtil::getConfigurationBuilder();
+		$builder->apiKey($binance_conf["key"])
+				->secretKey($binance_conf["secret"]);
+		$simpleEarnApi = new SimpleEarnRestApi($builder->build());
+		
+
+		# Subscriptions
+		// $data = $simpleEarnApi->getFlexibleSubscriptionRecord();
+		// $data = Binance::responseData_to_table($data);
+		// var_dump($data ["data"] ["rows"]);
+		
+
+		# Rewards (intérêts)
+		// $data = $simpleEarnApi->getFlexibleRewardsHistory(
+		// 	"ALL" # ALL, BONUS, INTEREST
+		// );
+		// $data = Binance::responseData_to_table($data);
+		// var_dump($data ["data"] ["rows"]);
+		
+
+		# Rachats
+		// $data = $simpleEarnApi->getFlexibleRedemptionRecord();
+		// $data = Binance::responseData_to_table($data);
+		// var_dump($data ["data"] ["rows"]);
+		
+		
+		# LOCKED
+		
+		
+		# Souscriptions
+		// $data = $simpleEarnApi->getLockedSubscriptionRecord();
+		// $data = Binance::responseData_to_table($data);
+		// var_dump($data ["data"] ["rows"]);
+		
+		
+		# Rachats / maturité
+		// $data = $simpleEarnApi->getLockedRedemptionRecord();
+		// $data = Binance::responseData_to_table($data);
+		// var_dump($data ["data"] ["rows"]);
+		
+		
+		# Rewards
+		// $data = $simpleEarnApi->getLockedRewardsHistory();
+		// $data = Binance::responseData_to_table($data);
+		// var_dump($data ["data"] ["rows"]);
 		
 		die;
 	}
@@ -132,61 +179,13 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
-		$binance_conf = Binance::get_conf();
-
-		$builder = SimpleEarnRestApiUtil::getConfigurationBuilder();
-		$builder->apiKey($binance_conf["key"])
-				->secretKey($binance_conf["secret"]);
-		$simpleEarnApi = new SimpleEarnRestApi($builder->build());
-		
-		# Subscriptions
-		$data = $simpleEarnApi->getFlexibleSubscriptionRecord([
-			'asset'     => 'USDT',
-			'current'   => 1,
-			'size'      => 100,
-		]);
-		var_dump($data);
-		
-		# Rewards (intérêts)
-		$data = $simpleEarnApi->getFlexibleRewardsHistory(
-			"ALL" # ALL, BONUS, INTEREST
-		);
-		var_dump($data);
-		
-		# Rachats
-		$data = $simpleEarnApi->getFlexibleRedemptionRecord([
-			'asset'   => 'USDT',
-			'current' => 1,
-			'size'    => 100,
-		]);
-		var_dump($data);
-
-		# LOCKED
-
-		# Souscriptions
-		$data = $simpleEarnApi->getLockedSubscriptionRecord();
-		var_dump($data);
-		
-		# Rachats / maturité
-		$data = $simpleEarnApi->getLockedRedemptionRecord();
-		var_dump($data);
-
-		# Rewards
-		$data = $simpleEarnApi->getLockedRewardsHistory();
-		var_dump($data);
-		
-		
-		
 		# BNB Vault / Launchpool
-		$builder = WalletRestApiUtil::getConfigurationBuilder();
-		$builder->apiKey($binance_conf["key"])->secretKey($binance_conf["secret"]);
-		$walletApi = new WalletRestApi($builder->build());
-		$data = $walletApi->getAssetDividendRecord([
-			'type' => 'BNB_VAULT', // ou LAUNCHPOOL
-		]);
+		$data = BinanceRestApi::getAssetDividend ();
+		$data = BinanceRestApi::assetDividend_to_spotTrades($data);
 		var_dump($data);
-		#TODO send custom rest query with the code from BinanceRestApi
-		
+
+		#TODO use DB cache
+		#TODO integrades in all trades for dashboard accouting use
 		
 		die;
 	}
