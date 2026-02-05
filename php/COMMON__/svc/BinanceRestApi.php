@@ -1,14 +1,15 @@
 <?php
 namespace COMMON__\svc;
 
-use Base;
 use COMMON__\mdl\CapitalConfig;
 use COMMON__\mdl\KeyValue;
 use DateTime;
 
 
-class BinanceCustomApi
+class BinanceRestApi
 {
+	
+	#TODO refactore custom rest query send
 
 	public static function get_capital_configs_from_api () : array
 	{
