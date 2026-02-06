@@ -180,8 +180,7 @@ class BinanceCtrl extends PrivateCtrl
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
 		# BNB Vault / Launchpool
-		$data = BinanceRestApi::getAssetDividend ();
-		$data = BinanceRestApi::assetDividend_to_spotTrades($data);
+		
 		var_dump($data);
 
 		#TODO use DB cache
@@ -242,15 +241,15 @@ class BinanceCtrl extends PrivateCtrl
 		
 		$trades = Binance::get_all_trades ();
 		$accounting = new Accounting ($assets_reference_price);
-		$accounting->execute_trades($trades);
+		$accounting->execute_trades ($trades);
 		$f3->set("accounting", $accounting);
 		
-		$accounting_assets = $accounting->get_accounts_assets();
+		$accounting_assets = $accounting->get_accounts_assets ();
 		$balance_assets = array_keys ($balance_reference_qty);
 		$all_assets_to_display = array_unique (array_merge ($accounting_assets, $balance_assets));
 		$top_assets = [BinanceFiatApi::fiat_asset, Binance::reference_asset, Binance::pivot_asset];
 		$assets_groups_to_display = [
-			"bank"		=> [BinanceFiatApi::fiat_asset],
+			"external"	=> [BinanceFiatApi::fiat_asset, BinanceRestApi::dividendes_asset],
 			"liquid"	=> [Binance::reference_asset, Binance::pivot_asset],
 			"balance"	=> array_diff ($balance_assets, $top_assets),
 			"remaining"	=> array_diff ($all_assets_to_display, $top_assets, $balance_assets),
@@ -258,7 +257,7 @@ class BinanceCtrl extends PrivateCtrl
 		$f3->set("assets_groups_to_display", $assets_groups_to_display);
 		
 		$breadcrumbs = static::breadcrumbs();
-		$breadcrumbs [] = new BreadCrumb("Dashboard", $f3->get("BASE").$f3->alias("binanceDashboard"), "Dashboard");
+		$breadcrumbs [] = new BreadCrumb ("Dashboard", $f3->get("BASE").$f3->alias("binanceDashboard"), "Dashboard");
 		$page = [
 			"module"		=> "COMMON__",
 			"layout"		=> "default",

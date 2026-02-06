@@ -150,8 +150,11 @@ class Binance
 		
 		$fiat_trades = BinanceFiatApi::get_all_trades();
 		$fiat_trades = BinanceFiatApi::fiatTrades_to_spotTrades($fiat_trades);
+
+		$dividendes_trades = BinanceRestApi::getAssetDividend ();
+		$dividendes_trades = BinanceRestApi::assetDividend_to_spotTrades($dividendes_trades);
 		
-		$all_trades = array_merge ($spot_trades, $convert_trades, $fiat_trades);
+		$all_trades = array_merge ($spot_trades, $convert_trades, $fiat_trades, $dividendes_trades);
 		$sort = array_column ($all_trades, "time");
 		array_multisort ($sort, SORT_ASC, SORT_NUMERIC, $all_trades);
 		

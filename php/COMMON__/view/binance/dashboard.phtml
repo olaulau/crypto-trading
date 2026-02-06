@@ -46,7 +46,7 @@ use COMMON__\svc\Stuff;
 				foreach ($assets_groups_to_display as $asset_group_name => $assets) {
 					foreach ($assets as $asset) {
 						$account = $accounting->get_account ($asset);
-						$can_hide = $asset_group_name !== "bank" && $asset_group_name !== "liquid";
+						$can_hide = $asset_group_name !== "external" && $asset_group_name !== "liquid";
 						dashboard_row ($account, $assets_reference_price, $balances, $accounting_total, $balance_reference_qty, $can_hide);
 					}
 					?>
@@ -95,8 +95,11 @@ use COMMON__\svc\Stuff;
 <?php
 
 
-function dashboard_row (Account $account, $assets_reference_price, $balances, &$accounting_total, $balance_reference_qty, bool $can_hide)
+function dashboard_row (?Account $account, $assets_reference_price, $balances, &$accounting_total, $balance_reference_qty, bool $can_hide)
 {
+	if (empty($account)) {
+		return;
+	}
 	$asset = $account->get_asset();
 	$account_reference_qty = $account->get_quantity() * ($assets_reference_price [$asset] ?? 0); #TODO integrate into accounting
 	?>

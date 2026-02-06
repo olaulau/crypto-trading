@@ -21,7 +21,7 @@ class BinanceFiatApi
 		"withdraw"	=> 1,
 	];
 	
-	public final const fiat_asset = "EUR_FIAT_BANK";
+	public final const fiat_asset = "FIAT";
 	
 	public final const max_history_days = 30;
 

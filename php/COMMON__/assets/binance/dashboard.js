@@ -31,5 +31,4 @@ $(function() {
 	auto_refresh();
 	
 	
-	
 });

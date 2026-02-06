@@ -1,6 +1,8 @@
 <?php
 namespace COMMON__\svc;
 
+use ErrorException;
+
 
 class Accounting
 {
@@ -14,9 +16,13 @@ class Accounting
 	{
 		$this->assets_reference_price = $assets_reference_price;
 		static::$symbols = BinanceSpotApi::get_all_symbols_cached();
-		static::$symbols [BinanceFiatApi::fiat_asset . Binance::reference_asset] = [
+		static::$symbols [BinanceFiatApi::fiat_asset . Binance::reference_asset] = [ # FIATEUR
 			"baseAsset"		=> BinanceFiatApi::fiat_asset,
 			"quoteAsset"	=> Binance::reference_asset,
+		];
+		static::$symbols [BinanceRestApi::dividendes_asset . Binance::pivot_asset] = [ # DIVIDENDESUSDC
+			"baseAsset"		=> BinanceRestApi::dividendes_asset,
+			"quoteAsset"	=> Binance::pivot_asset,
 		];
 		if ($type === "normal") {
 			$this->fees = new Accounting ($assets_reference_price, "fees");
@@ -62,13 +68,11 @@ class Accounting
 	private function execute_trade (array $trade) : void
 	{
 		$symbol = $trade ["symbol"];
-		
 
 		if (!isset(static::$symbols [$symbol])) { # symbol not listed by binance anymore, but we need to handle it anyway
 			$assets = BinanceSpotApiCached::guess_symbol_assets_cached ($symbol);
 			if (empty($assets)) {
-				echo "$symbol not in current symbols and couldn't be guessed <br/>" . PHP_EOL;
-				return; #TODO find why !
+				throw new ErrorException ("$symbol not in current symbols and couldn't be guessed"); #TODO find why !
 			}
 			list("base_asset" => $base_asset, "quote_asset" => $quote_asset) = $assets;
 		}

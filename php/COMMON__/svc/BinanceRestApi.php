@@ -4,7 +4,6 @@ namespace COMMON__\svc;
 use COMMON__\mdl\CapitalConfig;
 use COMMON__\mdl\KeyValue;
 use DateTime;
-use ErrorException;
 
 
 class BinanceRestApi
@@ -55,7 +54,7 @@ class BinanceRestApi
 		foreach ($asset_dividendes as $dividende) {
 			$base_asset = static::dividendes_asset;
 			$quote_asset = $dividende ["asset"];
-			if ($dividende ["direction"] !== 1) {
+			if ($dividende ["direction"] === 1) {
 				$is_buyer = 0;
 			}
 			else {
@@ -68,8 +67,8 @@ class BinanceRestApi
 				'orderId'			=> $dividende ["id"],
 				'orderListId'		=> -1,
 				'price'				=> 1,
-				'qty'				=> $dividende ["amount"],
-				'quoteQty'			=> 0, #TODO calculate
+				'qty'				=> $dividende ["amount"], #TODO which coin are they all, USDC ?
+				'quoteQty'			=> $dividende ["amount"], 
 				'commission'		=> 0, 
 				'commissionAsset'	=> "EUR", #TODO use constant
 				'time'				=> $dividende ["divTime"],
