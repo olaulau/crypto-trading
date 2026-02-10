@@ -17,7 +17,7 @@ class SpotTrade extends Mdl
 			'nullable' => false,
 			'index' => true,
 		],
-		'id' => [
+		'id' => [ #TODO usefull ?
 			'type' => Schema::DT_INT,
 			'nullable' => false,
 			'index' => true,

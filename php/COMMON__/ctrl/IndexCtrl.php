@@ -2,6 +2,7 @@
 namespace COMMON__\ctrl;
 
 use Base;
+use COMMON__\mdl\AssetDividend;
 use COMMON__\mdl\CapitalConfig;
 use COMMON__\mdl\ConvertTrade;
 use COMMON__\mdl\FiatTrade;
@@ -66,6 +67,7 @@ class IndexCtrl extends PrivateCtrl
 	public static function dbCleanGET (Base $f3, $url, $controler)
 	{
 		# cleanup
+		AssetDividend::drop_table();
 		CapitalConfig::drop_table();
 		ConvertTrade::drop_table();
 		FiatTrade::drop_table();
@@ -80,6 +82,7 @@ class IndexCtrl extends PrivateCtrl
 	public static function dbSetupGET (Base $f3, $url, $controler)
 	{
 		# create DB struct
+		AssetDividend::setup();
 		CapitalConfig::setup();
 		ConvertTrade::setup();
 		FiatTrade::setup();

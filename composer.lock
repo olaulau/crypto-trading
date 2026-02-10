@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7f6026a6db40ba3a9c476ef6cd7d29ac",
+    "content-hash": "5c520fcf91c44aa9fa482414cb1a8958",
     "packages": [
         {
             "name": "bcosca/fatfree-core",
@@ -634,21 +634,22 @@
         },
         {
             "name": "ikkez/f3-cortex",
-            "version": "v1.7.8",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ikkez/f3-cortex.git",
-                "reference": "79468b7a04695ad343b2f4d7dbdbe575a6b08a35"
+                "reference": "47d2596914776877ef4d87706d1faa812d1398f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ikkez/f3-cortex/zipball/79468b7a04695ad343b2f4d7dbdbe575a6b08a35",
-                "reference": "79468b7a04695ad343b2f4d7dbdbe575a6b08a35",
+                "url": "https://api.github.com/repos/ikkez/f3-cortex/zipball/47d2596914776877ef4d87706d1faa812d1398f2",
+                "reference": "47d2596914776877ef4d87706d1faa812d1398f2",
                 "shasum": ""
             },
             "require": {
                 "ikkez/f3-schema-builder": "2.*"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "classmap": [
@@ -670,7 +671,7 @@
             ],
             "support": {
                 "issues": "https://github.com/ikkez/f3-cortex/issues",
-                "source": "https://github.com/ikkez/f3-cortex/tree/v1.7.8"
+                "source": "https://github.com/ikkez/f3-cortex/tree/master"
             },
             "funding": [
                 {
@@ -682,7 +683,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-25T00:25:02+00:00"
+            "time": "2025-07-08T20:54:22+00:00"
         },
         {
             "name": "ikkez/f3-falsum",
@@ -824,37 +825,111 @@
             "time": "2023-01-23T22:06:35+00:00"
         },
         {
-            "name": "olaulau/htmlskel",
-            "version": "dev-master",
+            "name": "phrity/net-uri",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/olaulau/HtmlSkel.git",
-                "reference": "33f44fedf3da544d02b609bc923726ccf3c7af14"
+                "url": "https://github.com/sirn-se/phrity-net-uri.git",
+                "reference": "3f458e0c4d1ddc0e218d7a5b9420127c63925f43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/olaulau/HtmlSkel/zipball/33f44fedf3da544d02b609bc923726ccf3c7af14",
-                "reference": "33f44fedf3da544d02b609bc923726ccf3c7af14",
+                "url": "https://api.github.com/repos/sirn-se/phrity-net-uri/zipball/3f458e0c4d1ddc0e218d7a5b9420127c63925f43",
+                "reference": "3f458e0c4d1ddc0e218d7a5b9420127c63925f43",
                 "shasum": ""
             },
             "require": {
-                "bcosca/fatfree-core": "^3.8",
-                "components/jquery": "^3",
-                "components/jqueryui": "^1",
-                "fortawesome/font-awesome": "^6",
-                "ikkez/f3-cortex": "1.*",
-                "ikkez/f3-falsum": "^2.8",
-                "ikkez/f3-validation-engine": "^1.7",
-                "select2/select2": "^4.0",
-                "twbs/bootstrap": "^5"
+                "php": "^7.4 | ^8.0",
+                "psr/http-factory": "^1.0",
+                "psr/http-message": "^1.0 | ^2.0"
             },
-            "default-branch": true,
+            "require-dev": {
+                "php-coveralls/php-coveralls": "^2.0",
+                "phpunit/phpunit": "^9.0 | ^10.0",
+                "squizlabs/php_codesniffer": "^3.0"
+            },
             "type": "library",
-            "support": {
-                "source": "https://github.com/olaulau/HtmlSkel/tree/master",
-                "issues": "https://github.com/olaulau/HtmlSkel/issues"
+            "autoload": {
+                "psr-4": {
+                    "Phrity\\Net\\": "src/"
+                }
             },
-            "time": "2025-03-18T16:09:39+00:00"
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sören Jensen",
+                    "email": "sirn@sirn.se",
+                    "homepage": "https://phrity.sirn.se"
+                }
+            ],
+            "description": "PSR-7 Uri and PSR-17 UriFactory implementation",
+            "homepage": "https://phrity.sirn.se/net-uri",
+            "keywords": [
+                "psr-17",
+                "psr-7",
+                "uri",
+                "uri factory"
+            ],
+            "support": {
+                "issues": "https://github.com/sirn-se/phrity-net-uri/issues",
+                "source": "https://github.com/sirn-se/phrity-net-uri/tree/1.3.0"
+            },
+            "time": "2023-08-21T10:33:06+00:00"
+        },
+        {
+            "name": "phrity/util-errorhandler",
+            "version": "1.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sirn-se/phrity-util-errorhandler.git",
+                "reference": "70a669cc22db2eed6a109ec66fd95168a4332c9b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sirn-se/phrity-util-errorhandler/zipball/70a669cc22db2eed6a109ec66fd95168a4332c9b",
+                "reference": "70a669cc22db2eed6a109ec66fd95168a4332c9b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^10.0 || ^11.0 || ^12.0",
+                "robiningelbrecht/phpunit-coverage-tools": "^1.9",
+                "squizlabs/php_codesniffer": "^3.5 || ^4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Phrity\\Util\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sören Jensen",
+                    "email": "sirn@sirn.se",
+                    "homepage": "https://phrity.sirn.se"
+                }
+            ],
+            "description": "Inline error handler; catch and resolve errors for code block.",
+            "homepage": "https://phrity.sirn.se/util-errorhandler",
+            "keywords": [
+                "error",
+                "warning"
+            ],
+            "support": {
+                "issues": "https://github.com/sirn-se/phrity-util-errorhandler/issues",
+                "source": "https://github.com/sirn-se/phrity-util-errorhandler/tree/1.2.2"
+            },
+            "time": "2025-12-05T21:25:36+00:00"
         },
         {
             "name": "psr/http-client",
@@ -965,16 +1040,16 @@
         },
         {
             "name": "psr/http-message",
-            "version": "2.0",
+            "version": "1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/http-message.git",
-                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71"
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-message/zipball/402d35bcb92c70c026d1a6a9883f06b2ead23d71",
-                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
                 "shasum": ""
             },
             "require": {
@@ -983,7 +1058,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.0.x-dev"
+                    "dev-master": "1.1.x-dev"
                 }
             },
             "autoload": {
@@ -998,7 +1073,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "https://www.php-fig.org/"
+                    "homepage": "http://www.php-fig.org/"
                 }
             ],
             "description": "Common interface for HTTP messages",
@@ -1012,9 +1087,9 @@
                 "response"
             ],
             "support": {
-                "source": "https://github.com/php-fig/http-message/tree/2.0"
+                "source": "https://github.com/php-fig/http-message/tree/1.1"
             },
-            "time": "2023-04-04T09:54:51+00:00"
+            "time": "2023-04-04T09:50:52+00:00"
         },
         {
             "name": "psr/log",
@@ -1221,25 +1296,28 @@
         },
         {
             "name": "textalk/websocket",
-            "version": "1.5.8",
+            "version": "1.6.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Textalk/websocket-php.git",
-                "reference": "d05dbaa97500176447ffb1f1800573f23085ab13"
+                "reference": "67de79745b1a357caf812bfc44e0abf481cee012"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Textalk/websocket-php/zipball/d05dbaa97500176447ffb1f1800573f23085ab13",
-                "reference": "d05dbaa97500176447ffb1f1800573f23085ab13",
+                "url": "https://api.github.com/repos/Textalk/websocket-php/zipball/67de79745b1a357caf812bfc44e0abf481cee012",
+                "reference": "67de79745b1a357caf812bfc44e0abf481cee012",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 | ^8.0",
-                "psr/log": "^1 | ^2 | ^3"
+                "php": "^7.4 | ^8.0",
+                "phrity/net-uri": "^1.0",
+                "phrity/util-errorhandler": "^1.0",
+                "psr/http-message": "^1.0",
+                "psr/log": "^1.0 | ^2.0 | ^3.0"
             },
             "require-dev": {
                 "php-coveralls/php-coveralls": "^2.0",
-                "phpunit/phpunit": "^8.0|^9.0",
+                "phpunit/phpunit": "^9.0",
                 "squizlabs/php_codesniffer": "^3.5"
             },
             "type": "library",
@@ -1257,16 +1335,15 @@
                     "name": "Fredrik Liljegren"
                 },
                 {
-                    "name": "Sören Jensen",
-                    "email": "soren@abicart.se"
+                    "name": "Sören Jensen"
                 }
             ],
             "description": "WebSocket client and server",
             "support": {
                 "issues": "https://github.com/Textalk/websocket-php/issues",
-                "source": "https://github.com/Textalk/websocket-php/tree/1.5.8"
+                "source": "https://github.com/Textalk/websocket-php/tree/1.6.3"
             },
-            "time": "2022-04-26T06:28:24+00:00"
+            "time": "2022-11-07T18:59:33+00:00"
         },
         {
             "name": "twbs/bootstrap",
@@ -1323,7 +1400,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "olaulau/htmlskel": 20
+        "ikkez/f3-cortex": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

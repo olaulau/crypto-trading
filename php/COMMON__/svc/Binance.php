@@ -146,13 +146,13 @@ class Binance
 		$spot_trades = BinanceSpotApi::get_all_trades();
 		
 		$convert_trades = BinanceConvertApi::get_all_trades ();
-		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades($convert_trades);
+		$convert_trades = BinanceConvertApi::conversionTrades_to_spotTrades ($convert_trades);
 		
-		$fiat_trades = BinanceFiatApi::get_all_trades();
-		$fiat_trades = BinanceFiatApi::fiatTrades_to_spotTrades($fiat_trades);
+		$fiat_trades = BinanceFiatApi::get_all_trades ();
+		$fiat_trades = BinanceFiatApi::fiatTrades_to_spotTrades ($fiat_trades);
 
-		$dividendes_trades = BinanceRestApi::getAssetDividend ();
-		$dividendes_trades = BinanceRestApi::assetDividend_to_spotTrades($dividendes_trades);
+		$dividendes_trades = BinanceRestApi::get_asset_dividend_cached ();
+		$dividendes_trades = BinanceRestApi::assetDividend_to_spotTrades ($dividendes_trades);
 		
 		$all_trades = array_merge ($spot_trades, $convert_trades, $fiat_trades, $dividendes_trades);
 		$sort = array_column ($all_trades, "time");

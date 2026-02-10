@@ -179,12 +179,9 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
-		# BNB Vault / Launchpool
 		
-		var_dump($data);
+		// var_dump($data);
 
-		#TODO use DB cache
-		#TODO integrades in all trades for dashboard accouting use
 		
 		die;
 	}

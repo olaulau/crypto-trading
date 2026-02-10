@@ -18,6 +18,7 @@ trait BinanceRestApiCapitalConfigs
 		return static::query($path);
 	}
 
+	
 	private static function store_capital_configs_into_db (array $configs) : void
 	{
 		foreach ($configs as $config) {
@@ -28,14 +29,16 @@ trait BinanceRestApiCapitalConfigs
 		}
 	}
 
+	
 	private static function get_capital_configs_from_db () : array
 	{
 		return CapitalConfig::getAllFast ("coin");
 	}
 	
+	
 	public static function get_capital_configs_cached () : array
 	{
-		$cache_class = "BinanceCustomApi";
+		$cache_class = "BinanceRestApi";
 		$cache_function = __FUNCTION__;
 		$cache_key = "{$cache_class}__{$cache_function}__last_update";
 		$cache_ttl = 24 * 60 * 60;

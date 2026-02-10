@@ -45,11 +45,6 @@ default password is 'admin', don't forget to change it (see user[.dist].ini)
 
 
 
-- aller voir du côté de earn, y'a un peu de USDC dessus aussi
-
-
-
-
 - récupérer les trades en live avec un WS
 	=> tester en demo
 - forcer l'actualisation périodique des trades pour les symboles / assets pertinents
