@@ -1,6 +1,8 @@
 <?php
 use COMMON__\svc\Account;
 use COMMON__\svc\Binance;
+use COMMON__\svc\BinanceFiatApi;
+use COMMON__\svc\BinanceRestApi;
 use COMMON__\svc\Stuff;
 
 ?>
@@ -46,8 +48,10 @@ use COMMON__\svc\Stuff;
 				foreach ($assets_groups_to_display as $asset_group_name => $assets) {
 					foreach ($assets as $asset) {
 						$account = $accounting->get_account ($asset);
-						$can_hide = $asset_group_name !== "external" && $asset_group_name !== "liquid";
-						dashboard_row ($account, $assets_reference_price, $balances, $accounting_total, $balance_reference_qty, $can_hide);
+						if(!empty($account)) {
+							$can_hide = $asset_group_name !== "external" && $asset_group_name !== "liquid";
+							dashboard_row ($account, $assets_reference_price, $balances, $accounting_total, $balance_reference_qty, $can_hide);
+						}
 					}
 					?>
 					<tr>
@@ -95,11 +99,8 @@ use COMMON__\svc\Stuff;
 <?php
 
 
-function dashboard_row (?Account $account, $assets_reference_price, $balances, &$accounting_total, $balance_reference_qty, bool $can_hide)
+function dashboard_row (Account $account, $assets_reference_price, $balances, &$accounting_total, $balance_reference_qty, bool $can_hide)
 {
-	if (empty($account)) {
-		return;
-	}
 	$asset = $account->get_asset();
 	$account_reference_qty = $account->get_quantity() * ($assets_reference_price [$asset] ?? 0); #TODO integrate into accounting
 	?>
@@ -110,7 +111,10 @@ function dashboard_row (?Account $account, $assets_reference_price, $balances, &
 						</td>
 						
 						<td class="text-start">
-							<?= Stuff::format_crypto ($account->get_quantity()) ?> <br/>
+							<?= Stuff::format_crypto ($account->get_quantity()) ?>
+							<?= ($account->get_asset() === BinanceFiatApi::fiat_asset) ? " €" : "" ?>
+							<?= ($account->get_asset() === BinanceRestApi::dividendes_asset) ? " USDC" : "" ?>
+							<br/>
 						<?php
 						if(!empty($assets_reference_price [$asset])) {
 							$accounting_total += $account_reference_qty;
