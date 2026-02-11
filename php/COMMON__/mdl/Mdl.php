@@ -126,8 +126,8 @@ abstract class Mdl extends Cortex
 		}
 		$sql = "
 			SELECT *
-			FROM " . static::table . "
-			ORDER BY {$order_field} ASC
+			FROM  `" . static::table . "`
+			ORDER BY `{$order_field}` ASC
 		";
 		$params = [];
 

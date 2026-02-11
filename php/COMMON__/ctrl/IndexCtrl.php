@@ -8,6 +8,7 @@ use COMMON__\mdl\ConvertTrade;
 use COMMON__\mdl\FiatTrade;
 use COMMON__\mdl\KeyValue;
 use COMMON__\mdl\Kline;
+use COMMON__\mdl\Order;
 use COMMON__\mdl\OrderList;
 use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
@@ -74,6 +75,7 @@ class IndexCtrl extends PrivateCtrl
 		FiatTrade::drop_table();
 		KeyValue::drop_table();
 		Kline::drop_table();
+		Order::drop_table();
 		OrderList::drop_table();
 		SpotExchangeSymbol::drop_table();
 		SpotTrade::drop_table();
@@ -90,6 +92,7 @@ class IndexCtrl extends PrivateCtrl
 		FiatTrade::setup();
 		KeyValue::setup();
 		Kline::setup();
+		Order::setup();
 		OrderList::setup();
 		SpotExchangeSymbol::setup();
 		SpotTrade::setup();

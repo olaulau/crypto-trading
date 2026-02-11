@@ -167,11 +167,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
-		$data = BinanceSpotApi::get_order_lists_cached ();
-		var_dump($data);
-		die;
-		
-		$data = BinanceSpotApi::get_orders("ETHUSDC");
+		$data = BinanceSpotApi::get_orders_cached ("ETHUSDC");
 		var_dump($data);
 		die;
 	}
