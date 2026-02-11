@@ -45,19 +45,10 @@ class BinanceCtrl extends PrivateCtrl
 
 	public static function stuffGET (Base $f3, $url, $controler)
 	{
-		// Construction de la config
-		$binance_key = $f3->get("binance.key");
-		$binance_secret = $f3->get("binance.secret");
-		if (empty($binance_key) || empty($binance_secret)) {
-			throw new ErrorException("no binance api key / secret provided");
-		}
-
-		$configurationBuilder = SpotRestApiUtil::getConfigurationBuilder();
-		$configurationBuilder->apiKey($binance_key)->secretKey($binance_secret);
-		$spot_api = new SpotRestApi($configurationBuilder->build());
+		// $spot_api = BinanceSpotApi::get_api();
 
 		# server time
-		$response = $spot_api->time();
+		// $response = $spot_api->time();
 		// $data = Binance::responseData_to_table($response->getData());
 		// var_dump($data);
 
@@ -70,8 +61,7 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($data);
 
 		# orders
-		// $response = $spot_api->allOrders(IndexCtrl::$symbol);
-		// $data = Binance::responseData_to_table($response->getData());
+		// $data = BinanceSpotApi::get_orders("ETHUSDC");
 		// var_dump($data);
 
 		# order lists
@@ -107,14 +97,12 @@ class BinanceCtrl extends PrivateCtrl
 		// var_dump($trade_history);
 
 
-		$binance_conf = Binance::get_conf();
-
-		$builder = SimpleEarnRestApiUtil::getConfigurationBuilder();
-		$builder->apiKey($binance_conf["key"])
-				->secretKey($binance_conf["secret"]);
-		$simpleEarnApi = new SimpleEarnRestApi($builder->build());
+		// $binance_conf = Binance::get_conf();
+		// $builder = SimpleEarnRestApiUtil::getConfigurationBuilder();
+		// $builder->apiKey($binance_conf["key"])
+		// 		->secretKey($binance_conf["secret"]);
+		// $simpleEarnApi = new SimpleEarnRestApi($builder->build());
 		
-
 		# Subscriptions
 		// $data = $simpleEarnApi->getFlexibleSubscriptionRecord();
 		// $data = Binance::responseData_to_table($data);
@@ -179,10 +167,16 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
+		$data = BinanceSpotApi::get_symbols_from_order_lists();
+		var_dump($data);
+		die;
 		
-		// var_dump($data);
+		$data = BinanceSpotApi::get_order_lists ();
+		var_dump($data);
+		
+		$data = BinanceSpotApi::get_orders("ETHUSDC");
+		var_dump($data);
 
-		
 		die;
 	}
 	

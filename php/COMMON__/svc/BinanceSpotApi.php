@@ -77,20 +77,28 @@ class BinanceSpotApi
 	{
 		$spot_api = static::get_api();
 		$response = $spot_api->allOrderList();
-		$items = $response->getData()->getItems();
-		return $items;
+		$data = $response->getData();
+		$res = Binance::responseData_to_table($data);
+		return $res ["items"];
 	}
+	
+	
+	public static function get_orders (string $symbol) : array
+	{
+		$spot_api = static::get_api();
+		$response = $spot_api->allOrders($symbol);
+		$data = $response->getData();
+		$res = Binance::responseData_to_table($data);
+		return $res ["items"];
+	}
+	
 	
 	public static function get_symbols_from_order_lists () : array
 	{
 		$items = static::get_order_lists();
-		$symbols = [];
-		foreach ($items as $item) { /** @var AllOrderListResponseInner $item */
-			$symbol = $item->getSymbol();
-			if (!in_array($symbol, $symbols)) {
-				$symbols [] = $symbol;
-			}
-		}
+		$symbols = array_column($items, "symbol");
+		$symbols = array_unique($symbols);
+		sort($symbols);
 		return $symbols;
 	}
 	
@@ -99,8 +107,8 @@ class BinanceSpotApi
 	{
 		$trades = static::get_all_trades_from_db ();
 		$symbols = array_column($trades, "symbol");
-		sort($symbols);
 		$symbols = array_unique($symbols);
+		sort($symbols);
 		return $symbols;
 	}
 	

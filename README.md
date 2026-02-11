@@ -57,4 +57,8 @@ default password is 'admin', don't forget to change it (see user[.dist].ini)
 
 
 
+- orders
+	- put order and orderlist cache into DB
+	- WS to get new orders live
+	- show current pending TP/SL orders on dashboard
 
