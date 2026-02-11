@@ -1,6 +1,7 @@
 <?php
 namespace COMMON__\svc;
 
+use ErrorException;
 
 class BinanceRestApi
 {
@@ -34,6 +35,9 @@ class BinanceRestApi
 		
 		$response = curl_exec ($ch);
 		$data = json_decode ($response, true);
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			throw new ErrorException("response was not correct JSON data : {$response}");
+		}
 		return $data;
 	}
 
