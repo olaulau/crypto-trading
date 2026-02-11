@@ -2,7 +2,6 @@
 namespace COMMON__\svc;
 
 use Binance\Client\Spot\Api\SpotRestApi;
-use Binance\Client\Spot\Model\AllOrderListResponseInner;
 use Binance\Client\Spot\Model\GetAccountResponse;
 use Binance\Client\Spot\Model\TickerPriceResponse;
 use Binance\Client\Spot\SpotRestApiUtil;
@@ -14,7 +13,7 @@ use ErrorException;
 
 class BinanceSpotApi
 {
-	use BinanceSpotApiTrade;
+	use BinanceSpotApiTrade, BinanceSpotApiOrder;
 	
 	public static function get_api () : SpotRestApi
 	{
@@ -33,14 +32,6 @@ class BinanceSpotApi
 		return $api;
 	}
 	
-	
-	public static function get_trades_grouped (string $symbol) : array
-	{
-		$data = static::get_trades_from_api($symbol);
-		$data = Stuff::array_group_by($data, "orderListId");
-		return $data;
-	}
-
 	
 	public static function get_known_symbols (bool $with_balance = false) : array
 	{
@@ -73,29 +64,9 @@ class BinanceSpotApi
 	}
 	
 	
-	public static function get_order_lists () : array
-	{
-		$spot_api = static::get_api();
-		$response = $spot_api->allOrderList();
-		$data = $response->getData();
-		$res = Binance::responseData_to_table($data);
-		return $res ["items"];
-	}
-	
-	
-	public static function get_orders (string $symbol) : array
-	{
-		$spot_api = static::get_api();
-		$response = $spot_api->allOrders($symbol);
-		$data = $response->getData();
-		$res = Binance::responseData_to_table($data);
-		return $res ["items"];
-	}
-	
-	
 	public static function get_symbols_from_order_lists () : array
 	{
-		$items = static::get_order_lists();
+		$items = static::get_order_lists_from_api();
 		$symbols = array_column($items, "symbol");
 		$symbols = array_unique($symbols);
 		sort($symbols);
