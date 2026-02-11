@@ -12,6 +12,10 @@ use COMMON__\svc\Stuff;
 			<div></div>
 			<div>
 				<span class="">
+					<input type="checkbox" class="form-check-input" id="show_balance" >
+					<label class="form-check-label" for="show_balance">show balance</label>
+				</span> &nbsp; 
+				<span class="">
 					<input type="checkbox" class="form-check-input" id="auto_refresh" checked>
 					<label class="form-check-label" for="auto_refresh">auto refresh</label>
 				</span> &nbsp; 
@@ -30,7 +34,7 @@ use COMMON__\svc\Stuff;
 						<span class="text-secondary fw-normal">name</span>
 					</th>
 					<th rowspan=2 class="text-center align-middle">accounting</th>
-					<th rowspan=2 class="text-center align-middle">balance</th>
+					<th rowspan=2 class="text-center align-middle balance_cell d-none">balance</th>
 					<th rowspan=2 class="text-center align-middle">price</th>
 					<th colspan=2 class="text-center align-middle">trades</th>
 					<th colspan=2 class="text-center">orders</th>
@@ -69,8 +73,8 @@ use COMMON__\svc\Stuff;
 					<th class="text-start">
 						<?= Stuff::format_fiat ($accounting->get_reference_total()) ?> <?= Binance::reference_asset ?>
 					</th>
-					<th class="">
-					<?= Stuff::format_fiat (array_sum ($balance_reference_qty)) ?>
+					<th class="balance_cell d-none">
+						<?= Stuff::format_fiat (array_sum ($balance_reference_qty)) ?>
 					</th>
 					<th colspan=5 class="text-start">
 						&nbsp;
@@ -115,20 +119,20 @@ function dashboard_row (Account $account, $assets_reference_price, $balances, &$
 							<?= ($account->get_asset() === BinanceFiatApi::fiat_asset) ? " €" : "" ?>
 							<?= ($account->get_asset() === BinanceRestApi::dividendes_asset) ? " USDC" : "" ?>
 							<br/>
-						<?php
-						if(!empty($assets_reference_price [$asset])) {
-							$accounting_total += $account_reference_qty;
-							?>
-							<span class="text-secondary"><?= Stuff::format_fiat ( $account_reference_qty ) ?> <?= Binance::reference_asset ?></span>
 							<?php
-						}
-						?>
+							if(!empty($assets_reference_price [$asset])) {
+								$accounting_total += $account_reference_qty;
+								?>
+								<span class="text-secondary"><?= Stuff::format_fiat ( $account_reference_qty ) ?> <?= Binance::reference_asset ?></span>
+								<?php
+							}
+							?>
 						</td>
 
 						<?php
 						if (!empty($balances [$asset])) {
 							?>
-							<td class="text-start">
+							<td class="text-start balance_cell d-none">
 								<?= Stuff::format_crypto ($balances [$asset]) ?> <br/>
 								<span class="text-secondary"><?= Stuff::format_fiat ($balance_reference_qty [$asset]) ?> <?= Binance::reference_asset ?></span>
 							</td>
@@ -136,7 +140,7 @@ function dashboard_row (Account $account, $assets_reference_price, $balances, &$
 						}
 						else {
 							?>
-							<td>&nbsp;</td>
+							<td class="balance_cell d-none">&nbsp;</td>
 							<?php
 						}
 						?>

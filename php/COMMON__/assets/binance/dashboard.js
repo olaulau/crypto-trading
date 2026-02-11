@@ -31,4 +31,9 @@ $(function() {
 	auto_refresh();
 	
 	
+	// show balance
+	$("#show_balance").on("change", function() {
+		$(".balance_cell").toggleClass("d-none");
+	});
+	
 });
