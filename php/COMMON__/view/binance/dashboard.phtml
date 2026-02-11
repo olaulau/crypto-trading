@@ -54,7 +54,7 @@ use COMMON__\svc\Stuff;
 						$account = $accounting->get_account ($asset);
 						if(!empty($account)) {
 							$can_hide = $asset_group_name !== "external" && $asset_group_name !== "liquid";
-							dashboard_row ($account, $assets_reference_price, $balances, $balance_reference_qty, $can_hide);
+							dashboard_row ($account, $assets_reference_price, $balances, $balance_reference_qty, $can_hide, $stop_loss_infos);
 						}
 					}
 					?>
@@ -103,7 +103,7 @@ use COMMON__\svc\Stuff;
 <?php
 
 
-function dashboard_row (Account $account, $assets_reference_price, $balances, $balance_reference_qty, bool $can_hide)
+function dashboard_row (Account $account, array $assets_reference_price, array $balances, array $balance_reference_qty, bool $can_hide, array $stop_loss_infos)
 {
 	$asset = $account->get_asset();
 	$account_reference_qty = $account->get_quantity() * ($assets_reference_price [$asset] ?? 0);
@@ -167,9 +167,24 @@ function dashboard_row (Account $account, $assets_reference_price, $balances, $b
 						<td class="">
 							<?= "" ?>
 						</td>
-
+						
 						<td class="">
 							<?= "" ?>
+						</td>
+
+						<td class="">
+							<?php
+							if(!empty($stop_loss_infos [$asset])) {
+								$stops = $stop_loss_infos [$asset];
+								foreach ($stops as $stop) {
+									?>
+									@ <?= Stuff::format_crypto ($stop ["reference_stop"] )?> => <?= Stuff::format_crypto ($stop ["reference_quantity"]) ?> <?= Binance::reference_asset ?> <br/>
+									<?php
+								}
+								?>
+								<?php
+							}
+							?>
 						</td>
 					</tr>
 	<?php

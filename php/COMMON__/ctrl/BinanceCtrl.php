@@ -167,8 +167,8 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
-		$data = BinanceSpotApi::get_all_orders ();
-		var_dump($data);
+		
+		
 		die;
 	}
 	
@@ -176,7 +176,7 @@ class BinanceCtrl extends PrivateCtrl
 	public static function dashboardGET (Base $f3, $url, $controler) : void
 	{
 		$balances = BinanceSpotApiCached::get_account_balances_consolidated ();
-		$f3->set("balances", $balances);
+		$f3->set("balances", $balances); #TODO soon useless
 		
 		$capital_configs = BinanceRestApi::get_capital_configs_cached ();
 		$f3->set("capital_configs", $capital_configs);
@@ -188,10 +188,10 @@ class BinanceCtrl extends PrivateCtrl
 		$symbols = BinanceSpotApi::get_all_symbols_cached();
 		$tickers_query = [];
 		$assets_paths = [];
-		foreach ($assets as $asset) {
-			if ($asset !== Binance::reference_asset) {
-				$assets_paths [$asset] = Binance::find_symbol_path_for_assets ($asset, Binance::reference_asset, $symbols); #TODO put in DB (long cache)
-				foreach ($assets_paths [$asset] as $path) {
+		foreach ($assets as $baseAsset) {
+			if ($baseAsset !== Binance::reference_asset) {
+				$assets_paths [$baseAsset] = Binance::find_symbol_path_for_assets ($baseAsset, Binance::reference_asset, $symbols); #TODO put in DB (long cache)
+				foreach ($assets_paths [$baseAsset] as $path) {
 					$tickers_query [] = $path ["symbol"];
 				}
 			}
@@ -200,7 +200,7 @@ class BinanceCtrl extends PrivateCtrl
 		$tickers = BinanceSpotApiCached::get_ticker_prices ($tickers_query);
 		
 		$assets_reference_price = [];
-		foreach ($assets_paths as $asset => $path) {
+		foreach ($assets_paths as $baseAsset => $path) {
 			$price = 1;
 			foreach ($path as $step) {
 				if ($step ["direction"] === "normal") {
@@ -210,14 +210,14 @@ class BinanceCtrl extends PrivateCtrl
 					$price /= $tickers [$step ["symbol"]] ["price"];
 				}
 			}
-			$assets_reference_price [$asset] = $price; #TODO put in FS cache (small duration)
+			$assets_reference_price [$baseAsset] = $price; #TODO put in FS cache (small duration)
 		}
 		$assets_reference_price [Binance::reference_asset] = 1;
 		$f3->set("assets_reference_price", $assets_reference_price);
 		
 		$balance_reference_qty = [];
-		foreach ($balances_assets as $asset) {
-			$balance_reference_qty [$asset] = $balances [$asset] * $assets_reference_price [$asset];
+		foreach ($balances_assets as $baseAsset) {
+			$balance_reference_qty [$baseAsset] = $balances [$baseAsset] * $assets_reference_price [$baseAsset];
 		}
 		arsort($balance_reference_qty);
 		$f3->set("balance_reference_qty", $balance_reference_qty);
@@ -238,6 +238,35 @@ class BinanceCtrl extends PrivateCtrl
 			"remaining"	=> array_diff ($all_assets_to_display, $top_assets, $balance_assets),
 		];
 		$f3->set("assets_groups_to_display", $assets_groups_to_display);
+		
+		# try to find stop loss pending orders
+		$pending_orders = BinanceSpotApi::get_pending_orders_from_db ();
+		$stop_loss_infos = [];
+		foreach ($pending_orders as $order) {
+			if ($order ["type"] === "STOP_LOSS_LIMIT" && $order ["side"] === "SELL") {
+				$symbol_str = $order ["symbol"];
+				$symbol = $symbols [$symbol_str];
+				$baseAsset = $symbol ["baseAsset"];
+				$quoteAsset = $symbol ["quoteAsset"];
+				
+				$convert_symbol = $baseAsset . Binance::reference_asset;
+				$price = $tickers [$convert_symbol] ["price"];
+				$reference_quantity = $order ["origQty"] * $price;
+				
+				$convert_symbol = Binance::find_symbol_for_assets($quoteAsset, Binance::reference_asset, $symbols);
+				$price = $tickers [$convert_symbol ["symbol"]] ["price"];
+				if ($convert_symbol ["direction"] === "opposite") {
+					$price = 1 / $price;
+				}
+				$reference_stop = $order ["stopPrice"] * $price;
+				
+				$stop_loss_infos [$baseAsset] []  = [
+					"reference_quantity" => $reference_quantity,
+					"reference_stop" => $reference_stop,
+				];
+			}
+		}
+		$f3->set("stop_loss_infos", $stop_loss_infos);
 		
 		$breadcrumbs = static::breadcrumbs();
 		$breadcrumbs [] = new BreadCrumb ("Dashboard", $f3->get("BASE").$f3->alias("binanceDashboard"), "Dashboard");

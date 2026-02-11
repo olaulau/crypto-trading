@@ -36,6 +36,9 @@ trait BinanceRestApiCapitalConfigs
 	}
 	
 	
+	/**
+	 * get assets infos (cached into DB)
+	 */
 	public static function get_capital_configs_cached () : array
 	{
 		$cache_class = "BinanceRestApi";

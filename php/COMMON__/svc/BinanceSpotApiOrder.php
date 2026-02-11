@@ -230,4 +230,13 @@ trait BinanceSpotApiOrder
 		return $data;
 	}
 	
+	
+	#TODO force refresh of orders from api if needed
+	public static function get_pending_orders_from_db ()
+	{
+		$order_wrapper = new Order;
+		$data = $order_wrapper->find(["status = ?", "NEW"], []);
+		return $data->castAll();
+	}
+	
 }

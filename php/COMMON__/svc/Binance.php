@@ -169,7 +169,7 @@ class Binance
 	}
 	
 	
-	private static function find_symbol_for_assets (string $start, string $end, ?array $symbols=null) : ?array
+	public static function find_symbol_for_assets (string $start, string $end, ?array $symbols=null) : ?array
 	{
 		if ($start === $end) {
 			throw new ErrorException("start is same as end");
