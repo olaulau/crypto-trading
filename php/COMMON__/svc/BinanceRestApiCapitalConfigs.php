@@ -15,7 +15,7 @@ trait BinanceRestApiCapitalConfigs
 	public static function get_capital_configs_from_api () : array
 	{
 		$path = '/sapi/v1/capital/config/getall';
-		return static::query($path);
+		return BinanceRestApi::query($path, "prod");
 	}
 
 	

@@ -13,9 +13,9 @@ class BinanceRestApi
 	/**
 	 * generic rest query
 	 */
-	public static function query (string $path) : array
+	public static function query (string $path, ?string $env=null) : array
 	{
-		$binance_conf = Binance::get_conf();
+		$binance_conf = Binance::get_conf($env);
 
 		$query = http_build_query([
 			'timestamp' => (int)(microtime(true) * 1000),

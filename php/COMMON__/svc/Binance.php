@@ -225,12 +225,14 @@ class Binance
 	}
 
 	
-	public static function get_conf () : array
+	public static function get_conf (?string $env=null) : array
 	{
 		$f3 = Base::instance();
 		
-		$env = $f3->get("binance.env");
-		$binance_conf = $f3->get("binance.envs.$env");
+		if(empty($env)) {
+			$env = $f3->get("binance.env");
+		}
+		$binance_conf = $f3->get("binance.envs.{$env}");
 		return $binance_conf;
 	}
 }
