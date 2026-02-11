@@ -39,9 +39,6 @@ default password is 'admin', don't forget to change it (see user[.dist].ini)
 - accounting
 	- calculate avg cost
 		- historical value : GET /api/v3/klines?symbol=XXX&interval=1m&startTime=T&endTime=T
-- dashboard
-	- add stop loss & take profit infos
-
 
 
 
@@ -59,3 +56,15 @@ default password is 'admin', don't forget to change it (see user[.dist].ini)
 
 - orders
 	- WS to get new orders live
+
+
+- new architecture
+	- backend : auto fill DB (WS + periodic REST)
+		- page to force DB fill (easy dev)
+		- script to get data from prod
+		- launch and watch WS scripts
+	- frontend : only query DB, never use cache methods
+	
+
+- cron : every 15 minutes
+	- calculate 15m kline from 1s, if data are missing : get value from REST
