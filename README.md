@@ -6,7 +6,7 @@ vim user.ini
 	fill-in values
 crontab -e
 	*   *   *   *   *   cd crypto-trading/ || exit 1; { /usr/bin/date; /usr/bin/php index.php cli cron; } >> tmp/log/cron.log 2>&1
-screen -S crypto-trading_ws_miniTicker
+screen -S crypto-trading_ws_tickers
 	cd crypto-trading/
 	php index.php ws tickers 2>&1 |& tee -a tmp/log/ws_tickers.log
 
@@ -66,5 +66,3 @@ default password is 'admin', don't forget to change it (see user[.dist].ini)
 	- frontend : only query DB, never use cache methods
 	
 
-- cron : every 15 minutes
-	- calculate 15m kline from 1s, if data are missing : get value from REST

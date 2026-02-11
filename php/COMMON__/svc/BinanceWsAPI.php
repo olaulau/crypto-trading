@@ -57,7 +57,7 @@ class BinanceWsAPI
 	{
 		$binance_conf = Binance::get_conf ();
 
-		// --- setup WS ---
+		# setup WS ---
 		$listenKey = static::createListenKey ($binance_conf);
 		$url = $binance_conf ["ws_url"] . "/$listenKey";
 			
@@ -65,26 +65,29 @@ class BinanceWsAPI
 		$lastKeepAlive = time();
 		
 		while (1 === 1) {
-			echo "[OK] ListenKey créé : $listenKey\n";
-			echo "[OK] WS : $url\n";
+			echo "[OK] ListenKey créé : $listenKey" . PHP_EOL;
+			echo "[OK] WS : $url" . PHP_EOL;
 			try {
-				$ws = new Client ($url, ['timeout' => 1]); // timeout court pour check keep-alive
+				$ws = new Client ($url, ['timeout' => 1]); # timeout court pour check keep-alive
 
 				while (1 === 1) {
-					// --- keep-alive
+					#  keep-alive
 					if (time() - $lastKeepAlive >= $keepAliveInterval) {
 						static::keepAliveListenKey ($binance_conf, $listenKey);
 						$lastKeepAlive = time();
 						echo "[KEEPALIVE]\n";
 					}
 
-					// --- lire WS
-					$msg = $ws->receive(); // timeout = 5s max
+					# read WS
+					$msg = $ws->receive(); # timeout = 5s max
 					$data = json_decode($msg, true);
-					if (!$data || !isset($data['e'])) continue;
+					if (!$data || !isset($data['e'])) {
+						echo "DATA vide" . PHP_EOL;
+						continue;
+					}
 
-					// --- TES TRADES
-					if ($data['e'] === 'executionReport' &&
+					# messages
+					if ($data['e'] === 'executionReport' && # order status update ~= 1 trade (sans son ID)
 						in_array ($data['X'], ['FILLED', 'PARTIALLY_FILLED'])) {
 
 						$symbol = $data ['s'];
@@ -93,19 +96,25 @@ class BinanceWsAPI
 						$qty    = $data ['l'];
 						$time   = date ('H:i:s', $data['T']/1000);
 
-						echo "[$time] $symbol $side $qty @ $price\n";
+						echo "[$time] $symbol $side $qty @ $price" . PHP_EOL;
 
-						// --- INSERT DB ici si besoin
+						#TODO get trade data via REST : get_order_trades_from_api
+						#TODO insert DB
 					}
+					
+					#TODO other data type :
+					# outboundAccountPosition : complete balance snapshot
+					# balanceUpdate : small balance update
+					
 				}
 			}
 			catch (Throwable $e) {
 				echo $e::class ." " . $e->getCode() . " : " . $e->getMessage() . PHP_EOL;
-				echo "[WS ERROR] {$e->getMessage()}\n";
-				echo "[RECONNECT] dans 5s...\n";
+				echo "[WS ERROR] {$e->getMessage()}" . PHP_EOL;
+				echo "[RECONNECT] dans 5s..." . PHP_EOL;
 				sleep(5);
 
-				// --- recréer listenKey si nécessaire
+				# recreate listenKey if needed
 				$listenKey = static::createListenKey ($binance_conf);
 				$url = $binance_conf ["ws_url"] . "/$listenKey";
 			}

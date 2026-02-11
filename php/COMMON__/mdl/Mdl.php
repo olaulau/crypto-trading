@@ -363,14 +363,14 @@ abstract class Mdl extends Cortex
 	{
 		$f3 = Base::instance();
 		$db = $f3->get("db"); /** @var SQL $db */
-		$db->exec("DROP TABLE IF EXISTS " . static::table);
+		$db->exec("DROP TABLE IF EXISTS `" . static::table . "`");
 	}
 	
 	public static function delete_table () : void
 	{
 		$f3 = Base::instance();
 		$db = $f3->get("db"); /** @var SQL $db */
-		$db->exec("DELETE FROM " . static::table);
+		$db->exec("DELETE FROM `" . static::table . "`");
 	}
 	
 }

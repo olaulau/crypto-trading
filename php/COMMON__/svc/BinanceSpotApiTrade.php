@@ -11,6 +11,14 @@ use DateTime;
 trait BinanceSpotApiTrade
 {
 	
+	public static function get_order_trades_from_api (string $symbol, int $order_id) : array
+	{
+		$spot_api = BinanceSpotApi::get_api();
+		$response = $spot_api->myTrades($symbol, $order_id, null, null, null, null, Binance::recv_window); /** @var ApiResponse $response */
+		$data = Binance::responseData_to_table($response->getData());
+		return $data ["items"];
+	}
+	
 	public static function get_trades_from_api (string $symbol, ?SpotRestApi $spot_api = null) : array
 	{
 		if (empty($spot_api)) {
