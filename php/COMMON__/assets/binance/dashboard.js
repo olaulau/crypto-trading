@@ -2,7 +2,7 @@ $(function() {
 	
 	// hide dust checkbox
 	$("#hide_dust").on("change", function() {
-		$(".dust").toggleClass("visually-hidden");
+		$(".dust").toggleClass("d-none");
 	});
 	
 	
@@ -32,8 +32,18 @@ $(function() {
 	
 	
 	// show balance
+	function show_balance () {
+		var show_balance = $("#show_balance").prop("checked");
+		if (show_balance) {
+			$(".balance_cell").removeClass("d-none");
+		}
+		else {
+			$(".balance_cell").addClass("d-none");
+		}
+	}
 	$("#show_balance").on("change", function() {
-		$(".balance_cell").toggleClass("d-none");
+		show_balance () ;
 	});
+	show_balance () ;
 	
 });

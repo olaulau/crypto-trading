@@ -12,7 +12,7 @@ use COMMON__\svc\Stuff;
 			<div></div>
 			<div>
 				<span class="">
-					<input type="checkbox" class="form-check-input" id="show_balance" >
+					<input type="checkbox" class="form-check-input" id="show_balance" <?= ($binance["env"] !== "prod") ? "checked" : "" ?>>
 					<label class="form-check-label" for="show_balance">show balance</label>
 				</span> &nbsp; 
 				<span class="">
@@ -34,7 +34,7 @@ use COMMON__\svc\Stuff;
 						<span class="text-secondary fw-normal">name</span>
 					</th>
 					<th rowspan=2 class="text-center align-middle">accounting</th>
-					<th rowspan=2 class="text-center align-middle balance_cell d-none">balance</th>
+					<th rowspan=2 class="text-center align-middle balance_cell">balance</th>
 					<th rowspan=2 class="text-center align-middle">price</th>
 					<th colspan=2 class="text-center align-middle">trades</th>
 					<th colspan=2 class="text-center">orders</th>
@@ -70,8 +70,8 @@ use COMMON__\svc\Stuff;
 					<th class="text-start">
 						<?= Stuff::format_fiat ($accounting->get_reference_total()) ?> <?= Binance::reference_asset ?>
 					</th>
-					<th class="balance_cell d-none">
-						<?= Stuff::format_fiat (array_sum ($balance_reference_qty)) ?>
+					<th class="balance_cell">
+						<?= Stuff::format_fiat (array_sum ($balance_reference_qty)) ?> <?= Binance::reference_asset ?>
 					</th>
 					<th colspan=5 class="text-start">
 						&nbsp;
@@ -111,21 +111,32 @@ function dashboard_row (string $asset, ?Account $account, array $assets_referenc
 		$account_reference_qty = $balance_reference_qty [$asset] ?? 0;
 	}
 	?>
-					<tr class="<?= ($can_hide && $account_reference_qty >= 0 && $account_reference_qty < Binance::reference_dust_threashold) ? "dust visually-hidden" : "" ?>">
+					<tr class="<?= ($can_hide && $account_reference_qty >= 0 && $account_reference_qty < Binance::reference_dust_threashold) ? "dust d-none" : "" ?>">
 						<td class="text-end">
 							<?= $asset ?> <br/>
 							<span class="text-secondary"><?= $capital_configs [$asset] ["name"] ?? "" ?></span>
 						</td>
 						
 						<td class="text-start">
-							<?= Stuff::format_crypto ($account_quantity) ?>
-							<?= ($asset === BinanceFiatApi::fiat_asset) ? " €" : "" ?>
-							<?= ($asset === BinanceRestApi::dividendes_asset) ? " USDC" : "" ?>
-							<br/>
 							<?php
-							if(!empty($assets_reference_price [$asset])) {
+							if(!empty($account)) {
 								?>
-								<span class="text-secondary"><?= Stuff::format_fiat ( $account_reference_qty ) ?> <?= Binance::reference_asset ?></span>
+								<?= Stuff::format_crypto ($account_quantity) ?>
+								<?= ($asset === BinanceFiatApi::fiat_asset) ? " €" : "" ?>
+								<?= ($asset === BinanceRestApi::dividendes_asset) ? " USDC" : "" ?>
+								<br/>
+								<?php
+								if(!empty($assets_reference_price [$asset])) {
+									?>
+									<span class="text-secondary"><?= Stuff::format_fiat ( $account_reference_qty ) ?> <?= Binance::reference_asset ?></span>
+									<?php
+								}
+								?>
+								<?php
+							}
+							else {
+								?>
+								&nbsp;
 								<?php
 							}
 							?>
@@ -134,7 +145,7 @@ function dashboard_row (string $asset, ?Account $account, array $assets_referenc
 						<?php
 						if (!empty($balances [$asset])) {
 							?>
-							<td class="text-start balance_cell d-none">
+							<td class="text-start balance_cell">
 								<?= Stuff::format_crypto ($balances [$asset]) ?> <br/>
 								<span class="text-secondary"><?= Stuff::format_fiat ($balance_reference_qty [$asset]) ?> <?= Binance::reference_asset ?></span>
 							</td>
@@ -142,7 +153,7 @@ function dashboard_row (string $asset, ?Account $account, array $assets_referenc
 						}
 						else {
 							?>
-							<td class="balance_cell d-none">&nbsp;</td>
+							<td class="balance_cell">&nbsp;</td>
 							<?php
 						}
 						?>

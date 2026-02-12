@@ -231,12 +231,24 @@ class BinanceCtrl extends PrivateCtrl
 		$balance_assets = array_keys ($balance_reference_qty);
 		$all_assets_to_display = array_unique (array_merge ($accounting_assets, $balance_assets));
 		$top_assets = [BinanceFiatApi::fiat_asset, Binance::reference_asset, Binance::pivot_asset];
-		$assets_groups_to_display = [
-			"external"	=> [BinanceFiatApi::fiat_asset, BinanceRestApi::dividendes_asset],
-			"liquid"	=> [Binance::reference_asset, Binance::pivot_asset], #TODO add USDT
-			"balance"	=> array_diff ($balance_assets, $top_assets),
-			"remaining"	=> array_diff ($all_assets_to_display, $top_assets, $balance_assets),
-		];
+		$assets_groups_to_display = [];
+		if ($f3->get("binance.env")  === "prod") {
+			$assets_groups_to_display ["external"]		= [BinanceFiatApi::fiat_asset, BinanceRestApi::dividendes_asset];
+			$assets_groups_to_display ["liquid"]		= [Binance::reference_asset, Binance::pivot_asset];
+			$assets_groups_to_display ["balance"]		= array_diff ($balance_assets, $top_assets);
+			$assets_groups_to_display ["remaining"]		= array_diff ($all_assets_to_display, $top_assets, $balance_assets);
+		}
+		else {
+			$assets_groups_to_display ["balance"]		= $balance_assets;
+			$assets_groups_to_display ["remaining"]		= array_diff ($all_assets_to_display, $balance_assets);
+			
+		}
+		// $assets_groups_to_display = [
+		// 	"external"	=> [BinanceFiatApi::fiat_asset, BinanceRestApi::dividendes_asset],
+		// 	"liquid"	=> [Binance::reference_asset, Binance::pivot_asset],
+		// 	"balance"	=> array_diff ($balance_assets, $top_assets),
+		// 	"remaining"	=> array_diff ($all_assets_to_display, $top_assets, $balance_assets),
+		// ];
 		$f3->set("assets_groups_to_display", $assets_groups_to_display);
 		
 		# try to find stop loss pending orders
