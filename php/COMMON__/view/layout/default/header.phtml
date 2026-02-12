@@ -55,9 +55,12 @@
 							<?= $SESSION ["auth"] ["login"] ?>
 						</span>
 						<span class="text-danger">
-							<a href="<?= $BASE . $f3->alias("logout") ?>">
+							<a href="<?= $BASE . $f3->alias("logout") ?>" title="logout">
 								<i class="fa-solid fa-right-from-bracket"></i>
 							</a>
+						</span>
+						<span class="text-light">
+							(<?= $binance ["env"] ?>)
 						</span>
 					</div>
 					

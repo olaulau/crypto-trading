@@ -233,7 +233,7 @@ class BinanceCtrl extends PrivateCtrl
 		$top_assets = [BinanceFiatApi::fiat_asset, Binance::reference_asset, Binance::pivot_asset];
 		$assets_groups_to_display = [
 			"external"	=> [BinanceFiatApi::fiat_asset, BinanceRestApi::dividendes_asset],
-			"liquid"	=> [Binance::reference_asset, Binance::pivot_asset],
+			"liquid"	=> [Binance::reference_asset, Binance::pivot_asset], #TODO add USDT
 			"balance"	=> array_diff ($balance_assets, $top_assets),
 			"remaining"	=> array_diff ($all_assets_to_display, $top_assets, $balance_assets),
 		];
