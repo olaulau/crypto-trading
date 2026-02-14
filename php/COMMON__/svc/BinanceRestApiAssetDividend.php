@@ -22,9 +22,10 @@ trait BinanceRestApiAssetDividend
 		foreach ($data as $row) {
 			$elt = new AssetDividend;
 			$elt->load (["id2 = ?", $row ["id"]], []);
+			$id = $elt->id; # keep old PK
 			$elt->copyfrom ($row);
 			$elt->id2 = $row ["id"]; # shift id to id2 with larger column type
-			$elt->id = null; # let id be auto incremented
+			$elt->id = $id; # let id be auto incremented
 			$elt->save ();
 		}
 	}
