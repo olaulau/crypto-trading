@@ -86,7 +86,7 @@ trait BinanceSpotApiOrder
 		return $res ["items"];
 	}
 	
-	private static function store_orders_into_db (array $data) : void
+	public static function store_orders_into_db (array $data) : void
 	{
 		foreach ($data as $row) {
 			$elt = new Order;
@@ -97,7 +97,7 @@ trait BinanceSpotApiOrder
 	}
 
 	
-	private static function get_orders_from_db (string $symbol) : array
+	public static function get_orders_from_db (string $symbol) : array
 	{
 		$f3 = Base::instance();
 		$db = $f3->get("db"); /** @var SQL $db */

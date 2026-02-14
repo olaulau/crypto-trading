@@ -11,6 +11,7 @@ use Throwable;
 use WebSocket\Client;
 use WebSocket\TimeoutException;
 
+
 class BinanceWsAPI
 {
 
@@ -26,7 +27,6 @@ class BinanceWsAPI
 		]);
 		$res = curl_exec($ch);
 		$data = json_decode($res, true);
-		curl_close($ch);
 		if (!isset($data['listenKey'])) {
 			var_dump($data);
 			throw new RuntimeException ('Impossible de créer listenKey');
@@ -46,7 +46,6 @@ class BinanceWsAPI
 			CURLOPT_HTTPHEADER => ["X-MBX-APIKEY: $apiKey"],
 		]);
 		curl_exec($ch);
-		curl_close($ch);
 	}
 	
 
@@ -87,141 +86,31 @@ class BinanceWsAPI
 					}
 
 					# messages
-					if ($data['e'] === 'executionReport' && # order status update ~= 1 trade (with id ?)
-						in_array ($data['X'], ['FILLED', 'PARTIALLY_FILLED'])) {
-
-						$symbol = $data ['s'];
-						$side   = $data ['S'];
-						$price  = $data ['L'];
-						$qty    = $data ['l'];
-						$time   = date ('H:i:s', $data['T']/1000);
-
-						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] order data : ($time) $symbol $side $qty @ $price" . PHP_EOL;
+					if ($data ['e'] === 'executionReport') { # order status update ~= 1 trade (with id ?)
+						$order_data = static::executionReport_to_order ($data);
+						// var_dump($order_data);
+						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] order update : {$order_data ["orderId"]}" . PHP_EOL;
+						BinanceSpotApi::store_orders_into_db([$order_data]);
 						
-						#TODO get trade data via REST : get_order_trades_from_api
-						#TODO insert DB
+						if (in_array ($order_data ["status"], ['FILLED', 'PARTIALLY_FILLED'])) {
+							$trade_data = static::executionReport_to_trade($data);
+							// var_dump($trade_data);
+							echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] new trade : {$trade_data ["orderId"]}" . PHP_EOL;
+							BinanceSpotApiTrade::store_trades_into_db([$trade_data]);
+						}
+						else {
+							echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] order status : {$order_data ["status"]}" . PHP_EOL;
+							# other status : NEW / CANCELED / REJECTED / EXPIRED
+							#TODO do something special ?
+						}
 					}
 					else {
 						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] other data : " . PHP_EOL;
 						var_dump($data);
-						/*
-						array(34) {
-  'e' =>
-  string(15) "executionReport"
-  'E' =>
-  int(1770905271799)
-  's' =>
-  string(7) "ETHUSDT"
-  'c' =>
-  string(36) "web_fc7aad33303e44c5b6c8392dd213d90a"
-  'S' =>
-  string(3) "BUY"
-  'o' =>
-  string(5) "LIMIT"
-  'f' =>
-  string(3) "GTC"
-  'q' =>
-  string(10) "0.00500000"
-  'p' =>
-  string(13) "1000.00000000"
-  'P' =>
-  string(10) "0.00000000"
-  'F' =>
-  string(10) "0.00000000"
-  'g' =>
-  int(-1)
-  'C' =>
-  string(0) ""
-  'x' =>
-  string(3) "NEW"
-  'X' =>
-  string(3) "NEW"
-  'r' =>
-  string(4) "NONE"
-  'i' =>
-  int(3110296719)
-  'l' =>
-  string(10) "0.00000000"
-  'z' =>
-  string(10) "0.00000000"
-  'L' =>
-  string(10) "0.00000000"
-  'n' =>
-  string(1) "0"
-  'N' =>
-  NULL
-  'T' =>
-  int(1770905271799)
-  't' =>
-  int(-1)
-  'I' =>
-  int(7100556378)
-  'w' =>
-  bool(true)
-  'm' =>
-  bool(false)
-  'M' =>
-  bool(false)
-  'O' =>
-  int(1770905271799)
-  'Z' =>
-  string(10) "0.00000000"
-  'Y' =>
-  string(10) "0.00000000"
-  'Q' =>
-  string(10) "0.00000000"
-  'W' =>
-  int(1770905271799)
-  'V' =>
-  string(12) "EXPIRE_MAKER"
-}
-*/
-
-/*
-array(4) {
-  'e' =>
-  string(23) "outboundAccountPosition"
-  'E' =>
-  int(1770905271799)
-  'u' =>
-  int(1770905271799)
-  'B' =>
-  array(3) {
-    [0] =>
-    array(3) {
-      'a' =>
-      string(3) "ETH"
-      'f' =>
-      string(10) "0.00000000"
-      'l' =>
-      string(10) "0.00000000"
-    }
-    [1] =>
-    array(3) {
-      'a' =>
-      string(3) "BNB"
-      'f' =>
-      string(10) "0.00000000"
-      'l' =>
-      string(10) "0.00000000"
-    }
-    [2] =>
-    array(3) {
-      'a' =>
-      string(4) "USDT"
-      'f' =>
-      string(13) "4985.00000000"
-      'l' =>
-      string(11) "15.00000000"
-    }
-  }
-}
-*/
+						#TODO other data type :
+						# outboundAccountPosition : complete balance snapshot
+						# balanceUpdate : small balance update
 					}
-					
-					#TODO other data type :
-					# outboundAccountPosition : complete balance snapshot
-					# balanceUpdate : small balance update
 				}
 			}
 			catch (TimeoutException $e) {
@@ -241,6 +130,59 @@ array(4) {
 			}
 			#TODO recreate listenKey only if needed ?
 		}
+	}
+	
+	
+	private static function executionReport_to_order (array $data) : array
+	{
+		return [
+			'symbol' => $data['s'] ?? null,
+			'orderId' => $data['i'] ?? null,
+			'orderListId' => $data['g'] ?? -1,
+			'clientOrderId' => $data['c'] ?? null,
+			'price' => $data['p'] ?? null,
+			'origQty' => $data['q'] ?? null,
+			'executedQty' => $data['z'] ?? null,
+			'cummulativeQuoteQty' => $data['z'] !== null && $data['L'] !== null 
+									 ? bcmul($data['z'], $data['L'], 8)
+									 : '0', #TODO cumuler les trades partiels
+			'status' => $data['X'] ?? null,
+			'timeInForce' => $data['f'] ?? null,
+			'type' => $data['o'] ?? null,
+			'side' => $data['S'] ?? null,
+			'stopPrice' => $data['sp'] ?? null,
+			'icebergQty' => $data['Q'] ?? null,
+			'time' => $data['E'] ?? null,
+			'updateTime' => $data['T'] ?? null,
+			'isWorking' => isset($data['w']) ? (int)$data['w'] : 1,
+			'origQuoteOrderQty' => $data['Z'] ?? null,
+			'workingTime' => $data['W'] ?? null,
+			'selfTradePreventionMode' => $data['STPM'] ?? null, # only for futures
+		];
+	}
+	
+	
+	private static function executionReport_to_trade (array $data) : array
+	{
+		if (($data['x'] ?? '') !== 'TRADE' || !isset($data['t']) || $data['t'] < 0) {
+			throw new ErrorException("should notconvert executionReport to trade if conditions are not met");
+		}
+	
+		return [
+			'id'=> $data['t'],
+			'symbol' => $data['s'] ?? null,
+			'orderId' => $data['i'] ?? null,
+			'orderListId' => $data['g'] ?? -1, // OCO ou batch, sinon -1
+			'price' => $data['L'] ?? null, // last executed price
+			'qty' => $data['l'] ?? null,   // last executed quantity
+			'quoteQty' => isset($data['l'], $data['L']) ? bcmul($data['l'], $data['L'], 8) : '0',
+			'commission' => $data['n'] ?? '0',
+			'commissionAsset' => $data['N'] ?? null,
+			'time' => $data['T'] ?? null,
+			'isBuyer' => isset($data['S']) && strtoupper($data['S']) === 'BUY' ? 1 : 0,
+			'isMaker' => isset($data['m']) ? (int)$data['m'] : 0,
+			'isBestMatch' => 1, // Spot = toujours best match
+		];
 	}
 	
 	

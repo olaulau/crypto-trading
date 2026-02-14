@@ -1,4 +1,5 @@
 # install
+```
 git clone
 composer install
 cp conf/user.dist.ini user.ini
@@ -9,12 +10,12 @@ crontab -e
 screen -S crypto-trading_ws_tickers
 	cd crypto-trading/
 	php index.php ws tickers 2>&1 |& tee -a tmp/log/ws_tickers.log
-
+```
 
 
 
 # config
-default password is 'admin', don't forget to change it (see user[.dist].ini)
+default password is ```admin```, don't forget to change it (see ```user[.dist].ini```)
 
 
 

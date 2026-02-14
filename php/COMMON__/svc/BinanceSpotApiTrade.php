@@ -29,7 +29,7 @@ trait BinanceSpotApiTrade
 		return $data ["items"];
 	}
 
-	private static function store_trades_into_db (array $trades) : void
+	public static function store_trades_into_db (array $trades) : void
 	{
 		foreach ($trades as $trade) {
 			$ft = new SpotTrade();
