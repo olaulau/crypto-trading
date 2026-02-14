@@ -36,14 +36,11 @@ use COMMON__\svc\Stuff;
 					<th rowspan=2 class="text-center align-middle">accounting</th>
 					<th rowspan=2 class="text-center align-middle balance_cell">balance</th>
 					<th rowspan=2 class="text-center align-middle">price</th>
-					<th colspan=2 class="text-center align-middle">trades</th>
-					<th colspan=2 class="text-center">orders</th>
+					<th rowspan=2 class="text-center align-middle">AVG cost</th>
+					<th rowspan=2 class="text-center align-middle">orders</th>
 				</tr>
 				<tr>
-					<th class="text-center align-middle">cost</th>
-					<th class="text-center align-middle">margin</th>
-					<th class="text-center align-middle">Take Profit</th>
-					<th class="text-center align-middle">Stop Loss</th>
+					
 				</tr>
 			</thead>
 			<tbody>
@@ -52,7 +49,7 @@ use COMMON__\svc\Stuff;
 					foreach ($assets as $asset) {
 						$account = $accounting->get_account ($asset);
 						$can_hide = $asset_group_name !== "external" && $asset_group_name !== "liquid";
-						dashboard_row ($asset, $account, $assets_reference_price, $balances, $balance_reference_qty, $can_hide, $stop_loss_infos);
+						dashboard_row ($asset, $account, $assets_reference_price, $balances, $balance_reference_qty, $can_hide, $pending_orders_by_asset);
 					}
 					?>
 					<tr>
@@ -73,7 +70,7 @@ use COMMON__\svc\Stuff;
 					<th class="balance_cell">
 						<?= Stuff::format_fiat (array_sum ($balance_reference_qty)) ?> <?= Binance::reference_asset ?>
 					</th>
-					<th colspan=5 class="text-start">
+					<th colspan=3 class="text-start">
 						&nbsp;
 					</th>
 				</tr>
@@ -87,7 +84,7 @@ use COMMON__\svc\Stuff;
 					<th class="">
 						&nbsp;
 					</th>
-					<th colspan=5 class="text-start">
+					<th colspan=3 class="text-start">
 						&nbsp;
 					</th>
 				</tr>
@@ -100,7 +97,7 @@ use COMMON__\svc\Stuff;
 <?php
 
 
-function dashboard_row (string $asset, ?Account $account, array $assets_reference_price, array $balances, array $balance_reference_qty, bool $can_hide, array $stop_loss_infos)
+function dashboard_row (string $asset, ?Account $account, array $assets_reference_price, array $balances, array $balance_reference_qty, bool $can_hide, array $pending_orders_by_asset)
 {
 	if (!empty($account)) {
 		$account_quantity = $account->get_quantity();
@@ -142,44 +139,36 @@ function dashboard_row (string $asset, ?Account $account, array $assets_referenc
 							?>
 						</td>
 
-						<?php
-						if (!empty($balances [$asset])) {
-							?>
-							<td class="text-start balance_cell">
+						<td class="text-start balance_cell">
+							<?php
+							if (!empty($balances [$asset])) {
+								?>
 								<?= Stuff::format_crypto ($balances [$asset]) ?> <br/>
 								<span class="text-secondary"><?= Stuff::format_fiat ($balance_reference_qty [$asset]) ?> <?= Binance::reference_asset ?></span>
-							</td>
-							<?php
-						}
-						else {
+								<?php
+							}
+							else {
+								?>
+								&nbsp;
+								<?php
+							}
 							?>
-							<td class="balance_cell">&nbsp;</td>
-							<?php
-						}
-						?>
+						</td>
 
-						<?php
-						if (!empty($assets_reference_price [$asset])) {
-							?>
-							<td class="text-start">
+						<td class="text-start">
+							<?php
+							if (!empty($assets_reference_price [$asset])) {
+								?>
 								1 = <br/>
 								<?= Stuff::format_crypto ($assets_reference_price [$asset]) ?>
-							</td>
-							<?php
-						}
-						else {
+								<?php
+							}
+							else {
+								?>
+								&nbsp;
+								<?php
+							}
 							?>
-							<td>&nbsp;</td>
-							<?php
-						}
-						?>
-						
-						<td class="">
-							<?= "" ?>
-						</td>
-
-						<td class="">
-							<?= "" ?>
 						</td>
 						
 						<td class="">
@@ -188,11 +177,28 @@ function dashboard_row (string $asset, ?Account $account, array $assets_referenc
 
 						<td class="">
 							<?php
-							if(!empty($stop_loss_infos [$asset])) {
-								$stops = $stop_loss_infos [$asset];
-								foreach ($stops as $stop) {
+							if(!empty($pending_orders_by_asset [$asset])) {
+								$orders = $pending_orders_by_asset [$asset];
+								foreach ($orders as $order) {
+									if (in_array($order ["type"], ["STOP_LOSS_LIMIT", "LIMIT_MAKER"])) {
+										?>
+										<?= $order ["type"] === "STOP_LOSS_LIMIT" ? "SL" : "TP" ?> 
+										<?= Stuff::format_crypto ($order ["reference_quantity"]) ?> <?= Binance::reference_asset ?>
+										(<?= Stuff::format_percent ($order ["reference_quantity"] / $account_reference_qty * 100 , false) ?>)
+										@ <?= Stuff::format_crypto ($order ["reference_stop"] )?>
+										(<?= Stuff::format_percent( ( $order ["reference_stop"] - $assets_reference_price [$asset] ) / $assets_reference_price [$asset] * 100 ) ?>)
+										<?php
+									}
+									else {
+										?>
+										<?= $order ["side"] ?> 
+										<?= Stuff::format_crypto ($order ["reference_quantity"]) ?> <?= Binance::reference_asset ?>
+										@ <?= Stuff::format_crypto ($order ["reference_stop"] )?>
+										(<?= Stuff::format_percent( ( $order ["reference_stop"] - $assets_reference_price [$asset] ) / $assets_reference_price [$asset] * 100 ) ?>)
+										<?php
+									}
 									?>
-									@ <?= Stuff::format_crypto ($stop ["reference_stop"] )?> => <?= Stuff::format_crypto ($stop ["reference_quantity"]) ?> <?= Binance::reference_asset ?> <br/>
+									<br/>
 									<?php
 								}
 								?>

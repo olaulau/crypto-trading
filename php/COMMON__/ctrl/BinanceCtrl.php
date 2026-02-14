@@ -248,32 +248,27 @@ class BinanceCtrl extends PrivateCtrl
 		# try to find stop loss pending orders
 		BinanceSpotApi::get_all_orders (); # fetch orders if needed
 		$pending_orders = BinanceSpotApi::get_pending_orders_from_db ();
-		$stop_loss_infos = [];
+		$pending_orders_by_asset = [];
 		foreach ($pending_orders as $order) {
-			if ($order ["type"] === "STOP_LOSS_LIMIT" && $order ["side"] === "SELL") {
-				$symbol_str = $order ["symbol"];
-				$symbol = $symbols [$symbol_str];
-				$baseAsset = $symbol ["baseAsset"];
-				$quoteAsset = $symbol ["quoteAsset"];
-				
-				$convert_symbol = $baseAsset . Binance::reference_asset;
-				$price = $tickers [$convert_symbol] ["price"];
-				$reference_quantity = $order ["origQty"] * $price;
-				
-				$convert_symbol = Binance::find_symbol_for_assets($quoteAsset, Binance::reference_asset, $symbols);
-				$price = $tickers [$convert_symbol ["symbol"]] ["price"];
-				if ($convert_symbol ["direction"] === "opposite") {
-					$price = 1 / $price;
-				}
-				$reference_stop = $order ["stopPrice"] * $price;
-				
-				$stop_loss_infos [$baseAsset] []  = [
-					"reference_quantity" => $reference_quantity,
-					"reference_stop" => $reference_stop,
-				];
+			$symbol_str = $order ["symbol"];
+			$symbol = $symbols [$symbol_str];
+			$baseAsset = $symbol ["baseAsset"];
+			$quoteAsset = $symbol ["quoteAsset"];
+			
+			$convert_symbol = $baseAsset . Binance::reference_asset;
+			$price = $tickers [$convert_symbol] ["price"];
+			$order ["reference_quantity"] = $order ["origQty"] * $price;
+			
+			$convert_symbol = Binance::find_symbol_for_assets($quoteAsset, Binance::reference_asset, $symbols);
+			$price = $tickers [$convert_symbol ["symbol"]] ["price"];
+			if ($convert_symbol ["direction"] === "opposite") {
+				$price = 1 / $price;
 			}
+			$order ["reference_stop"] = $order ["price"] * $price;
+			
+			$pending_orders_by_asset [$baseAsset] [] = $order;
 		}
-		$f3->set("stop_loss_infos", $stop_loss_infos);
+		$f3->set("pending_orders_by_asset", $pending_orders_by_asset);
 		
 		$breadcrumbs = static::breadcrumbs();
 		$breadcrumbs [] = new BreadCrumb ("Dashboard", $f3->get("BASE").$f3->alias("binanceDashboard"), "Dashboard");

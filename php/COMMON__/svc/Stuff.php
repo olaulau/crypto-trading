@@ -49,7 +49,7 @@ class Stuff
 	}
 	
 	
-	public static function number_format_french ($value, $decimals, bool $force_sign=false)
+	public static function number_format_french (float $value, int $decimals, bool $force_sign=false)
 	{
 		return (($force_sign && $value > 0) ? "+ " : "") . number_format($value, $decimals, ",", " ");
 	}
@@ -79,9 +79,9 @@ class Stuff
 	}
 	
 	
-	public static function format_percent ($value)
+	public static function format_percent (float $value, bool $force_sign = true)
 	{
-		return static::number_format_french ($value, 2, true) . " %";
+		return static::number_format_french ($value, 2, $force_sign) . " %";
 	}
 	
 	

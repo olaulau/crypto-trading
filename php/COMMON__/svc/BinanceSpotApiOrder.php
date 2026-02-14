@@ -2,6 +2,7 @@
 namespace COMMON__\svc;
 
 use Base;
+use Binance\Client\Spot\Api\SpotRestApi;
 use COMMON__\mdl\KeyValue;
 use COMMON__\mdl\Order;
 use COMMON__\mdl\OrderList;
@@ -75,7 +76,7 @@ trait BinanceSpotApiOrder
 	
 	
 	
-	public static function get_orders_from_api (string $symbol, BinanceSpotApi $spot_api) : array
+	public static function get_orders_from_api (string $symbol, SpotRestApi $spot_api) : array
 	{
 		if (empty($spot_api)) {
 			$spot_api = BinanceSpotApi::get_api();
@@ -115,7 +116,7 @@ trait BinanceSpotApiOrder
 	}
 	
 	
-	public static function get_orders_cached (string $symbol, BinanceSpotApi $spot_api) : array
+	public static function get_orders_cached (string $symbol, SpotRestApi $spot_api) : array
 	{
 		$cache_class = "BinanceSpotApi";
 		$cache_function = __FUNCTION__;
