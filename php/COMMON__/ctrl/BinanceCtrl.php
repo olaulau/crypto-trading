@@ -243,15 +243,10 @@ class BinanceCtrl extends PrivateCtrl
 			$assets_groups_to_display ["remaining"]		= array_diff ($all_assets_to_display, $balance_assets);
 			
 		}
-		// $assets_groups_to_display = [
-		// 	"external"	=> [BinanceFiatApi::fiat_asset, BinanceRestApi::dividendes_asset],
-		// 	"liquid"	=> [Binance::reference_asset, Binance::pivot_asset],
-		// 	"balance"	=> array_diff ($balance_assets, $top_assets),
-		// 	"remaining"	=> array_diff ($all_assets_to_display, $top_assets, $balance_assets),
-		// ];
 		$f3->set("assets_groups_to_display", $assets_groups_to_display);
 		
 		# try to find stop loss pending orders
+		BinanceSpotApi::get_all_orders (); # fetch orders if needed
 		$pending_orders = BinanceSpotApi::get_pending_orders_from_db ();
 		$stop_loss_infos = [];
 		foreach ($pending_orders as $order) {

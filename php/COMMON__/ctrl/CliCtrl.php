@@ -37,20 +37,6 @@ class CliCtrl extends Ctrl
 	}
 
 
-	public static function trades (Base $f3, $url, $controler) : void
-	{
-		# ignore deprecated
-		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
-
-		# empty buffers
-		while (ob_get_level () > 0) {
-			ob_end_flush ();
-		}
-
-		BinanceWsAPI::userDataStream ();
-	}
-
-
 	public static function miniTickers (Base $f3, $url, $controler) : void
 	{
 		# ignore deprecated
@@ -62,6 +48,20 @@ class CliCtrl extends Ctrl
 		}
 
 		BinanceWsAPI::miniTicker (); #TODO
+	}
+	
+	
+	public static function userDataStream (Base $f3, $url, $controler) : void
+	{
+		# ignore deprecated
+		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+		# empty buffers
+		while (ob_get_level () > 0) {
+			ob_end_flush ();
+		}
+
+		BinanceWsAPI::userDataStream ();
 	}
 	
 	
