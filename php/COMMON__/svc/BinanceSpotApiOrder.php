@@ -75,9 +75,11 @@ trait BinanceSpotApiOrder
 	
 	
 	
-	public static function get_orders_from_api (string $symbol) : array
+	public static function get_orders_from_api (string $symbol, BinanceSpotApi $spot_api) : array
 	{
-		$spot_api = BinanceSpotApi::get_api();
+		if (empty($spot_api)) {
+			$spot_api = BinanceSpotApi::get_api();
+		}
 		$response = $spot_api->allOrders($symbol);
 		$data = $response->getData();
 		$res = Binance::responseData_to_table($data);
@@ -113,7 +115,7 @@ trait BinanceSpotApiOrder
 	}
 	
 	
-	public static function get_orders_cached (string $symbol) : array
+	public static function get_orders_cached (string $symbol, BinanceSpotApi $spot_api) : array
 	{
 		$cache_class = "BinanceSpotApi";
 		$cache_function = __FUNCTION__;
@@ -131,7 +133,7 @@ trait BinanceSpotApiOrder
 		# check if we have to query the API to refresh data
 		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
 			# get orders
-			$data = static::get_orders_from_api ($symbol);
+			$data = static::get_orders_from_api ($symbol, $spot_api);
 
 			# store them into db
 			static::store_orders_into_db ($data);
