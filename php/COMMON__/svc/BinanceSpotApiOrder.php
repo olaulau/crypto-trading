@@ -76,7 +76,7 @@ trait BinanceSpotApiOrder
 	
 	
 	
-	public static function get_orders_from_api (string $symbol, SpotRestApi $spot_api) : array
+	public static function get_orders_from_api (string $symbol, ?SpotRestApi $spot_api=null) : array
 	{
 		if (empty($spot_api)) {
 			$spot_api = BinanceSpotApi::get_api();
