@@ -147,24 +147,6 @@ class BinanceCtrl extends PrivateCtrl
 	}
 
 
-	public static function tradesGET (Base $f3, $url, $controler)
-	{
-		// $symbol = IndexCtrl::$symbol;
-		$symbol = "DOGEEUR"; ///////////////////
-		$data = BinanceSpotApi::get_trades_grouped($symbol);
-		$f3->set("data", $data);
-
-		$page = [
-			"module"	=>	"COMMON__",
-			"layout"	=>	"default",
-			"name"		=>	"binance/trades",
-			"title"		=>	"Trades {$symbol}",
-			"breadcrumbs" => static::breadcrumbs(),
-		];
-		self::renderPage($page);
-	}
-	
-	
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
 		
@@ -255,8 +237,7 @@ class BinanceCtrl extends PrivateCtrl
 			$baseAsset = $symbol ["baseAsset"];
 			$quoteAsset = $symbol ["quoteAsset"];
 			
-			$convert_symbol = $baseAsset . Binance::reference_asset;
-			$price = $tickers [$convert_symbol] ["price"];
+			$price = $assets_reference_price [$baseAsset];
 			$order ["reference_quantity"] = $order ["origQty"] * $price;
 			
 			$convert_symbol = Binance::find_symbol_for_assets($quoteAsset, Binance::reference_asset, $symbols);
