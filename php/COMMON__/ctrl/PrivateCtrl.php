@@ -3,6 +3,7 @@ namespace COMMON__\ctrl;
 
 use Base;
 
+
 class PrivateCtrl extends Ctrl
 {
 	

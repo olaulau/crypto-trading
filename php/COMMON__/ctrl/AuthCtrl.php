@@ -3,7 +3,8 @@ namespace COMMON__\ctrl;
 
 use Base;
 
-class AuthCtrl extends Ctrl
+
+class AuthCtrl extends MiniCtrl
 {
 	
 	public static function beforeRoute ()
