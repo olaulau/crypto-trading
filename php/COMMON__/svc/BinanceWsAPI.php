@@ -132,6 +132,47 @@ class BinanceWsAPI
 		}
 	}
 	
+/*
+array(4) {
+  'e' =>
+  string(23) "outboundAccountPosition"
+  'E' =>
+  int(1771197761104)
+  'u' =>
+  int(1771197761103)
+  'B' =>
+  array(3) {
+    [0] =>
+    array(3) {
+      'a' =>
+      string(3) "ETH"
+      'f' =>
+      string(10) "0.01288440"
+      'l' =>
+      string(10) "0.00000000"
+    }
+    [1] =>
+    array(3) {
+      'a' =>
+      string(3) "BNB"
+      'f' =>
+      string(10) "0.00000000"
+      'l' =>
+      string(10) "0.00000000"
+    }
+    [2] =>
+    array(3) {
+      'a' =>
+      string(4) "USDT"
+      'f' =>
+      string(13) "4973.95836050"
+      'l' =>
+      string(10) "0.00000000"
+    }
+  }
+}
+*/
+	
 	
 	private static function executionReport_to_order (array $data) : array
 	{

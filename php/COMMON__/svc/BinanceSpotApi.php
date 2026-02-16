@@ -3,6 +3,7 @@ namespace COMMON__\svc;
 
 use Binance\Client\Spot\Api\SpotRestApi;
 use Binance\Client\Spot\Model\GetAccountResponse;
+use Binance\Client\Spot\Model\Symbols;
 use Binance\Client\Spot\Model\TickerPriceResponse;
 use Binance\Client\Spot\SpotRestApiUtil;
 use COMMON__\mdl\KeyValue;
@@ -116,7 +117,8 @@ class BinanceSpotApi
 	public static function get_exchange_infos (array $symbols, bool $keep_symbols_filters = true) : array
 	{
 		$spot_api = static::get_api();
-		$response = $spot_api->exchangeInfo(null, $symbols, null, false);
+		$s = empty($symbols) ? null : new Symbols ($symbols);
+		$response = $spot_api->exchangeInfo(null, $s, null, false);
 		$data = Binance::responseData_to_table($response->getData());
 		if($keep_symbols_filters === false) {
 			foreach ($data ["symbols"] as &$symbol) {
@@ -198,7 +200,7 @@ class BinanceSpotApi
 		sort($symbols);
 		
 		$spot_api = static::get_api();
-		$response = $spot_api->tickerPrice (null, $symbols);
+		$response = $spot_api->tickerPrice (null, new Symbols ($symbols));
 		$data = $response->getData(); /** @var TickerPriceResponse $data */
 		$response2 = $data->getTickerPriceResponse2();
 		$res = Binance::responseData_to_table ($response2);

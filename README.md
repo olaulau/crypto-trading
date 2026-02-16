@@ -45,10 +45,10 @@ crontab -e
 	*   *   *   *   *   cd crypto-trading/ || exit 1; { /usr/bin/date; /usr/bin/php index.php cli cron; } >> tmp/log/cron.log 2>&1
 screen -S crypto-trading_ws_tickers
 	cd crypto-trading/
-	php index.php ws tickers 2>&1 |& tee -a tmp/log/ws_tickers.log
+	php index.php ws tickers |& tee -a tmp/log/ws_tickers.log
 screen -S crypto-trading_ws_uds
 	cd crypto-trading/
-	php index.php ws uds 2>&1 |& tee -a tmp/log/ws_uds.log
+	php index.php ws uds |& tee -a tmp/log/ws_uds.log
 ```
 
 

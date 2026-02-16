@@ -6,20 +6,28 @@ use DB\SQL;
 use DB\SQL\Schema;
 
 
-class KeyValue extends Mdl
+class Balance extends Mdl
 {
 	
-	public const table = "key_value";
+	public const table = "balance";
 	
 	protected $fieldConf = [
-		'key' => [
+		'asset' => [
 			'type' => Schema::DT_VARCHAR128,
 			'nullable' => false,
 			'index' => true,
 			'unique' => true,
 		],
-		'value' => [
-			'type' => Schema::DT_VARCHAR128,
+		'lastUpdated' => [
+			'type' => Schema::DT_DATETIME,
+			'nullable' => false,
+		],
+		'free' => [
+			'type' => Schema::DT_FLOAT,
+			'nullable' => false,
+		],
+		'locked' => [
+			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
 	];
