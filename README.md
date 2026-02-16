@@ -1,7 +1,6 @@
-# crypto-trading
+# crypto-trading
 
-
-## project description
+## description
 Binance crypto trading companion
 
 
