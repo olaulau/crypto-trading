@@ -333,7 +333,7 @@ array(11) {
 
 		$binance_conf = Binance::get_conf ();
 		$url = $binance_conf ["ws_url"] . "/!miniTicker@arr";
-		$ws = new Client ($url);
+		$ws = new Client ($url, ['timeout' => 60]); #TODO same timeout for all WS
 
 		while (1 === 1) {
 			try {
@@ -399,5 +399,93 @@ array(11) {
 			sleep(5);
 		}
 	}
+	
+	
+	/**
+	 * get best bid & ask
+	 */
+	public static function bookTicker (string $symbol)
+	{
+		$f3 = Base::instance();
+		
+		#TODO check symbol exists
+		$symbol = strtolower($symbol);
 
+		$binance_conf = Binance::get_conf ();
+		$url = $binance_conf ["ws_url"] . "/{$symbol}@bookTicker";
+		$ws = new Client ($url);
+
+		while (1 === 1) {
+			try {
+				# read message
+				$msg = $ws->receive();
+				$tickers = json_decode($msg, true);
+				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] book ticker : " . PHP_EOL;
+				var_dump($tickers);
+				echo PHP_EOL;
+				// break;
+				////////////////////////////
+				/*
+				array(6) {
+					'u' =>
+					int(946796400)
+					's' =>
+					string(7) "ETHUSDC"
+					'b' =>
+					string(13) "1967.67000000"
+					'B' =>
+					string(10) "5.41260000"
+					'a' =>
+					string(13) "1967.68000000"
+					'A' =>
+					string(10) "7.87790000"
+				}
+
+				*/
+
+
+				/*
+				# insert into DB
+				$kline = new Kline;
+				$kline->symbol = $ticker ["s"];
+				$kline->candle_size = "1s";
+				$kline->open_time = Binance::timestamp_to_datetime ($ticker ["E"]);
+				$kline->open = 0;
+				$kline->high = 0;
+				$kline->low = 0;
+				$kline->close = 0;
+				$kline->volume = 0;
+				$kline->close_time = Binance::timestamp_to_datetime ($ticker ["E"]);
+				$kline->quote_asset_volume = 0;
+				$kline->number_of_trades = 0;
+				$kline->taker_buy_base_asset_volume = 0;
+				$kline->taker_buy_quote_asset_volume = 0;
+				$kline->ignore = 0;
+				
+				try {
+					$kline->save();
+					
+					echo ".";
+				}
+				catch (Throwable $th) {
+					if (str_contains($th->getMessage(), "uniq__symbol__candle_size__open_time")) {
+						echo " [duplicate key ignore] ";
+					}
+					else {
+						var_dump($ticker);
+						throw $th;
+					}
+				}
+				*/
+			}
+			catch (TimeoutException $e) {
+				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] timeout" . PHP_EOL;
+			}
+			catch (Throwable $e) {
+				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] unknown exception " . $e::class . " : " . $e->getCode() . " : " . $e->getMessage() . PHP_EOL;
+			}
+			sleep(5);
+		}
+	}
+	
 }

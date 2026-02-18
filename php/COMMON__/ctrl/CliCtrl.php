@@ -37,7 +37,7 @@ class CliCtrl extends Ctrl
 	}
 
 
-	public static function miniTickers (Base $f3, $url, $controler) : void
+	public static function miniTicker (Base $f3, $url, $controler) : void
 	{
 		# ignore deprecated
 		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
@@ -46,8 +46,50 @@ class CliCtrl extends Ctrl
 		while (ob_get_level () > 0) {
 			ob_end_flush ();
 		}
+		
+		# long run
+		set_time_limit(0);
+		
+		# get exception instead of errors
+		set_error_handler(function ($severity, $message, $file, $line) {
+			if (!(error_reporting() & $severity)) {
+				return false;
+			}
+			throw new \ErrorException($message, 0, $severity, $file, $line);
+		});
 
-		BinanceWsAPI::miniTicker (); #TODO
+		BinanceWsAPI::miniTicker ();
+	}
+	
+	
+	
+	public static function bookTicker (Base $f3, $url, $controler) : void
+	{
+		$symbol = $f3->get("PARAMS.symbol");
+		if (empty($symbol)) {
+			die("empty symbol param");
+		}
+		
+		# ignore deprecated
+		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+		# empty buffers
+		while (ob_get_level () > 0) {
+			ob_end_flush ();
+		}
+		
+		# long run
+		set_time_limit(0);
+		
+		# get exception instead of errors
+		set_error_handler(function ($severity, $message, $file, $line) {
+			if (!(error_reporting() & $severity)) {
+				return false;
+			}
+			throw new \ErrorException($message, 0, $severity, $file, $line);
+		});
+
+		BinanceWsAPI::bookTicker ($symbol);
 	}
 	
 	

@@ -42,9 +42,12 @@ vim user.ini
 ```
 crontab -e
 	*   *   *   *   *   cd crypto-trading/ || exit 1; { /usr/bin/date; /usr/bin/php index.php cli cron; } >> tmp/log/cron.log 2>&1
-screen -S crypto-trading_ws_tickers
+screen -S crypto-trading_ws_miniTtickers
 	cd crypto-trading/
-	php index.php ws tickers |& tee -a tmp/log/ws_tickers.log
+	php index.php ws miniTicker |& tee -a tmp/log/ws_miniTicker.log
+screen -S crypto-trading_ws_bookTicker
+	cd crypto-trading/
+	php index.php ws bookTicker |& tee -a tmp/log/ws_bookTicker.log
 screen -S crypto-trading_ws_uds
 	cd crypto-trading/
 	php index.php ws uds |& tee -a tmp/log/ws_uds.log
@@ -92,8 +95,6 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 
-- récupérer les trades en live avec un WS
-	=> tester en demo
 - forcer l'actualisation périodique des trades pour les symboles / assets pertinents
 	- balance > 0
 	- trades passés
@@ -101,11 +102,6 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 - trades update
 	- route CLI pour forcer l'update des symbols sans trades => cron daily
-
-
-
-- orders
-	- WS to get new orders live
 
 
 - new architecture
@@ -116,3 +112,4 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 	- frontend : only query DB, never use cache methods
 	
 
+- balance REST : store into DB instead of FS cache
