@@ -2,6 +2,7 @@
 namespace COMMON__\svc;
 
 use Base;
+use COMMON__\mdl\Balance;
 use COMMON__\mdl\Kline;
 use DateTime;
 use DB\SQL;
@@ -103,6 +104,44 @@ class BinanceWsAPI
 							# other status : NEW / CANCELED / REJECTED / EXPIRED
 							#TODO do something special ?
 						}
+					}
+					elseif($order_data ["status"] === "outboundAccountPosition") {
+						$timestamp = $order_data ["E"];
+						$lastUpdate = Binance::timestamp_to_datetime($timestamp);
+						foreach ($order_data ["B"] as $row) {
+							$balance = new Balance();
+							$balance->load(["asset = ?", "asset"], []);
+							$balance->asset = $row ["a"];
+							$balance->lastUpdated = $lastUpdate;
+							$balance->free = $row ["f"];
+							$balance->locked = $row ["l"];
+							$balance->save();
+						}
+					}
+					elseif($order_data ["status"] === "balanceUpdate") {
+						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] balanceUpdate : " . PHP_EOL;
+						var_dump($data);
+						
+						/*
+						$timestamp = $order_data ["T"];
+						$lastUpdate = Binance::timestamp_to_datetime($timestamp);
+						$balance = new Balance ();
+						$balance->load (["asset = ?", "asset"], []);
+						$balance->asset = $row ["a"];
+						$balance->lastUpdated = $lastUpdate;
+						$balance->free = $row ["f"];
+						$balance->locked = $row ["l"];
+						$balance->save ();
+						*/
+						#TODO apply delta :
+						/*
+						 "d": {                      // delta object
+							"f": "50.00000000",       // change dans la quantité libre (free)
+							"l": "0.00000000"         // change dans la quantité bloquée (locked)
+						}
+						$balances[$asset]['free']   = bcadd($balances[$asset]['free'], $delta['f'], 8);
+						$balances[$asset]['locked'] = bcadd($balances[$asset]['locked'], $delta['l'], 8);
+						*/
 					}
 					else {
 						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] other data : " . PHP_EOL;
