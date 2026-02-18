@@ -172,7 +172,69 @@ array(4) {
   }
 }
 */
-	
+
+/*
+[2026-02-16 02:15:01] other data :
+/var/www/crypto.nas.laulau.ovh/php/COMMON__/svc/BinanceWsAPI.php:109:
+array(3) {
+  'e' =>
+  string(16) "listenKeyExpired"
+  'E' =>
+  int(1771204501407)
+  'listenKey' =>
+  string(60) "Y1J60rcjq1ipsoeqMhyW6vocUZEObX4D5NJtlkA05z0kGvQifkwvUgz4Q1q6"
+}
+[2026-02-16 02:15:01] keep alive
+*/
+
+/*
+[2026-02-16 01:31:16] other data :
+/var/www/crypto.nas.laulau.ovh/php/COMMON__/svc/BinanceWsAPI.php:109:
+array(11) {
+  'e' =>
+  string(10) "listStatus"
+  'E' =>
+  int(1771201876078)
+  's' =>
+  string(7) "ETHUSDC"
+  'g' =>
+  int(20065027320)
+  'c' =>
+  string(3) "OCO"
+  'l' =>
+  string(12) "EXEC_STARTED"
+  'L' =>
+  string(9) "EXECUTING"
+  'r' =>
+  string(4) "NONE"
+  'C' =>
+  string(36) "web_08947207969b44398f60aa4e6f86bf26"
+  'T' =>
+  int(1771201876078)
+  'O' =>
+  array(2) {
+    [0] =>
+    array(3) {
+      's' =>
+      string(7) "ETHUSDC"
+      'i' =>
+      int(9203132403)
+      'c' =>
+      string(36) "web_3366497f6293431dbdd6af04f22a3cdb"
+    }
+    [1] =>
+    array(3) {
+     's' =>
+      string(7) "ETHUSDC"
+      'i' =>
+      int(9203132404)
+      'c' =>
+      string(22) "CHT2X6YrK28MYN7k8HbpmI"
+    }
+  }
+}
+*/
+
 	
 	private static function executionReport_to_order (array $data) : array
 	{
