@@ -217,7 +217,7 @@ class Binance
 	public static function find_symbol_path_for_assets (string $start, string $end, ?array $symbols=null) : array
 	{
 		if ($start === $end) {
-			throw new ErrorException ("start is same as end");
+			throw new ErrorException ("find_symbol_path_for_assets : start = end");
 		}
 		
 		# direct (and opposite)
@@ -234,7 +234,7 @@ class Binance
 		}
 		
 		# more complex case, need real path search
-		throw new ErrorException("complex case not implemented");
+		throw new ErrorException("find_symbol_path_for_assets ($start, $end) : complex case not implemented");
 	}
 
 	

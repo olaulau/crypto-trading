@@ -10,27 +10,9 @@ use Cache;
 class BinanceSpotApiCached
 {
 
-	public static function get_account_balances_consolidated () : array
-	{
-		$cache = Cache::instance();
-		$cache_class = "BinanceSpotApi";
-		$cache_function = __FUNCTION__;
-		$cache_key = "{$cache_class}__{$cache_function}";
-		$cache_ttl = 1 * 60;
-		
-		if ($cache->exists($cache_key) === false) {
-			$data = BinanceSpotApi::$cache_function();
-			$cache->set($cache_key, $data, $cache_ttl);
-		}
-		else {
-			$data = $cache->get($cache_key);
-		}
-		return $data;
-	}
-	
 	public static function get_symbols_from_balance () : array
 	{
-		$balances = static::get_account_balances_consolidated();
+		$balances = BinanceSpotApiAccount::get_account_balances_consolidated();
 		$balances_assets = array_keys ($balances);
 		
 		$all_symbols = BinanceSpotApi::get_all_symbols_cached();

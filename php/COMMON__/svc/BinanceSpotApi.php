@@ -14,7 +14,7 @@ use ErrorException;
 
 class BinanceSpotApi
 {
-	use BinanceSpotApiTrade, BinanceSpotApiOrder;
+	use BinanceSpotApiTrade, BinanceSpotApiOrder, BinanceSpotApiAccount;
 	
 	public static function get_api () : SpotRestApi
 	{
@@ -85,35 +85,7 @@ class BinanceSpotApi
 	}
 	
 	
-	public static function get_account () : array
-	{
-		$spot_api = static::get_api();
-		$response = $spot_api->getAccount(true);
-		$data = $response->getData(); /** @var GetAccountResponse $data */
-		$res = Binance::responseData_to_table($data);
-		return $res;
-	}
-	
-	public static function get_account_balances () : array
-	{
-		$account = static::get_account();
-		$balances = $account ["balances"];
-		$res = Stuff::array_group_by($balances, "asset", false);
-		return $res;
-	}
-	
-	public static function get_account_balances_consolidated () : array
-	{
-		$account = static::get_account();
-		$balances = $account ["balances"];
-		$res = [];
-		foreach ($balances as $balance) {
-			$res [$balance ["asset"]] = $balance ["free"] + $balance ["locked"];
-		}
-		return $res;
-	}
-	
-	
+	#TODO move to a trait
 	public static function get_exchange_infos (array $symbols, bool $keep_symbols_filters = true) : array
 	{
 		$spot_api = static::get_api();
@@ -139,7 +111,7 @@ class BinanceSpotApi
 	private static function store_symbols_into_db (array $symbols) : void
 	{
 		foreach ($symbols as $symbol) {
-			$elt = new SpotExchangeSymbol();
+			$elt = new SpotExchangeSymbol;
 			$elt->load (["symbol = ?", $symbol ["symbol"]], []);
 			$elt->copyfrom ($symbol);
 			$elt->save ();
