@@ -189,7 +189,7 @@ class Binance
 		}
 		
 		if(empty($symbols)) {
-			$symbols = BinanceSpotApi::get_all_symbols_cached();
+			$symbols = BinanceSpotApi::get_all_symbols_cached ();
 		}
 		$symbols_str = array_keys ($symbols);
 		

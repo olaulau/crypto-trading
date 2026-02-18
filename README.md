@@ -112,4 +112,6 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 	- frontend : only query DB, never use cache methods
 	
 
-- balance REST : store into DB instead of FS cache
+- dashboard : ignorer les balances === 0 (le WS renvoie de force une balance BNB = 0)
+
+
