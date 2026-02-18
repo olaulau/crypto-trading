@@ -89,13 +89,13 @@ trait BinanceSpotApiAccount
 		
 		$res = [];
 		foreach ($balances as $balance) {
-			$res [$balance ["asset"]] = $balance ["free"] + $balance ["locked"];
+			$sum = $balance ["free"] + $balance ["locked"];
+			if ($sum > 0) {
+				$res [$balance ["asset"]] = $sum;
+			}
 		}
 		
 		return $res;
 	}
-	
-	
-	
 	
 }
