@@ -338,57 +338,67 @@ array(11) {
 		$ws = new Client ($url);
 
 		while (1 === 1) {
-			# read message
-			$msg = $ws->receive();
-			$tickers = json_decode($msg, true);
+			try {
+				# read message
+				$msg = $ws->receive();
+				$tickers = json_decode($msg, true);
 
-			$start = microtime(true);
-			$db->begin();
-			echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] ";
-			foreach ($tickers as $ticker) {
-				if ($ticker ["e"] !== "24hrMiniTicker") {
-					throw new ErrorException ("WS miniTicker : unhandled message type : {$ticker ["e"]}");
-				}
+				$start = microtime(true);
+				$db->begin();
+				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] ";
+				foreach ($tickers as $ticker) {
+					if ($ticker ["e"] !== "24hrMiniTicker") {
+						throw new ErrorException ("WS miniTicker : unhandled message type : {$ticker ["e"]}");
+					}
 
-				# insert into DB
-				$kline = new Kline;
-				$kline->symbol = $ticker ["s"];
-				$kline->candle_size = "1s";
-				$kline->open_time = Binance::timestamp_to_datetime ($ticker ["E"]);
-				$kline->open = 0;
-				$kline->high = 0;
-				$kline->low = 0;
-				$kline->close = 0;
-				$kline->volume = 0;
-				$kline->close_time = Binance::timestamp_to_datetime ($ticker ["E"]);
-				$kline->quote_asset_volume = 0;
-				$kline->number_of_trades = 0;
-				$kline->taker_buy_base_asset_volume = 0;
-				$kline->taker_buy_quote_asset_volume = 0;
-				$kline->ignore = 0;
-				
-				try {
-					$kline->save();
-				}
-				catch (Throwable $th) {
-					if (str_contains($th->getMessage(), "uniq__symbol__candle_size__open_time")) {
-						echo " [duplicate key ignore] ";
+					# insert into DB
+					$kline = new Kline;
+					$kline->symbol = $ticker ["s"];
+					$kline->candle_size = "1s";
+					$kline->open_time = Binance::timestamp_to_datetime ($ticker ["E"]);
+					$kline->open = 0;
+					$kline->high = 0;
+					$kline->low = 0;
+					$kline->close = 0;
+					$kline->volume = 0;
+					$kline->close_time = Binance::timestamp_to_datetime ($ticker ["E"]);
+					$kline->quote_asset_volume = 0;
+					$kline->number_of_trades = 0;
+					$kline->taker_buy_base_asset_volume = 0;
+					$kline->taker_buy_quote_asset_volume = 0;
+					$kline->ignore = 0;
+					
+					try {
+						$kline->save();
+						echo ".";
 					}
-					else {
-						var_dump($ticker);
-						throw $th;
+					catch (Throwable $th) {
+						if (str_contains($th->getMessage(), "uniq__symbol__candle_size__open_time")) {
+							echo " [duplicate key ignore] ";
+						}
+						else {
+							var_dump($ticker);
+							throw $th;
+						}
 					}
 				}
-				echo ".";
+				$db->commit();
+
+				$end = microtime(true);
+				$duration = $end - $start;
+				$duration = $duration * 1000;
+				$duration = number_format($duration, 3, ",", " ");
+				echo " : " . count($tickers) . " tickers in {$duration} ms";
+				echo PHP_EOL;
+			
 			}
-			$db->commit();
-
-			$end = microtime(true);
-			$duration = $end - $start;
-			$duration = $duration * 1000;
-			$duration = number_format($duration, 3, ",", " ");
-			echo " : " . count($tickers) . " tickers in {$duration} ms";
-			echo PHP_EOL;
+			catch (TimeoutException $e) {
+				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] timeout" . PHP_EOL;
+			}
+			catch (Throwable $e) {
+				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] unknown exception " . $e::class . " : " . $e->getCode() . " : " . $e->getMessage() . PHP_EOL;
+			}
+			sleep(5);
 		}
 	}
 
