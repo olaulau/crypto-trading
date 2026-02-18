@@ -51,7 +51,8 @@ class BinanceWsAPI
 	
 
 	/**
-	 * get my trades
+	 * get user data update on events :  
+	 * orderLists, orders, trades, balance
 	 */
 	public static function userDataStream ()
 	{
@@ -61,7 +62,7 @@ class BinanceWsAPI
 		$listenKey = static::createListenKey ($binance_conf);
 		$url = $binance_conf ["ws_url"] . "/$listenKey";
 			
-		$keepAliveInterval = 30 * 60; // 30 min
+		$keepAliveInterval = 30 * 60; // 30 min (max 60 min)
 		$lastKeepAlive = time();
 		
 		while (1 === 1) {
@@ -99,18 +100,14 @@ class BinanceWsAPI
 							echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] new trade : {$trade_data ["orderId"]}" . PHP_EOL;
 							BinanceSpotApiTrade::store_trades_into_db([$trade_data]);
 						}
-						else {
-							echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] order status : {$order_data ["status"]}" . PHP_EOL;
-							# other status : NEW / CANCELED / REJECTED / EXPIRED
-							#TODO do something special ?
-						}
 					}
-					elseif($order_data ["status"] === "outboundAccountPosition") {
-						$timestamp = $order_data ["E"];
+					elseif ($data ["e"] === "outboundAccountPosition") {
+						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] balance update " . PHP_EOL;
+						$timestamp = $data ["E"];
 						$lastUpdate = Binance::timestamp_to_datetime($timestamp);
-						foreach ($order_data ["B"] as $row) {
+						foreach ($data ["B"] as $row) {
 							$balance = new Balance();
-							$balance->load(["asset = ?", "asset"], []);
+							$balance->load(["asset = ?", $row ["a"]], []);
 							$balance->asset = $row ["a"];
 							$balance->lastUpdated = $lastUpdate;
 							$balance->free = $row ["f"];
@@ -118,12 +115,12 @@ class BinanceWsAPI
 							$balance->save();
 						}
 					}
-					elseif($order_data ["status"] === "balanceUpdate") {
+					elseif ($data ["e"] === "balanceUpdate") {
 						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] balanceUpdate : " . PHP_EOL;
 						var_dump($data);
-						
+						throw new ErrorException("not implemented : WS UDS balanceUpdate");
 						/*
-						$timestamp = $order_data ["T"];
+						$timestamp = $data ["T"];
 						$lastUpdate = Binance::timestamp_to_datetime($timestamp);
 						$balance = new Balance ();
 						$balance->load (["asset = ?", "asset"], []);
@@ -146,9 +143,7 @@ class BinanceWsAPI
 					else {
 						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] other data : " . PHP_EOL;
 						var_dump($data);
-						#TODO other data type :
-						# outboundAccountPosition : complete balance snapshot
-						# balanceUpdate : small balance update
+						throw new ErrorException("WS UDS : unknown data type");
 					}
 				}
 			}
@@ -328,6 +323,9 @@ array(11) {
 	}
 	
 	
+	/**
+	 * get symbols prices every seconds, store them into DB
+	 */
 	public static function miniTicker ()
 	{
 		$f3 = Base::instance();
