@@ -42,14 +42,11 @@ vim user.ini
 ```
 crontab -e
 	*   *   *   *   *   cd crypto-trading/ || exit 1; { /usr/bin/date; /usr/bin/php index.php cli cron; } >> tmp/log/cron.log 2>&1
-screen -S crypto-trading_ws_miniTtickers
-	cd crypto-trading/
+screen -S crypto-trading_ws_miniTicker
 	php index.php ws miniTicker |& tee -a tmp/log/ws_miniTicker.log
 screen -S crypto-trading_ws_bookTicker
-	cd crypto-trading/
-	php index.php ws bookTicker |& tee -a tmp/log/ws_bookTicker.log
+	php index.php ws bookTicker ETHUSDC |& tee -a tmp/log/ws_bookTicker_ethusdc.log
 screen -S crypto-trading_ws_uds
-	cd crypto-trading/
 	php index.php ws uds |& tee -a tmp/log/ws_uds.log
 ```
 
