@@ -109,3 +109,11 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 	- frontend : only query DB, never use cache methods
 	
 
+- balances
+	- put all functions into Balance class
+	- set lastUpdate in WS UDS balance update too
+
+
+- cron / ws
+	- process handler
+	- auto run cron & WS if needed
