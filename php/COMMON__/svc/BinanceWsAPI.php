@@ -60,16 +60,16 @@ class BinanceWsAPI
 
 		# setup WS
 		$listenKey = static::createListenKey ($binance_conf);
-		$url = $binance_conf ["ws_url"] . "/$listenKey";
+		echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] created listen key : {$listenKey}" . PHP_EOL;
 			
 		$keepAliveInterval = 30 * 60; // 30 min (max 60 min)
 		$lastKeepAlive = time();
 		
 		while (1 === 1) {
-			echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] created listen key : {$listenKey}" . PHP_EOL;
 			try {
+				$url = $binance_conf ["ws_url"] . "/$listenKey";
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] WS : {$url}" . PHP_EOL;
-				$ws = new Client ($url, ['timeout' => 10 * 60 * 60]); # timeout court pour check keep-alive
+				$ws = new Client ($url, ['timeout' => 5 * 60]); # timeout court pour check keep-alive
 
 				while (1 === 1) {
 					#  keep-alive
@@ -140,6 +140,12 @@ class BinanceWsAPI
 						$balances[$asset]['locked'] = bcadd($balances[$asset]['locked'], $delta['l'], 8);
 						*/
 					}
+					elseif ($data ["e"] === "listenKeyExpired") {
+						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] listen key expired" . PHP_EOL;
+						# recreate listenKey
+						$listenKey = static::createListenKey ($binance_conf);
+						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] created listen key : {$listenKey}" . PHP_EOL;
+					}
 					else {
 						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] other data : " . PHP_EOL;
 						var_dump($data);
@@ -149,9 +155,6 @@ class BinanceWsAPI
 			}
 			catch (TimeoutException $e) {
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] timeout" . PHP_EOL;
-				# recreate listenKey
-				$listenKey = static::createListenKey ($binance_conf);
-				$url = $binance_conf ["ws_url"] . "/$listenKey";
 			}
 			catch (Throwable $e) {
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] exception : " . $e->getCode() . " : " . $e->getMessage() . PHP_EOL;
@@ -160,9 +163,8 @@ class BinanceWsAPI
 
 				# recreate listenKey
 				$listenKey = static::createListenKey ($binance_conf);
-				$url = $binance_conf ["ws_url"] . "/$listenKey";
+				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] created listen key : {$listenKey}" . PHP_EOL;
 			}
-			#TODO recreate listenKey only if needed ?
 		}
 	}
 	
