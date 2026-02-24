@@ -1,4 +1,6 @@
 <?php
+namespace COMMON__\svc;
+
 # https://www.php.net/manual/en/function.exec.php#88704
 
 /**
@@ -12,19 +14,19 @@ class Process
 
     private string $command;
     private int $pid;
-    #TODO add start_date
+    #TODO add start_date to handle PID recycling
 
 
-    public function __construct ($cl=false)
+    public function __construct (?string $command=null)
     {
-        if ($cl != false) {
-            $this->command = $cl;
+        if (!empty($command)) {
+            $this->command = $command;
             $this->runCom ();
         }
     }
 
 
-    private function runCom ()
+    private function runCom () : void
     {
         $command = 'nohup ' . $this->command . ' > /dev/null 2>&1 & echo $!';
         exec ($command ,$op);
@@ -32,7 +34,7 @@ class Process
     }
 
 
-    public function setPid ($pid)
+    public function setPid ($pid) : void
     {
         $this->pid = $pid;
     }
@@ -57,10 +59,12 @@ class Process
 
     public function start () : bool
     {
-        if ($this->command != '')
+        if (!empty($this->command)) {
             $this->runCom();
-        else
             return true;
+        }
+        else
+            return false;
     }
 
 
@@ -68,7 +72,7 @@ class Process
     {
         $command = 'kill ' . $this->pid;
         exec ($command);
-        if ($this->status() == false)
+        if ($this->status() === false)
             return true;
         else
             return false;

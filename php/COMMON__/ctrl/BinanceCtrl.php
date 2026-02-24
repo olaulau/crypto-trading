@@ -1,12 +1,7 @@
 <?php
-
 namespace COMMON__\ctrl;
 
 use Base;
-use Binance\Client\SimpleEarn\Api\SimpleEarnRestApi;
-use Binance\Client\SimpleEarn\SimpleEarnRestApiUtil;
-use Binance\Client\Spot\Api\SpotRestApi;
-use Binance\Client\Spot\SpotRestApiUtil;
 use COMMON__\svc\Accounting;
 use COMMON__\svc\Binance;
 use COMMON__\svc\BinanceRestApi;
@@ -14,7 +9,8 @@ use COMMON__\svc\BinanceFiatApi;
 use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\BreadCrumb;
-use ErrorException;
+use COMMON__\svc\Process;
+
 
 
 
@@ -149,7 +145,15 @@ class BinanceCtrl extends PrivateCtrl
 
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
-		
+		$p = new Process ("sleep 3");
+		$pid = $p->getPid();
+		var_dump($pid);
+
+		$p = new Process();
+		$p->setPid($pid);
+		var_dump($p->status());
+		$p->stop();
+		var_dump($p->status());
 		
 		die;
 	}
