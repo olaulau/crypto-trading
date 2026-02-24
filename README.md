@@ -117,3 +117,9 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 - cron / ws
 	- process handler
 	- auto run cron & WS if needed
+
+
+
+cron minutly	->
+						watchdog : infinite loop checking if cron is running	->		cron : checek subscripts are running
+webcron			->	
