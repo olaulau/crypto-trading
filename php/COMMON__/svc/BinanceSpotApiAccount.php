@@ -83,7 +83,7 @@ trait BinanceSpotApiAccount
 	}
 	
 	
-	public static function get_account_balances_consolidated () : array
+	public static function get_all_balances_consolidated () : array
 	{
 		$balances = static::get_all_balances_cached ();
 		

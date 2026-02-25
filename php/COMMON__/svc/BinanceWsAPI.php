@@ -70,17 +70,22 @@ class BinanceWsAPI
 				$url = $binance_conf ["ws_url"] . "/$listenKey";
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] WS : {$url}" . PHP_EOL;
 				$ws = new Client ($url, ['timeout' => 5 * 60]); # timeout court pour check keep-alive
+				#TODO can fail, and need a new key
 
 				while (1 === 1) {
 					#  keep-alive
 					if (time() - $lastKeepAlive >= $keepAliveInterval) {
 						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] keep alive" . PHP_EOL;
 						static::keepAliveListenKey ($binance_conf, $listenKey);
+						#TODO can fail, and need a new key
 						$lastKeepAlive = time();
 					}
+					#TODO envoyer le keep alive dans un thread séparé, pour éviter de recevoir un "listenKeyExpired", ensuite envoyer un keep alive synchrone, puis reocnnecter le WS
 
 					# read WS
+					#TODO envoyer de temps à autre des pings : $ws->ping()
 					$msg = $ws->receive(); # with timeout
+					#TODO traiter (ignorer) les pongs, checker le timing depuis el ping au moment d'un timeout et forcer la reocnnexion si besoin
 					$data = json_decode($msg, true);
 					if (!$data || !isset($data['e'])) {
 						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] empty data" . PHP_EOL;
@@ -102,7 +107,7 @@ class BinanceWsAPI
 						}
 					}
 					elseif ($data ["e"] === "outboundAccountPosition") {
-						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] balance update " . PHP_EOL;
+						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] full balance update " . PHP_EOL;
 						$timestamp = $data ["E"];
 						$lastUpdate = Binance::timestamp_to_datetime($timestamp);
 						foreach ($data ["B"] as $row) {
@@ -113,10 +118,11 @@ class BinanceWsAPI
 							$balance->free = $row ["f"];
 							$balance->locked = $row ["l"];
 							$balance->save();
+							#TODO save that we updated the balance cache
 						}
 					}
 					elseif ($data ["e"] === "balanceUpdate") {
-						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] balanceUpdate : " . PHP_EOL;
+						echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] partial balance update : " . PHP_EOL;
 						var_dump($data);
 						throw new ErrorException("not implemented : WS UDS balanceUpdate");
 						/*

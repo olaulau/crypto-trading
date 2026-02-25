@@ -161,7 +161,7 @@ class BinanceCtrl extends PrivateCtrl
 	
 	public static function dashboardGET (Base $f3, $url, $controler) : void
 	{
-		$balances = BinanceSpotApi::get_account_balances_consolidated ();
+		$balances = BinanceSpotApi::get_all_balances_consolidated ();
 		$f3->set("balances", $balances);
 		
 		$capital_configs = BinanceRestApi::get_capital_configs_cached ();

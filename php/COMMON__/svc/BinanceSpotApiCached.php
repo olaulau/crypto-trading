@@ -12,7 +12,7 @@ class BinanceSpotApiCached
 
 	public static function get_symbols_from_balance () : array
 	{
-		$balances = BinanceSpotApiAccount::get_account_balances_consolidated();
+		$balances = BinanceSpotApiAccount::get_all_balances_consolidated();
 		$balances_assets = array_keys ($balances);
 		
 		$all_symbols = BinanceSpotApi::get_all_symbols_cached();
