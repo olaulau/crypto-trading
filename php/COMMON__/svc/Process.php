@@ -30,7 +30,8 @@ class Process
 
     private function runCom () : void
     {
-        $command = "nohup {$this->command} > /dev/null 2>&1 & echo $!";
+        $command = "setsid nohup sh -c '{$this->command}' > /dev/null 2>&1 & echo $!"; # setsid : run in same pgroup, so that pid = pgid
+        #TODO see if we can remove nohup and those redirections
         exec ($command ,$op);
         $this->pid = (int) $op [0];
     }
@@ -76,8 +77,9 @@ class Process
     public function stop () : bool
     {
 		$status = $this->status();
-        $command = "kill {$this->pid} 2>&1";
+        $command = "kill -KILL -{$this->pid} 2>&1"; # -PID to kill the whole PGID group
         exec ($command, $output, $result_code);
+        var_dump($result_code, $output);
 		
         if ($status === false) {
             return false; # not kill as not running
