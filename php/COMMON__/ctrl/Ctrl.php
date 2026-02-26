@@ -17,7 +17,7 @@ abstract class Ctrl extends MiniCtrl
 		$db = $f3->get("db"); /** @var SQL $db */
 		
 		if (!empty ($db)) {
-			# check DB
+			# check DB content
 			$sql = "
 				SELECT	1
 				FROM	information_schema.tables

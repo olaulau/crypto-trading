@@ -50,6 +50,12 @@ screen -S crypto-trading_ws_uds
 	php index.php ws uds |& tee -a tmp/log/ws_uds.log
 ```
 
+## new setup
+```
+crontab -e
+	*   *   *   *   *   cd crypto-trading/ ; php index.php watchdog
+```
+
 
 ## config
 default password is ```admin```, don't forget to change it (see ```user[.dist].ini```)

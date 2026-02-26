@@ -54,6 +54,9 @@ class IndexCtrl extends PrivateCtrl
 	
 	public static function indexGET (Base $f3, $url, $controler)
 	{
+		# run watchdog
+		WatchdogCtrl::watchdogCached ();
+		
 		$page = [
 			"module"	=>	"COMMON__",
 			"layout"	=>	"default",

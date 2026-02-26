@@ -4,7 +4,7 @@ namespace COMMON__\ctrl;
 use Base;
 
 
-class AuthCtrl extends MiniCtrl
+class AuthCtrl extends MiniCtrl # can auth with empty DB to be able to setup it via web ui
 {
 	
 	public static function beforeRoute ()

@@ -29,14 +29,14 @@ class WatchdogCtrl extends Ctrl
 
 	public static function watchdogCached () : void
 	{
-		echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : watchdogCached ()" . PHP_EOL;
+		// echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : watchdogCached ()" . PHP_EOL;
 		
 		$cache_ttl = 5;
 
 		# use FS cache to avoid frequent call costs
 		$cache = new Cache;
 		if ($cache->exists(static::lastUpdate_cache_key)) {
-			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : frequent call avoid" . PHP_EOL;
+			// echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : frequent call avoid" . PHP_EOL;
 			return;
 		}
 		else {
@@ -51,8 +51,8 @@ class WatchdogCtrl extends Ctrl
 			$last_update_dt = DateTime::createFromFormat (Stuff::datetime_sql_format, $last_update);
 		}
 		if (empty($last_update_dt) || (time() - $last_update_dt->getTimestamp()) > $cache_ttl) {
-			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : last update expired : " . PHP_EOL;
-			var_dump($last_update_dt ?? null);
+			// echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : last update expired : " . PHP_EOL;
+			// var_dump($last_update_dt ?? null);
 			static::watchdogLauncher();
 			return;
 		}
@@ -60,7 +60,7 @@ class WatchdogCtrl extends Ctrl
 		# check if we have a PID
 		$pid = KeyValue::getValue(static::pid_cache_key);
 		if (empty($pid)) {
-			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : no pid in DB" . PHP_EOL;
+			// echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : no pid in DB" . PHP_EOL;
 			static::watchdogLauncher();
 			return;
 		}
@@ -69,12 +69,12 @@ class WatchdogCtrl extends Ctrl
 		$p = new Process;
 		$p->setPid ($pid);
 		if ($p->status() === false) {
-			echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : PID not running" . PHP_EOL;
+			// echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : PID not running" . PHP_EOL;
 			static::watchdogLauncher();
 			return;
 		}
 		
-		echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : watchdog seems to be running fine" . PHP_EOL;
+		// echo "[" . (new DateTime)->format(Stuff::datetime_sql_format) . "] : watchdog seems to be running fine" . PHP_EOL;
 
 		#TODO can be running but hanged, so we have to kill it and re run
 	}
