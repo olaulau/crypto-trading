@@ -9,7 +9,7 @@ use DB\SQL\Schema;
 class FiatTrade extends Mdl
 {
 	
-	public const table = "fiat_trade";
+	public const string table = "fiat_trade";
 	
 	protected $fieldConf = [
 		'transactionType' => [

@@ -13,7 +13,7 @@ use Exception;
 
 abstract class Mdl extends Cortex
 {
-	public const table = null; // each subclass must fill-in this var
+	public const string table = ""; // each subclass must fill-in this var
 	
 	const BOOLEAN_ENUM =
 	[

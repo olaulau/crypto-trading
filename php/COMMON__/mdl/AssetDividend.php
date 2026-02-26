@@ -9,7 +9,7 @@ use DB\SQL\Schema;
 class AssetDividend extends Mdl
 {
 	
-	public const table = "asset_dividend";
+	public const string table = "asset_dividend";
 	
 	protected $fieldConf = [
 		'id2' => [

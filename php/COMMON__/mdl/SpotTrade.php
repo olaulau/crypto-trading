@@ -9,7 +9,7 @@ use DB\SQL\Schema;
 class SpotTrade extends Mdl
 {
 	
-	public const table = "spot_trade";
+	public const string table = "spot_trade";
 	
 	protected $fieldConf = [
 		'symbol' => [

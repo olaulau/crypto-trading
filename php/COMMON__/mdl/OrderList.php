@@ -7,7 +7,7 @@ use DB\SQL\Schema;
 class OrderList extends Mdl
 {
 	
-	public const table = "order_list";
+	public const string table = "order_list";
 	
 	protected $fieldConf = [
 		'orderListId' => [

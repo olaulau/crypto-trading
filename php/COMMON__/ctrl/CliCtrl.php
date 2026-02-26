@@ -14,15 +14,38 @@ use DB\SQL;
 class CliCtrl extends Ctrl
 {
 	
-	public static function beforeRoute ()
+	public static function beforeRoute () : void
 	{
 		parent::beforeRoute();
 	}
 
 
-	public static function afterRoute ()
+	public static function afterRoute () : void
 	{
 		parent::afterRoute();
+	}
+	
+	
+	public static function prepareCli () : void
+	{
+		# ignore deprecated
+		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+		# empty buffers
+		while (ob_get_level () > 0) {
+			ob_end_flush ();
+		}
+		
+		# long run
+		set_time_limit(0);
+		
+		# get exception instead of errors
+		set_error_handler(function ($severity, $message, $file, $line) {
+			if (!(error_reporting() & $severity)) {
+				return false;
+			}
+			throw new \ErrorException($message, 0, $severity, $file, $line);
+		});
 	}
 
 
@@ -36,25 +59,7 @@ class CliCtrl extends Ctrl
 
 	public static function miniTicker (Base $f3, $url, $controler) : void
 	{
-		# ignore deprecated
-		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
-
-		# empty buffers
-		while (ob_get_level () > 0) {
-			ob_end_flush ();
-		}
-		
-		# long run
-		set_time_limit(0);
-		
-		# get exception instead of errors
-		set_error_handler(function ($severity, $message, $file, $line) {
-			if (!(error_reporting() & $severity)) {
-				return false;
-			}
-			throw new \ErrorException($message, 0, $severity, $file, $line);
-		});
-
+		static::prepareCli ();
 		BinanceWsAPI::miniTicker ();
 	}
 	
@@ -67,24 +72,7 @@ class CliCtrl extends Ctrl
 			die("empty symbol param");
 		}
 		
-		# ignore deprecated
-		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
-
-		# empty buffers
-		while (ob_get_level () > 0) {
-			ob_end_flush ();
-		}
-		
-		# long run
-		set_time_limit(0);
-		
-		# get exception instead of errors
-		set_error_handler(function ($severity, $message, $file, $line) {
-			if (!(error_reporting() & $severity)) {
-				return false;
-			}
-			throw new \ErrorException($message, 0, $severity, $file, $line);
-		});
+		static::prepareCli ();
 
 		BinanceWsAPI::bookTicker ($symbol);
 	}
@@ -92,13 +80,7 @@ class CliCtrl extends Ctrl
 	
 	public static function userDataStream (Base $f3, $url, $controler) : void
 	{
-		# ignore deprecated
-		error_reporting (E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
-
-		# empty buffers
-		while (ob_get_level () > 0) {
-			ob_end_flush ();
-		}
+		static::prepareCli ();
 
 		BinanceWsAPI::userDataStream ();
 	}

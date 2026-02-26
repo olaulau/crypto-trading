@@ -9,7 +9,7 @@ use DB\SQL\Schema;
 class KeyValue extends Mdl
 {
 	
-	public const table = "key_value";
+	public const string table = "key_value";
 	
 	protected $fieldConf = [
 		'key' => [
@@ -37,6 +37,33 @@ class KeyValue extends Mdl
 		# add indexes
 		// $sql = "";
 		// $db->exec($sql);
+	}
+	
+	
+	public static function getValue (string $key) : ?string
+	{
+		$kv = static::findOneBy("key", $key);
+		return $kv->value ?? null;
+	}
+	
+	
+	public static function setValue (string $key, string $value) : void
+	{
+		$kv = new KeyValue;
+		$kv->load(["key = ?", $key]);
+		$kv->key = $key;
+		$kv->value = $value;
+		$kv->save ();
+	}
+	
+	
+	public static function clearValue (string $key) : void
+	{
+		$kv = new KeyValue;
+		$kv->load(["key = ?", $key]);
+		if(!$kv->dry()) {
+			$kv->erase();
+		}
 	}
 	
 }

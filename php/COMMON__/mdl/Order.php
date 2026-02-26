@@ -7,7 +7,7 @@ use DB\SQL\Schema;
 class Order extends Mdl
 {
 	
-	public const table = "order";
+	public const string table = "order";
 	
 	protected $fieldConf = [
 		'symbol' => [

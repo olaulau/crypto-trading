@@ -1,6 +1,8 @@
 <?php
 namespace COMMON__\svc;
 
+use DateTime;
+
 # https://www.php.net/manual/en/function.exec.php#88704
 
 /**
@@ -28,7 +30,7 @@ class Process
 
     private function runCom () : void
     {
-        $command = 'nohup ' . $this->command . ' > /dev/null 2>&1 & echo $!';
+        $command = "nohup {$this->command} > /dev/null 2>&1 & echo $!";
         exec ($command ,$op);
         $this->pid = (int) $op [0];
     }
@@ -46,9 +48,12 @@ class Process
     }
 
 
+	/**
+	 * check if the PID is running
+	 */
     public function status () : bool
     {
-        $command = 'ps -p ' . $this->pid;
+        $command = "ps -p {$this->pid}";
         exec ($command,$op);
         if (!isset ($op [1]))
             return false;
@@ -70,12 +75,16 @@ class Process
 
     public function stop () : bool
     {
-        $command = 'kill ' . $this->pid;
-        exec ($command);
-        if ($this->status() === false)
-            return true;
-        else
-            return false;
+		$status = $this->status();
+        $command = "kill {$this->pid} 2>&1";
+        exec ($command, $output, $result_code);
+		
+        if ($status === false) {
+            return false; # not kill as not running
+		}
+        else {
+            return ($result_code === 0); # kill command failed
+		}
     }
 
 }

@@ -9,7 +9,7 @@ use DB\SQL\Schema;
 class Kline extends Mdl
 {
 	
-	public const table = "kline";
+	public const string table = "kline";
 	
 	protected $fieldConf = [
 		'symbol' => [

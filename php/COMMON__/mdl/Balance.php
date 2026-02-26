@@ -9,7 +9,7 @@ use DB\SQL\Schema;
 class Balance extends Mdl
 {
 	
-	public const table = "balance";
+	public const string table = "balance";
 	
 	protected $fieldConf = [
 		'asset' => [

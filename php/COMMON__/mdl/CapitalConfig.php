@@ -9,7 +9,7 @@ use DB\SQL\Schema;
 class CapitalConfig extends Mdl
 {
 	
-	public const table = "capital_config";
+	public const string table = "capital_config";
 	
 	protected $fieldConf = [
 		'coin' => [

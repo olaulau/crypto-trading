@@ -9,7 +9,7 @@ use DB\SQL\Schema;
 class ConvertTrade extends Mdl
 {
 	
-	public const table = "convert_trade";
+	public const string table = "convert_trade";
 	
 	protected $fieldConf = [
 		'quoteId' => [
