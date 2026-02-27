@@ -10,6 +10,7 @@ use COMMON__\svc\BinanceSpotApi;
 use COMMON__\svc\BinanceSpotApiCached;
 use COMMON__\svc\BreadCrumb;
 use COMMON__\svc\Process;
+use COMMON__\svc\Watchdog;
 
 
 
@@ -145,15 +146,7 @@ class BinanceCtrl extends PrivateCtrl
 
 	public static function testGET (Base $f3, $url, $controler) : void
 	{
-		$p = new Process ("sleep 3");
-		$pid = $p->getPid();
-		var_dump($pid);
-
-		$p = new Process();
-		$p->setPid($pid);
-		var_dump($p->status());
-		$p->stop();
-		var_dump($p->status());
+		$w = new Watchdog ("name", 60, "command");
 		
 		die;
 	}
