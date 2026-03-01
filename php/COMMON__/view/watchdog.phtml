@@ -1,0 +1,23 @@
+<?php
+
+?>
+		
+		<h1><?= $page["title"] ?></h1>
+
+		<div class="row">
+			<div class="col">
+				
+				<h3 class="mt-2">
+					<a href="<?= $BASE . $f3->alias("watchdog" . ($global_watchdog->isRunning() ? "Kill" : "Run")) ?> ">
+						global
+					</a>
+					<div class="form-check form-switch d-inline-block">
+						<input class="form-check-input" type="checkbox" role="switch" id="global_watchdog" disabled <?= $global_watchdog->isRunning() ? "checked" : "" ?>>
+						<label class="form-check-label" for="global_watchdog"></label>
+					</div>
+				</h3>
+				
+			</div>
+		</div>
+
+		</main>

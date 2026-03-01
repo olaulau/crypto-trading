@@ -55,7 +55,7 @@ class IndexCtrl extends PrivateCtrl
 	public static function indexGET (Base $f3, $url, $controler)
 	{
 		# run watchdog
-		WatchdogCtrl::watchdogCached ();
+		WatchdogCtrl::watchdogRun (); #TODO can produce some space / display
 		
 		$page = [
 			"module"	=>	"COMMON__",
