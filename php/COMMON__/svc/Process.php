@@ -1,7 +1,6 @@
 <?php
 namespace COMMON__\svc;
 
-use DateTime;
 
 # https://www.php.net/manual/en/function.exec.php#88704
 
@@ -37,7 +36,7 @@ class Process
     }
 
 
-    public function setPid ($pid) : void
+    public function setPid (int $pid) : void
     {
         $this->pid = $pid;
     }
