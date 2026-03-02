@@ -5,6 +5,7 @@ use COMMON__\mdl\KeyValue;
 use COMMON__\svc\Process;
 use COMMON__\svc\Stuff;
 use DateTime;
+use DateTimeInterface;
 
 
 class Watchdog
@@ -99,6 +100,19 @@ class Watchdog
 	public function markAsUpdated () : void
 	{
 		KeyValue::setValue($this->lastUpdate_cache_key, (new DateTime)->format(Stuff::datetime_sql_format));
+	}
+
+
+	public function getLastUpdate () : ?DateTimeInterface
+	{
+		$last_update = KeyValue::getValue ($this->lastUpdate_cache_key);
+		if (!empty ($last_update)) {
+			$last_update_dt = DateTime::createFromFormat (Stuff::datetime_sql_format, $last_update);
+			return $last_update_dt;
+		}
+		else {
+			return null;
+		}
 	}
 
 }

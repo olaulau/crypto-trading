@@ -79,7 +79,7 @@ class WatchdogCtrl extends Ctrl
 	
 	public static function watchdogGET (Base $f3, $url, $controler) : void
 	{
-		$global_watchdog = new Watchdog("global");
+		$global_watchdog = new Watchdog ("global");
 		$f3->set ("global_watchdog", $global_watchdog);
 		
 		$page = [

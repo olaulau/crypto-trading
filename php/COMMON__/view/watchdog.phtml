@@ -1,5 +1,7 @@
 <?php
 
+use COMMON__\svc\Stuff;
+
 ?>
 		
 		<h1><?= $page["title"] ?></h1>
@@ -15,6 +17,19 @@
 						<input class="form-check-input" type="checkbox" role="switch" id="global_watchdog" disabled <?= $global_watchdog->isRunning() ? "checked" : "" ?>>
 						<label class="form-check-label" for="global_watchdog"></label>
 					</div>
+					<?php
+					$last_update_dt = $global_watchdog->getLastUpdate(); /** @var DateTimeInterface $last_update_dt */
+					if (!empty ($last_update_dt)) {
+						$diff = $last_update_dt->diff(new dateTime);
+						?>
+						<?= $last_update_dt->format(Stuff::datetime_french_format) ?>
+						(
+						<?= $diff->y ? $diff->y."y" : "" ?> <?= $diff->m ? $diff->m."m" : "" ?> <?= $diff->d ? $diff->d."d" : "" ?> 
+						<?= $diff->h ? $diff->h."h" : "" ?> <?= $diff->i ? $diff->i."m" : "" ?> <?= $diff->s ? $diff->s."s" : "" ?>
+						 ago )
+						<?php
+					}
+					?>
 				</h3>
 				
 			</div>
