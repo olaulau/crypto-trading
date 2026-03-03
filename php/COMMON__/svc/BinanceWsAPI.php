@@ -19,6 +19,7 @@ class BinanceWsAPI
 	private static function createListenKey (array $binance_conf): string
 	{
 		$url = $binance_conf ["rest_url"] . '/api/v3/userDataStream';
+		var_dump($url); die;
 		$apiKey = $binance_conf ["key"];
 		$ch = curl_init($url);
 		curl_setopt_array($ch, [
@@ -27,10 +28,17 @@ class BinanceWsAPI
 			CURLOPT_HTTPHEADER => ["X-MBX-APIKEY: $apiKey"],
 		]);
 		$res = curl_exec($ch);
+		if (json_validate ($res) === false) {
+			throw new ErrorException("result is not valid JSON : {$res}");
+		}
 		$data = json_decode($res, true);
-		if (!isset($data['listenKey'])) {
+		if (json_last_error() !== JSON_ERROR_NONE) {
+			echo "JSON error : " . json_last_error() . " : " . json_last_error_msg() . PHP_EOL;
+			throw new ErrorException("error decoding json : : {$res}");
+		}
+		if (!isset ($data ['listenKey'])) {
 			var_dump($data);
-			throw new RuntimeException ('Impossible de créer listenKey');
+			throw new RuntimeException ("invalid decoded data struct");
 		}
 		return $data['listenKey'];
 	}
