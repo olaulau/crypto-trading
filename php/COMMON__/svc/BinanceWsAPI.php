@@ -340,7 +340,7 @@ array(11) {
 	
 	
 	/**
-	 * get symbols prices every seconds, store them into DB
+	 * get symbols prices very often, store them into DB
 	 */
 	public static function miniTicker ()
 	{
@@ -356,6 +356,109 @@ array(11) {
 				# read message
 				$msg = $ws->receive();
 				$tickers = json_decode($msg, true);
+
+				if (!empty($tickers) && is_array($tickers) && count($tickers) > 0) {
+					$start = microtime(true);
+					$db->begin();
+					echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] ";
+
+					foreach ($tickers as $ticker) {
+						if ($ticker ["e"] !== "24hrMiniTicker") {
+							throw new ErrorException ("WS miniTicker : unhandled message type : {$ticker ["e"]}");
+						}
+	
+						# insert into DB
+						$kline = new Kline;
+						$kline->symbol = $ticker ["s"];
+						$kline->candle_size = "1s";
+						$kline->open_time = Binance::timestamp_to_datetime ($ticker ["E"]);
+						$kline->open = 0;
+						$kline->high = 0;
+						$kline->low = 0;
+						$kline->close = 0;
+						$kline->volume = 0;
+						$kline->close_time = Binance::timestamp_to_datetime ($ticker ["E"]);
+						$kline->quote_asset_volume = 0;
+						$kline->number_of_trades = 0;
+						$kline->taker_buy_base_asset_volume = 0;
+						$kline->taker_buy_quote_asset_volume = 0;
+						$kline->ignore = 0;
+						
+						try {
+							$kline->save();
+							echo ".";
+						}
+						catch (Throwable $th) {
+							if (str_contains($th->getMessage(), "uniq__symbol__candle_size__open_time")) {
+								echo " [duplicate key ignore] ";
+							}
+							else {
+								var_dump($ticker);
+								throw $th;
+							}
+						}
+					}
+
+					$db->commit();
+	
+					$end = microtime(true);
+					$duration = $end - $start;
+					$duration = $duration * 1000;
+					$duration = number_format($duration, 3, ",", " ");
+					echo " : " . count($tickers) . " tickers in {$duration} ms";
+					echo PHP_EOL;
+				}
+			}
+			catch (TimeoutException $e) {
+				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] timeout" . PHP_EOL;
+			}
+			catch (Throwable $e) {
+				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] unknown exception " . $e::class . " : " . $e->getCode() . " : " . $e->getMessage() . PHP_EOL;
+			}
+			sleep(5);
+		}
+	}
+	
+	
+	/**
+	 * get symbols prices very often, store them into DB
+	 */
+	public static function ticker24h ()
+	{
+		$f3 = Base::instance();
+		$db = $f3->get ("db"); /** @var SQL $db */
+
+		$binance_conf = Binance::get_conf ();
+		$url = $binance_conf ["ws3_url"];
+		$url = "wss://ws-api.binance.com/ws-api/v3";
+		$ws = new Client ($url, 
+			[
+			'headers' => [
+				'Sec-WebSocket-Protocol: json'
+			],
+			// 'timeout' => 60,
+			]
+		); #TODO same timeout for all WS
+
+		$payload = [
+			"id"		=> 1,
+			"method"	=> "ticker.24hr",
+			"params"	=> [
+				"symbols"	=> [ # not mandatory
+					"ETHUSDC",
+					"BTCUSDC",
+				],
+			],
+		];
+		$ws->send(json_encode($payload));
+
+		while (1 === 1) {
+			try {
+				# read message
+				$msg = $ws->receive();
+				$tickers = json_decode($msg, true);
+				var_dump($tickers);
+				continue; #TODO finish, no loop here
 
 				if (!empty($tickers) && is_array($tickers) && count($tickers) > 0) {
 					$start = microtime(true);
