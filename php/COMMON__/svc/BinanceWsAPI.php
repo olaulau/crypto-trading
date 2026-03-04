@@ -2,7 +2,6 @@
 namespace COMMON__\svc;
 
 use Base;
-use COMMON__\ctrl\CliCtrl;
 use COMMON__\mdl\Balance;
 use COMMON__\mdl\Kline;
 use DateTime;
@@ -12,8 +11,6 @@ use RuntimeException;
 use Throwable;
 use WebSocket\Client;
 use WebSocket\TimeoutException;
-
-use Amp\Future;
 use Amp\Websocket\Client\WebsocketHandshake;
 use Amp\Websocket\Client\WebsocketConnection;
 use function Amp\Websocket\Client\connect;
@@ -430,7 +427,7 @@ array(11) {
 	}
 	
 
-	#TODO retire la dépendance à textalk/websocket
+	#TODO remove textalk/websocket dependency
 
 
 	/**
@@ -438,18 +435,17 @@ array(11) {
 	 */
 	public static function ticker24h (string $symbol)
 	{
-		$future = async(function () use ($symbol) : void {
-			$symbol = strtolower($symbol);
-			$uri = "wss://stream.binance.com:9443/ws/{$symbol}@ticker";
-			$handshake = new WebsocketHandshake($uri);
-			
-			$connection = connect($handshake); /** @var WebsocketConnection $connection */
-			while ($message = $connection->receive()) {
-				echo $message->buffer() . PHP_EOL;
-				#TODO to something
-			}
-		});
-		$future->await();
+		$symbol = strtolower($symbol);
+		$uri = "wss://stream.binance.com:9443/ws/{$symbol}@ticker";
+		$handshake = new WebsocketHandshake($uri);
+		
+		$connection = connect($handshake); /** @var WebsocketConnection $connection */
+		while ($message = $connection->receive()) {
+			$buffer = $message->buffer();
+			$data = json_decode ($buffer, true);
+			var_dump($data);
+			#TODO to something
+		}
 	}
 	
 	
