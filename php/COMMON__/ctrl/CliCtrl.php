@@ -51,9 +51,7 @@ class CliCtrl extends Ctrl
 
 	public static function test (Base $f3, $url, $controler) : void
 	{
-		CliCtrl::prepareCli();
-		BinanceWsAPI::ticker24h("ETHUSDC");
-
+		
 		die;
 	}
 
@@ -65,6 +63,17 @@ class CliCtrl extends Ctrl
 	}
 	
 	
+	public static function ticker24h (Base $f3, $url, $controler) : void
+	{
+		$symbol = $f3->get("PARAMS.symbol");
+		if (empty($symbol)) {
+			die("empty symbol param");
+		}
+		
+		static::prepareCli ();
+		BinanceWsAPI::ticker24h($symbol);
+	}
+	
 	
 	public static function bookTicker (Base $f3, $url, $controler) : void
 	{
@@ -74,7 +83,6 @@ class CliCtrl extends Ctrl
 		}
 		
 		static::prepareCli ();
-
 		BinanceWsAPI::bookTicker ($symbol);
 	}
 	
@@ -82,7 +90,6 @@ class CliCtrl extends Ctrl
 	public static function userDataStream (Base $f3, $url, $controler) : void
 	{
 		static::prepareCli ();
-
 		BinanceWsAPI::userDataStream ();
 	}
 	

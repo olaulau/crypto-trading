@@ -431,20 +431,25 @@ array(11) {
 
 
 	/**
-	 * get symbols prices very often, store them into DB
+	 * get symbol prices very often
 	 */
-	public static function ticker24h (string $symbol)
+	public static function ticker24h (string $symbol) : void
 	{
 		$symbol = strtolower($symbol);
 		$uri = "wss://stream.binance.com:9443/ws/{$symbol}@ticker";
 		$handshake = new WebsocketHandshake($uri);
 		
-		$connection = connect($handshake); /** @var WebsocketConnection $connection */
-		while ($message = $connection->receive()) {
-			$buffer = $message->buffer();
-			$data = json_decode ($buffer, true);
-			var_dump($data);
-			#TODO to something
+		while (1 === 1) {
+			$connection = connect($handshake); /** @var WebsocketConnection $connection */
+			while ($message = $connection->receive()) {
+				$buffer = $message->buffer();
+				$data = json_decode ($buffer, true);
+				var_dump($data);
+				echo PHP_EOL;
+				#TODO to something
+			}
+			sleep (5);
+			echo "reconnect ..." . PHP_EOL;
 		}
 	}
 	
@@ -471,60 +476,6 @@ array(11) {
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] book ticker : " . PHP_EOL;
 				var_dump($tickers);
 				echo PHP_EOL;
-				// break;
-				////////////////////////////
-				/*
-				array(6) {
-					'u' =>
-					int(946796400)
-					's' =>
-					string(7) "ETHUSDC"
-					'b' =>
-					string(13) "1967.67000000"
-					'B' =>
-					string(10) "5.41260000"
-					'a' =>
-					string(13) "1967.68000000"
-					'A' =>
-					string(10) "7.87790000"
-				}
-
-				*/
-
-
-				/*
-				# insert into DB
-				$kline = new Kline;
-				$kline->symbol = $ticker ["s"];
-				$kline->candle_size = "1s";
-				$kline->open_time = Binance::timestamp_to_datetime ($ticker ["E"]);
-				$kline->open = 0;
-				$kline->high = 0;
-				$kline->low = 0;
-				$kline->close = 0;
-				$kline->volume = 0;
-				$kline->close_time = Binance::timestamp_to_datetime ($ticker ["E"]);
-				$kline->quote_asset_volume = 0;
-				$kline->number_of_trades = 0;
-				$kline->taker_buy_base_asset_volume = 0;
-				$kline->taker_buy_quote_asset_volume = 0;
-				$kline->ignore = 0;
-				
-				try {
-					$kline->save();
-					
-					echo ".";
-				}
-				catch (Throwable $th) {
-					if (str_contains($th->getMessage(), "uniq__symbol__candle_size__open_time")) {
-						echo " [duplicate key ignore] ";
-					}
-					else {
-						var_dump($ticker);
-						throw $th;
-					}
-				}
-				*/
 			}
 			catch (TimeoutException $e) {
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] timeout" . PHP_EOL;
