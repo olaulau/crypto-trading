@@ -78,7 +78,7 @@ class BinanceWsAPI
 		
 		while (1 === 1) {
 			try {
-				$url = $binance_conf ["ws2_url"];
+				$url = $binance_conf ["ws3_url"];
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] WS : {$url}" . PHP_EOL;
 				$ws = new Client ($url, 
 					[
