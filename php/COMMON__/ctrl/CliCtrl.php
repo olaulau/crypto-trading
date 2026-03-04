@@ -49,9 +49,10 @@ class CliCtrl extends Ctrl
 	}
 
 
-	public static function testGET (Base $f3, $url, $controler) : void
+	public static function test (Base $f3, $url, $controler) : void
 	{
-
+		CliCtrl::prepareCli();
+		BinanceWsAPI::ticker24h("ETHUSDC");
 
 		die;
 	}
