@@ -485,12 +485,14 @@ array(11) {
 			try {
 				# read message
 				$msg = $ws->receive();
+				$msg = $msg->getPayload();
 				$tickers = json_decode($msg, true);
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] book ticker : " . PHP_EOL;
 				var_dump($tickers);
 				echo PHP_EOL;
+				#TODO do something
 			}
-			catch (TimeoutException $e) {
+			catch (ConnectionTimeoutException $e) {
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] timeout" . PHP_EOL;
 			}
 			catch (Throwable $e) {
