@@ -16,7 +16,6 @@
 		"ikkez/f3-cortex": "dev-master",
 		"ikkez/f3-validation-engine": "^1.7",
 		"binance/binance-connector-php": "^3.0",
-		"amphp/websocket-client": "^2.0",
 		"phrity/websocket": "^2.0"
 	}
 }

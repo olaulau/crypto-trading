@@ -10,6 +10,7 @@ use ErrorException;
 use RuntimeException;
 use Throwable;
 use WebSocket\Client;
+use WebSocket\Exception\ConnectionTimeoutException;
 use WebSocket\Message\Text;
 use WebSocket\TimeoutException;
 
@@ -352,12 +353,17 @@ array(11) {
 
 		$binance_conf = Binance::get_conf ();
 		$url = $binance_conf ["ws_url"] . "/!miniTicker@arr";
-		$ws = new Client ($url, ['timeout' => 60]); #TODO same timeout for all WS
+		$ws = new Client ($url); #TODO same timeout for all WS
+		// ['timeout' => 60]
 
 		while (1 === 1) {
 			try {
 				# read message
 				$msg = $ws->receive();
+				if (!$msg->hasContent()) {
+					throw new ErrorException("empty message content");
+				}
+				$msg = $msg->getPayload();
 				$tickers = json_decode($msg, true);
 
 				if (!empty($tickers) && is_array($tickers) && count($tickers) > 0) {
@@ -412,7 +418,7 @@ array(11) {
 					echo PHP_EOL;
 				}
 			}
-			catch (TimeoutException $e) {
+			catch (ConnectionTimeoutException $e) {
 				echo "[" . (new DateTime)->format (Stuff::datetime_sql_format) . "] timeout" . PHP_EOL;
 			}
 			catch (Throwable $e) {
@@ -437,7 +443,7 @@ array(11) {
 		echo "connecté\n";
 
 		while (true) {
-			$client->send (new Text( json_encode (
+			$client->send (new Text (json_encode (
 			[
 				"id" => 1,
 				"method" => "ticker.24hr",
