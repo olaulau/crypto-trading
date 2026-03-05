@@ -10,12 +10,8 @@ use ErrorException;
 use RuntimeException;
 use Throwable;
 use WebSocket\Client;
+use WebSocket\Message\Text;
 use WebSocket\TimeoutException;
-use Amp\Websocket\Client\WebsocketHandshake;
-use Amp\Websocket\Client\WebsocketConnection;
-use function Amp\Websocket\Client\connect;
-use function Amp\async;
-
 
 
 class BinanceWsAPI
@@ -435,21 +431,32 @@ array(11) {
 	 */
 	public static function ticker24h (string $symbol) : void
 	{
-		$symbol = strtolower($symbol);
-		$uri = "wss://stream.binance.com:9443/ws/{$symbol}@ticker";
-		$handshake = new WebsocketHandshake($uri);
-		
-		while (1 === 1) {
-			$connection = connect($handshake); /** @var WebsocketConnection $connection */
-			while ($message = $connection->receive()) {
-				$buffer = $message->buffer();
-				$data = json_decode ($buffer, true);
-				var_dump($data);
-				echo PHP_EOL;
-				#TODO to something
+		$binance_conf = Binance::get_conf ();
+		$url = $binance_conf ["ws3_url"];
+		$client = new Client ($url);
+		echo "connecté\n";
+
+		while (true) {
+			$client->send (new Text( json_encode (
+			[
+				"id" => 1,
+				"method" => "ticker.24hr",
+				"params" => [
+					"symbol" => $symbol
+				]
+			])));
+
+			$msg = $client->receive();
+			if ($msg === null) {
+				throw new ErrorException("connexion closed");
 			}
-			sleep (5);
-			echo "reconnect ..." . PHP_EOL;
+			if (!$msg->hasContent()) {
+				throw new ErrorException("message has no content");
+			}
+			$msg = $msg->getPayload();
+			$data = json_decode($msg, true);
+			var_dump($data);
+			#TODO do something
 		}
 	}
 	
