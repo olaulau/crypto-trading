@@ -440,12 +440,24 @@ class IndexCtrl extends PrivateCtrl
 	
 	public static function chartGET (Base $f3, $url, $controler)
 	{
+		$db = $f3->get("db"); /** @var SQL $db */
+		
+		$sql = "
+			SELECT	open_time, open
+			FROM	" . Kline::table . "
+			WHERE	open_time >= ?
+			AND open_time <= ?
+			AND UNIX_TIMESTAMP(open_time) % ? = 0
+		";
+		$params = ["2025-12-01 00:00:00", "2025-12-31 23:59:59", 86400];
+		$klines = $db->exec($sql, $params);
+		
 		// data
 		$data = [];
-		for ($i=1; $i <= 30; $i++) {
+		foreach ($klines as $kline) {
 			$data [] = [
-				"x" => new DateTime("2025-12-$i")->format(DateTimeInterface::ATOM),
-				"y" => 100 + mt_rand() / mt_getrandmax() * 10,
+				"x" => new DateTime($kline ["open_time"])->format(DateTimeInterface::ATOM),
+				"y" => $kline ["open"],
 			];
 		}
 		$f3->set("data", $data);

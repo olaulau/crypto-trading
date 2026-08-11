@@ -5,12 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
 	[
 		{
 			x: new Date(2025, 11, 2, 12),
-			y: 107,
+			y: 2000,
 			label: 'Événement A'
 		},
 		{
 			x: new Date(2025, 11, 3, 18),
-			y: 101,
+			y: 3000,
 			label: 'Événement B'
 		}
 	];
