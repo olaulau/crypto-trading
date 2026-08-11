@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 	
 	// Points clés (hors série principale)
-	const keyPoints = 
+	keyPoints = 
 	[
 		{
 			x: new Date(2025, 11, 2, 12),
@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			label: 'Événement B'
 		}
 	];
+	keyPoints = []; /////////////
 
 	
 	// set up the chart
@@ -52,8 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
 				x: {
 					type: 'time',
 					time: {
-						unit: 'day', // jour, mois, année, etc.
-						tooltipFormat: 'PP' // format du tooltip
+						unit: 'hour', // jour, mois, année, etc.
+						// tooltipFormat: 'PP' // format du tooltip
+						displayFormats: {
+							minute: 'dd/MM HH:mm',
+							hour: 'dd/MM HH:mm',
+							day: 'dd/MM/yyyy HH:mm'
+						},
+						tooltipFormat: 'dd/MM/yyyy HH:mm'
 					},
 					ticks: {
 						font: {

@@ -449,7 +449,7 @@ class IndexCtrl extends PrivateCtrl
 			AND open_time <= ?
 			AND UNIX_TIMESTAMP(open_time) % ? = 0
 		";
-		$params = ["2025-12-01 00:00:00", "2025-12-31 23:59:59", 86400];
+		$params = ["2025-01-01 00:00:00", "2025-12-31 23:59:59", 3600];
 		$klines = $db->exec($sql, $params);
 		
 		// data
