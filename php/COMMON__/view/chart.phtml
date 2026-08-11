@@ -1,17 +1,22 @@
 		<h1><?= $page["title"] ?></h1>
 
-		<div id="chartContainer">
-			<canvas id="chart"></canvas>
-			<canvas id="overlay"></canvas>
+		<div class="d-flex">
+			<div id="chartContainer" class="flex-grow-1">
+				<canvas id="chart"></canvas>
+				<canvas id="overlay"></canvas>
+			</div>
+			<div class="">
+				<div id="stats">
+					<h5>Stats</h5>
+					<div class="text-nowrap"><span id="stats-mode">viewport</span> : <span id="stats-points">–</span> points</div>
+					<div class="text-nowrap">start : <span id="stats-start">–</span></div>
+					<div class="text-nowrap">end : <span id="stats-end">–</span> (<span id="stats-pct">–</span> %)</div>
+					<div class="text-nowrap">low : <span id="stats-min">–</span></div>
+					<div class="text-nowrap">high : <span id="stats-max">–</span> (<span id="stats-amp-pct">–</span> %)</div>
+				</div>
+			</div>
 		</div>
-
-		<div id="stats">
-			<h5>Stats</h5>
-			<div><span id="stats-mode">viewport</span> : <span id="stats-points">–</span> points</div>
-			<div>start : <span id="stats-start">–</span> - end : <span id="stats-end">–</span> (<span id="stats-pct">–</span> %)</div>
-			<div>low : <span id="stats-min">–</span> - high : <span id="stats-max">–</span> (<span id="stats-amp-pct">–</span> %)</div>
-		</div>
-
+		
 		<script src="<?= $BASE . "/node_modules/chart.js/dist/chart.umd.js" ?>"></script>
 		<script src="<?= $BASE . "/node_modules/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js" ?>"></script>
 		<script src="<?= $BASE . "/node_modules/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js" ?>"></script>
