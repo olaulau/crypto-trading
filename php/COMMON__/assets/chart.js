@@ -1,15 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 	
-	// data
-	var data = [];
-	for (let i = 1; i <= 30; i++) {
-		data.push(
-		{
-			x: new Date(2025, 11, i),
-			y: 100 + Math.random() * 10
-		});
-	}
-
 	// Points clés (hors série principale)
 	const keyPoints = 
 	[

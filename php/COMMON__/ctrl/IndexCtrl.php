@@ -17,6 +17,7 @@ use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
 use COMMON__\svc\Stuff;
 use DateTime;
+use DateTimeInterface;
 use DateTimeZone;
 use DB\SQL;
 use ErrorException;
@@ -439,6 +440,16 @@ class IndexCtrl extends PrivateCtrl
 	
 	public static function chartGET (Base $f3, $url, $controler)
 	{
+		// data
+		$data = [];
+		for ($i=1; $i <= 30; $i++) {
+			$data [] = [
+				"x" => new DateTime("2025-12-$i")->format(DateTimeInterface::ATOM),
+				"y" => 100 + mt_rand() / mt_getrandmax() * 10,
+			];
+		}
+		$f3->set("data", $data);
+		
 		$page = [
 			"module"	=>	"COMMON__",
 			"layout"	=>	"default",

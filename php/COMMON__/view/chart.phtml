@@ -17,6 +17,14 @@
 			</div>
 		</div>
 		
+		<script>
+			var data = <?= json_encode($data) ?>;
+			data.forEach(element => {
+				element.x = new Date(element.x);
+			});
+			// console.log(data);
+		</script>
+		
 		<script src="<?= $BASE . "/node_modules/chart.js/dist/chart.umd.js" ?>"></script>
 		<script src="<?= $BASE . "/node_modules/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js" ?>"></script>
 		<script src="<?= $BASE . "/node_modules/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js" ?>"></script>
