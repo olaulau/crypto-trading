@@ -21,6 +21,7 @@ use DateTimeZone;
 use DB\SQL;
 use ErrorException;
 use Exception;
+use Throwable;
 
 
 class IndexCtrl extends PrivateCtrl
@@ -186,7 +187,12 @@ class IndexCtrl extends PrivateCtrl
 				$kline->candle_size = static::$small_candle_size;
 				$kline->open_time = Binance::timestamp_to_datetime($row ["open_time"])->format("Y-m-d H:i:s");
 				$kline->close_time = Binance::timestamp_to_datetime($row ["close_time"])->format("Y-m-d H:i:s");
-				$kline->save();
+				try {
+					$kline->save();
+				}
+				catch (Throwable $t) {
+					echo $t->getMessage() . "<br/>" . PHP_EOL;
+				}
 			}
 			$db->commit();
 			// $end_time = microtime(true);
