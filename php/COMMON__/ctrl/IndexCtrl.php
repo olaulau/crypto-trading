@@ -440,7 +440,24 @@ class IndexCtrl extends PrivateCtrl
 	
 	public static function chartGET (Base $f3, $url, $controler)
 	{
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"default",
+			"name"		=>	"chart",
+			"title"		=>	"Chart",
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		self::renderPage($page);
+	}
+
+
+	public static function chartDataGET (Base $f3, $url, $controler)
+	{
 		$db = $f3->get("db"); /** @var SQL $db */
+
+		$symbol = $f3->get("GET.symbol");
+		$start = $f3->get("GET.start");
+		$end = $f3->get("GET.end");
 		
 		$sql = "
 			SELECT	open_time, open
@@ -452,10 +469,10 @@ class IndexCtrl extends PrivateCtrl
 			AND 	UNIX_TIMESTAMP(open_time) % ? = 0
 		";
 		$params = [
-			"ETHEUR",
+			$symbol,
 			"15m",
-			"2025-01-01 00:00:00",
-			"2025-12-31 23:59:59",
+			$start,
+			$end,
 			60 * 60
 			];
 		$klines = $db->exec($sql, $params);
@@ -463,28 +480,24 @@ class IndexCtrl extends PrivateCtrl
 		$data = [];
 		foreach ($klines as $kline) {
 			$data [] = [
-				"x" => new DateTime($kline ["open_time"])->format(DateTimeInterface::ATOM),
+				"x" => new DateTime($kline ["open_time"])->getTimestamp() * 1000,
 				"y" => $kline ["open"],
 			];
 		}
-		$f3->set("data", $data);
-		
+
+		$keyPoints = [];
 		if (!empty($data)) {
-			$first = $data [0];
-			$f3->set("first", $first);
-			$last = $data [count($data) - 1];
-			$f3->set("last", $last);
+			$keyPoints [0] = $data [0];
+			$keyPoints [0] ["label"] = "start";
+			$keyPoints [1] = $data [count($data)-1];
+			$keyPoints [1] ["label"] = "end";
 		}
-		
-		$page = [
-			"module"	=>	"COMMON__",
-			"layout"	=>	"default",
-			"name"		=>	"chart",
-			"title"		=>	"Chart",
-			"breadcrumbs" => static::breadcrumbs(),
-		];
-		
-		self::renderPage($page);
+
+		$res = ["data" => $data, "keyPoints" => $keyPoints];
+
+		header('Content-Type: application/json; charset=utf-8');
+		echo json_encode($res);
+		exit;
 	}
 	
 	

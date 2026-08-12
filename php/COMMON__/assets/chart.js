@@ -1,6 +1,5 @@
+//// set up the chart ////
 document.addEventListener('DOMContentLoaded', () => {
-	
-	// set up the chart
 	chartCanvas = document.getElementById('chart');
 	chart = new Chart (chartCanvas, {
 		type: 'line',
@@ -9,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			[
 				{
 					label: 'ETHEUR',
-					data: data,
+					data: [],
 					borderWidth: 2,
 
 					pointRadius: 0, // ❌ pas de points
@@ -20,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				},
 				{
 					label: 'Points clés',
-					data: keyPoints,
+					data: [],
 					type: 'scatter', // important pour avoir seulement des points
 					pointRadius: 6, // taille des points
 					pointBackgroundColor: 'red',
@@ -28,7 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			]
 		},
+		
 		options: {
+			parsing: false,
 			animation: {
 				duration: 500
 			},
@@ -101,14 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 	
-	
-	
-	
 	// overlay
 	const overlay = document.getElementById('overlay');
 	const overlayCtx = overlay.getContext('2d');
 	overlay.width = chartCanvas.clientWidth;
 	overlay.height = chartCanvas.clientHeight;
+
 
 
 	////// zoom & pan & select /////
@@ -126,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				x: e.offsetX,
 				y: e.offsetY
 			};
-			overlayCtx.clearRect(0, 0, overlay.width, overlay.height); /////////////
+			overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 		}
 		else {
 			isPanning = true;
@@ -156,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			// Dessin du rectangle
 			overlayCtx.fillRect(x, y, w, h);
-			overlayCtx.strokeRect(x, y, w, h); /////////////////
+			overlayCtx.strokeRect(x, y, w, h);
 
 			// On ne continue pas vers le pan
 			return;
@@ -214,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	let statsMode = 'viewport'; // 'viewport' | 'selection'
 	updateStats(chart);
 
-	
 	function getViewportRange (chart) {
 		const scale = chart.scales.x;
 		return {
@@ -255,12 +253,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 	
 	function updateStats (chart) {
+		const data = chart.data.datasets[0].data;
+		if (data.length < 2) {
+			return;
+		}
 		const range = (statsMode === 'selection') ?
-			getSelectionRange (chart) :
-			getViewportRange (chart);
+			getSelectionRange(chart) :
+			getViewportRange(chart);
 		const stats = computeStats(chart, range);
 		if (!stats) {
-			goViewport ();
 			return;
 		}
 		renderStats(stats, statsMode);
@@ -300,5 +301,28 @@ document.addEventListener('DOMContentLoaded', () => {
 		drawSelectionRect();
 		updateStats(chart);
 	}
+
+
+
+
+	//// data loading /////
+	const symbol = "ETHEUR";
+	const initialStart = "2025-01-01 00:00:00";
+	const initialEnd = "2025-12-31 23:59:59";
+	loadData (symbol, initialStart, initialEnd);
 	
+	async function loadData(symbol, start, end) {
+		url = `${charDataUrl}?symbol=${symbol}&start=${start}&end=${end}`;
+		const response = await fetch(
+			url
+		);
+
+		const json = await response.json();
+
+		chart.data.datasets[0].data = json.data;
+		chart.data.datasets[1].data = json.keyPoints;
+
+		chart.update();
+		updateStats(chart);
+	}
 });
