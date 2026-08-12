@@ -17,7 +17,6 @@ use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
 use COMMON__\svc\Stuff;
 use DateTime;
-use DateTimeInterface;
 use DateTimeZone;
 use DB\SQL;
 use ErrorException;
@@ -32,8 +31,8 @@ class IndexCtrl extends PrivateCtrl
 	public final static $symbol = "ETHEUR";
 	public final static $small_candle_size = "15m";
 	public final static $sql_read_limit = 10000;
-	public final static $date_start = "2024-01-01 00:00:00";
-	public final static $date_end = "2024-12-31 23:59:59";
+	public final static $date_start = "2025-01-01 00:00:00";
+	public final static $date_end = "2025-12-31 23:59:59";
 	
 
 	public static function beforeRoute ()
@@ -374,8 +373,11 @@ class IndexCtrl extends PrivateCtrl
 	
 	public static function candlesGET (Base $f3, $url, $controler)
 	{
+		//TODO choose small candle smartly
+		//TODO calculate all bigger candles
+		
 		# config
-		$big_candle_size = "4h";
+		$big_candle_size = "12h";
 		
 		# start reading data
 		$candle_seconds = Binance::candles [$big_candle_size];
@@ -383,8 +385,9 @@ class IndexCtrl extends PrivateCtrl
 		$buffer = new Buffer ($buffer_size);
 		$offset = 0;
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load(["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
-		["limit" => static::$sql_read_limit, "offset" => $offset])) {
+		while ($kline_wrapper->load(
+			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
+			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
 			do {
 				$open_time = $kline_wrapper->open_time; /** @var DateTime $open_time */
 				$timestamp = $open_time->getTimestamp();
@@ -394,7 +397,7 @@ class IndexCtrl extends PrivateCtrl
 					$big_candle->save();
 					$buffer->clear();
 				}
-				$buffer->push($kline_wrapper);
+				$buffer->push(clone $kline_wrapper);
 			}
 			while ($kline_wrapper->next());
 			
@@ -455,10 +458,24 @@ class IndexCtrl extends PrivateCtrl
 	{
 		$db = $f3->get("db"); /** @var SQL $db */
 
+		// params
 		$symbol = $f3->get("GET.symbol");
 		$start = $f3->get("GET.start");
+		$start_d = new DateTime($start);
 		$end = $f3->get("GET.end");
+		$end_d = new DateTime($end);
 		
+		// calculate candle size
+		$duration = $end_d->getTimestamp() - $start_d->getTimestamp();
+		$max_candles = 1000;
+		foreach (Binance::candles as $candle_name => $candle_duration) {
+			$candles_count = $duration / $candle_duration;
+			if ($candles_count <= $max_candles) {
+				break;
+			}
+		}
+		
+		// get klines
 		$sql = "
 			SELECT	open_time, open
 			FROM	" . Kline::table . "
@@ -470,10 +487,10 @@ class IndexCtrl extends PrivateCtrl
 		";
 		$params = [
 			$symbol,
-			"15m",
+			$candle_name,
 			$start,
 			$end,
-			60 * 60
+			$candle_duration,
 			];
 		$klines = $db->exec($sql, $params);
 		
@@ -485,6 +502,7 @@ class IndexCtrl extends PrivateCtrl
 			];
 		}
 
+		// calculate keypoints
 		$keyPoints = [];
 		if (!empty($data)) {
 			$keyPoints [0] = $data [0];
@@ -494,7 +512,6 @@ class IndexCtrl extends PrivateCtrl
 		}
 
 		$res = ["data" => $data, "keyPoints" => $keyPoints];
-
 		header('Content-Type: application/json; charset=utf-8');
 		echo json_encode($res);
 		exit;
