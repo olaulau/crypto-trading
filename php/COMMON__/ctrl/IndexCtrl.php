@@ -445,11 +445,19 @@ class IndexCtrl extends PrivateCtrl
 		$sql = "
 			SELECT	open_time, open
 			FROM	" . Kline::table . "
-			WHERE	open_time >= ?
-			AND open_time <= ?
-			AND UNIX_TIMESTAMP(open_time) % ? = 0
+			WHERE	symbol = ?
+			AND		candle_size = ?
+			AND		open_time >= ?
+			AND 	open_time <= ?
+			AND 	UNIX_TIMESTAMP(open_time) % ? = 0
 		";
-		$params = ["2025-01-01 00:00:00", "2025-12-31 23:59:59", 3600];
+		$params = [
+			"ETHEUR",
+			"15m",
+			"2025-01-01 00:00:00",
+			"2025-12-31 23:59:59",
+			60 * 60
+			];
 		$klines = $db->exec($sql, $params);
 		
 		// data
