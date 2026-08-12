@@ -18,11 +18,34 @@
 		</div>
 		
 		<script>
+			// données
 			var data = <?= json_encode($data) ?>;
 			data.forEach(element => {
-				element.x = new Date(element.x);
+				element.x = new Date(element.x); // convert php date string to js date
 			});
 			// console.log(data);
+			
+			// Points clés
+			keyPoints = [];
+			<?php
+			if (!empty($first)) {
+				?>
+				first = <?= json_encode($first) ?>;
+				first.x = new Date(first.x); // convert php date string to js date
+				first.label = "start";
+				keyPoints.push(first);
+				<?php
+			}
+			if (!empty($last)) {
+				?>
+				last = <?= json_encode($last) ?>;
+				last.x = new Date(last.x); // convert php date string to js date
+				last.label = "end";
+				keyPoints.push(last);
+				<?php
+			}
+			?>
+			// console.log(keyPoints);
 		</script>
 		
 		<script src="<?= $BASE . "/node_modules/chart.js/dist/chart.umd.js" ?>"></script>

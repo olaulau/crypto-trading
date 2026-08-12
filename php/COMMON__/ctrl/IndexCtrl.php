@@ -460,7 +460,6 @@ class IndexCtrl extends PrivateCtrl
 			];
 		$klines = $db->exec($sql, $params);
 		
-		// data
 		$data = [];
 		foreach ($klines as $kline) {
 			$data [] = [
@@ -469,6 +468,13 @@ class IndexCtrl extends PrivateCtrl
 			];
 		}
 		$f3->set("data", $data);
+		
+		if (!empty($data)) {
+			$first = $data [0];
+			$f3->set("first", $first);
+			$last = $data [count($data) - 1];
+			$f3->set("last", $last);
+		}
 		
 		$page = [
 			"module"	=>	"COMMON__",

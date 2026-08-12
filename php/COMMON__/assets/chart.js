@@ -1,22 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 	
-	// Points clés (hors série principale)
-	keyPoints = 
-	[
-		{
-			x: new Date(2025, 11, 2, 12),
-			y: 2000,
-			label: 'Événement A'
-		},
-		{
-			x: new Date(2025, 11, 3, 18),
-			y: 3000,
-			label: 'Événement B'
-		}
-	];
-	keyPoints = []; /////////////
-
-	
 	// set up the chart
 	chartCanvas = document.getElementById('chart');
 	chart = new Chart (chartCanvas, {
@@ -25,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			datasets:
 			[
 				{
-					label: 'Prix test',
+					label: 'ETHEUR',
 					data: data,
 					borderWidth: 2,
 
@@ -47,30 +30,30 @@ document.addEventListener('DOMContentLoaded', () => {
 		},
 		options: {
 			animation: {
-				duration: 200
+				duration: 500
 			},
 			scales: {
 				x: {
 					type: 'time',
 					time: {
-						unit: 'hour', // jour, mois, année, etc.
+						unit: 'day', // jour, mois, année, etc.
 						// tooltipFormat: 'PP' // format du tooltip
 						displayFormats: {
 							minute: 'dd/MM HH:mm',
 							hour: 'dd/MM HH:mm',
-							day: 'dd/MM/yyyy HH:mm'
+							day: 'dd/MM/yy HH:mm'
 						},
-						tooltipFormat: 'dd/MM/yyyy HH:mm'
+						tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
 					},
 					ticks: {
 						font: {
-							size: 14, // taille en pixels (par défaut ~12)
+							size: 10, // taille en pixels (par défaut ~12)
 							family: 'Arial, sans-serif',
 							weight: 'normal'
 						},
 						autoSkip: true, // ajustement automatique
-						maxRotation: 90,
-						minRotation: 90
+						maxRotation: 45,
+						minRotation: 45
 					}
 				}
 			},
