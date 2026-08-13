@@ -31,8 +31,8 @@ class IndexCtrl extends PrivateCtrl
 	public final static $symbol = "ETHEUR";
 	public final static $small_candle_size = "15m";
 	public final static $sql_read_limit = 10000;
-	public final static $date_start = "2025-01-01 00:00:00";
-	public final static $date_end = "2025-12-31 23:59:59";
+	public final static $date_start = "2020-01-01 00:00:00";
+	public final static $date_end = "2026-12-31 23:59:59";
 	
 
 	public static function beforeRoute ()
@@ -394,7 +394,12 @@ class IndexCtrl extends PrivateCtrl
 				if (($timestamp % $candle_seconds) === 0) {
 					# create big candle
 					$big_candle = static::candles_aggregate($buffer, $big_candle_size);
-					$big_candle->save();
+					try {
+						$big_candle->save();
+					}
+					catch (Throwable $t) {
+						echo $t->getMessage() . " <br/>" . PHP_EOL;
+					}
 					$buffer->clear();
 				}
 				$buffer->push(clone $kline_wrapper);
@@ -457,19 +462,25 @@ class IndexCtrl extends PrivateCtrl
 	public static function chartDataGET (Base $f3, $url, $controler)
 	{
 		$db = $f3->get("db"); /** @var SQL $db */
-
+		
 		// params
 		$symbol = $f3->get("GET.symbol");
 		$start = $f3->get("GET.start");
 		$start_d = new DateTime($start);
 		$end = $f3->get("GET.end");
 		$end_d = new DateTime($end);
+
+		// margin
+		$margin_tx = 0.2; //20% pargin on start and end side
+		$x_width = $end_d->getTimestamp() - $start_d->getTimestamp();
+		$margin_s = round($x_width * $margin_tx);
+		$start_d->modify("-$margin_s seconds");
+		$end_d->modify("+$margin_s seconds");
 		
 		// calculate candle size
-		$duration = $end_d->getTimestamp() - $start_d->getTimestamp();
 		$max_candles = 1000;
 		foreach (Binance::candles as $candle_name => $candle_duration) {
-			$candles_count = $duration / $candle_duration;
+			$candles_count = $x_width / $candle_duration;
 			if ($candles_count <= $max_candles) {
 				break;
 			}
@@ -488,8 +499,8 @@ class IndexCtrl extends PrivateCtrl
 		$params = [
 			$symbol,
 			$candle_name,
-			$start,
-			$end,
+			$start_d->format(Stuff::datetime_sql_format),
+			$end_d->format(Stuff::datetime_sql_format),
 			$candle_duration,
 			];
 		$klines = $db->exec($sql, $params);
