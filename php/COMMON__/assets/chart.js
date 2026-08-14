@@ -1,10 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-	// const
-	const symbol = "ETHEUR";
-	const initialStart = "2025-01-01 00:00:00";
-	const initialEnd = "2025-12-31 23:59:59";
-
 	//// set up the chart ////
 	chartCanvas = document.getElementById('chart');
 	chart = new Chart (chartCanvas, {

@@ -19,7 +19,10 @@
 		
 		<script>
 			// const
-			charDataUrl = "<?= $BASE . $f3->alias("chartData", [], []) ?>";
+			const charDataUrl = "<?= $BASE . $f3->alias("chartData", [], []) ?>";
+			const symbol = "ETHEUR";
+			const initialStart = "2025-01-01 00:00:00"; //TODO calculate previous year
+			const initialEnd = "2025-12-31 23:59:59";
 		</script>
 		
 		<script src="<?= $BASE . "/node_modules/chart.js/dist/chart.umd.js" ?>"></script>

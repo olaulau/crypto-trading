@@ -31,8 +31,8 @@ class IndexCtrl extends PrivateCtrl
 	public final static $symbol = "ETHEUR";
 	public final static $small_candle_size = "15m";
 	public final static $sql_read_limit = 10000;
-	public final static $date_start = "2020-01-01 00:00:00";
-	public final static $date_end = "2026-12-31 23:59:59";
+	public final static $date_start = "2025-01-01 00:00:00";
+	public final static $date_end = "2025-12-31 23:59:59";
 	
 
 	public static function beforeRoute ()
@@ -373,11 +373,18 @@ class IndexCtrl extends PrivateCtrl
 	
 	public static function candlesGET (Base $f3, $url, $controler)
 	{
+		ini_set('max_execution_time', 0);
+
 		//TODO choose small candle smartly
 		//TODO calculate all bigger candles
 		
 		# config
-		$big_candle_size = "12h";
+		$small_candle_size = "15m"; //TODO calculate
+		$big_candle_size = "4h";
+
+		$candles_available = $candles = self::candles_available(static::$symbol, static::$date_start, static::$date_end);
+		unset($candles_available [array_search($candles_available, $big_candle_size)]);
+		//TODO choose candle
 		
 		# start reading data
 		$candle_seconds = Binance::candles [$big_candle_size];
@@ -385,6 +392,8 @@ class IndexCtrl extends PrivateCtrl
 		$buffer = new Buffer ($buffer_size);
 		$offset = 0;
 		$kline_wrapper = new Kline;
+		echo "computing candles from " . static::$small_candle_size . " to {$big_candle_size} ... <br/>" . PHP_EOL;
+
 		while ($kline_wrapper->load(
 			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
 			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
@@ -409,10 +418,34 @@ class IndexCtrl extends PrivateCtrl
 			$offset += static::$sql_read_limit;
 			$kline_wrapper->reset();
 		}
+		echo " OK. <br.>" . PHP_EOL;
+	}
+
+	private static function candles_available (string $symbol, DateTime $start, DateTime $end) : array
+	{
+		$f3 = Base::instance();
+		$db = $f3->get("db"); /** @var SQL $db */
+		
+		$sql = "
+			SELECT	DISTINCT(candle_size)
+			FROM	" . Kline::table . "
+			WHERE	symbol = ?
+			AND		open_time >= ?
+			AND		close_time <= ?
+		";
+		$params = [$symbol, $start->format(Stuff::datetime_sql_format), $end->format(Stuff::datetime_sql_format)];
+		$data = $db->exec($sql, $params);
+		$res = array_column($data, "candle_size");
+		return $res;
+		
 	}
 	
-	private static function candles_aggregate (Buffer $candles, string $big_candle_size) : Kline
+	private static function candles_aggregate (Buffer $candles, string $big_candle_size) : ?Kline
 	{
+		if ($candles->empty()) {
+			return null;
+		}
+
 		$res = new Kline;
 		$res->symbol = static::$symbol;
 		$res->candle_size = $big_candle_size;
@@ -606,6 +639,23 @@ class IndexCtrl extends PrivateCtrl
 		header('Content-Type: application/json');
 		echo json_encode ($data);
 		exit;
+	}
+
+	public static function testGET (Base $f3, $url, $controler)
+	{
+		$candles = self::candles_available("ETHEUR", new DateTime("2025-01-01 00:00:00"), new DateTime("2025-12-31 23:59:59"));
+		var_dump($candles);
+		die;
+
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"default",
+			"name"		=>	"test",
+			"title"		=>	"test",
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		
+		self::renderPage($page);
 	}
 
 }
