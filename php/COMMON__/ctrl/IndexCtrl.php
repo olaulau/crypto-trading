@@ -375,27 +375,43 @@ class IndexCtrl extends PrivateCtrl
 	{
 		ini_set('max_execution_time', 0);
 
-		//TODO choose small candle smartly
-		//TODO calculate all bigger candles
-		
 		# config
-		$small_candle_size = "15m"; //TODO calculate
-		$big_candle_size = "4h";
+		$big_candle_size = "12h";
+		//TODO calculate all possible candles
 
-		$candles_available = $candles = self::candles_available(static::$symbol, static::$date_start, static::$date_end);
-		unset($candles_available [array_search($candles_available, $big_candle_size)]);
-		//TODO choose candle
+		self::calculate_candle(static::$symbol, $big_candle_size);
+	}
+
+	private static function calculate_candle (string $symbol, string $big_candle_size)
+	{
+		# get available candles
+		$candles_available = $candles = self::candles_available(static::$symbol, new DateTime(static::$date_start), new DateTime(static::$date_end));
+		$big_candle_pos = array_search($big_candle_size, $candles_available);
+		if ($big_candle_pos !== false) {
+			echo "WARNING : there are already some {$symbol} {$big_candle_size} candles <br/>" . PHP_EOL;
+			unset($candles_available [$big_candle_pos]);
+		}
+		
+		# choose biggest compatible candle
+		$small_candle_size = null;
+		$big_candle_duration = Binance::candles [$big_candle_size];;
+		foreach ($candles_available as $candle) {
+			$candle_duration = Binance::candles [$candle];
+			if (($big_candle_duration % $candle_duration) === 0) {
+				$small_candle_size = $candle;
+			}
+		}
 		
 		# start reading data
 		$candle_seconds = Binance::candles [$big_candle_size];
-		$buffer_size = $candle_seconds / Binance::candles [static::$small_candle_size];
+		$buffer_size = $candle_seconds / Binance::candles [$small_candle_size];
 		$buffer = new Buffer ($buffer_size);
 		$offset = 0;
 		$kline_wrapper = new Kline;
-		echo "computing candles from " . static::$small_candle_size . " to {$big_candle_size} ... <br/>" . PHP_EOL;
+		echo "computing {$symbol} candles from {$small_candle_size} to {$big_candle_size} ... <br/>" . PHP_EOL;
 
 		while ($kline_wrapper->load(
-			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$date_start, static::$date_end],
+			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, static::$date_start, static::$date_end],
 			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
 			do {
 				$open_time = $kline_wrapper->open_time; /** @var DateTime $open_time */
@@ -654,7 +670,6 @@ class IndexCtrl extends PrivateCtrl
 			"title"		=>	"test",
 			"breadcrumbs" => static::breadcrumbs(),
 		];
-		
 		self::renderPage($page);
 	}
 
