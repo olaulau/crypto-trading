@@ -375,32 +375,49 @@ class IndexCtrl extends PrivateCtrl
 	{
 		ini_set('max_execution_time', 0);
 
-		# config
-		$big_candle_size = "12h";
-		//TODO calculate all possible candles
-
-		self::calculate_candle(static::$symbol, $big_candle_size);
+		$candles_available = $candles = self::candles_available (static::$symbol, new DateTime(static::$date_start), new DateTime(static::$date_end));
+		
+		foreach (Binance::candles as $big_candle_size => $big_candle_duration) {
+			echo "<b>$big_candle_size = $big_candle_duration</b> <br/>" . PHP_EOL;
+			if (in_array($big_candle_size, $candles_available)) {
+				echo "candle already available <br/>" . PHP_EOL;
+				echo "<br/><br/>" . PHP_EOL;
+				continue;
+			}
+			
+			# choose biggest compatible candle
+			$small_candle_size = null;
+			$big_candle_duration = Binance::candles [$big_candle_size];;
+			foreach ($candles_available as $candle) {
+				if ($big_candle_size === $candle) {
+					echo "$candle $candle_duration is same <br/>" . PHP_EOL;
+					continue; // don't try to recalculate ourself
+				}
+				$candle_duration = Binance::candles [$candle];
+				$quotient = $big_candle_duration / $candle_duration;
+				$reste = $big_candle_duration % $candle_duration;
+				echo "$candle $candle_duration $quotient $reste <br/>" . PHP_EOL;
+				if ($quotient > 1 && $reste === 0) {
+					$small_candle_size = $candle;
+				}
+			}
+			
+			if (empty($small_candle_size)) {
+				echo "ERROR : no candle suitable for calculation of " . static::$symbol . " {$big_candle_size} <br/>" . PHP_EOL;
+			}
+			else {
+				self::calculate_candle(static::$symbol, $small_candle_size, $big_candle_size);
+				$candles_available = self::candles_available(static::$symbol, new DateTime(static::$date_start), new DateTime(static::$date_end));
+			}
+			
+			echo "<br/><br/>" . PHP_EOL;
+		}
 	}
 
-	private static function calculate_candle (string $symbol, string $big_candle_size)
+	private static function calculate_candle (string $symbol, string $small_candle_size, string $big_candle_size)
 	{
-		# get available candles
-		$candles_available = $candles = self::candles_available(static::$symbol, new DateTime(static::$date_start), new DateTime(static::$date_end));
-		$big_candle_pos = array_search($big_candle_size, $candles_available);
-		if ($big_candle_pos !== false) {
-			echo "WARNING : there are already some {$symbol} {$big_candle_size} candles <br/>" . PHP_EOL;
-			unset($candles_available [$big_candle_pos]);
-		}
-		
-		# choose biggest compatible candle
-		$small_candle_size = null;
-		$big_candle_duration = Binance::candles [$big_candle_size];;
-		foreach ($candles_available as $candle) {
-			$candle_duration = Binance::candles [$candle];
-			if (($big_candle_duration % $candle_duration) === 0) {
-				$small_candle_size = $candle;
-			}
-		}
+		echo "computing {$symbol} candles from {$small_candle_size} to {$big_candle_size} ... <br/>" . PHP_EOL;
+		// return;
 		
 		# start reading data
 		$candle_seconds = Binance::candles [$big_candle_size];
@@ -408,33 +425,33 @@ class IndexCtrl extends PrivateCtrl
 		$buffer = new Buffer ($buffer_size);
 		$offset = 0;
 		$kline_wrapper = new Kline;
-		echo "computing {$symbol} candles from {$small_candle_size} to {$big_candle_size} ... <br/>" . PHP_EOL;
 
 		while ($kline_wrapper->load(
 			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, static::$date_start, static::$date_end],
 			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
 			do {
+				$buffer->push(clone $kline_wrapper);
 				$open_time = $kline_wrapper->open_time; /** @var DateTime $open_time */
 				$timestamp = $open_time->getTimestamp();
 				if (($timestamp % $candle_seconds) === 0) {
 					# create big candle
-					$big_candle = static::candles_aggregate($buffer, $big_candle_size);
+					$big_candle = static::candles_aggregate ($buffer, $big_candle_size);
 					try {
 						$big_candle->save();
 					}
 					catch (Throwable $t) {
 						echo $t->getMessage() . " <br/>" . PHP_EOL;
+						// var_dump($buffer); //////////////////////////
 					}
 					$buffer->clear();
 				}
-				$buffer->push(clone $kline_wrapper);
 			}
 			while ($kline_wrapper->next());
 			
 			$offset += static::$sql_read_limit;
 			$kline_wrapper->reset();
 		}
-		echo " OK. <br.>" . PHP_EOL;
+		echo " OK. <br/>" . PHP_EOL;
 	}
 
 	private static function candles_available (string $symbol, DateTime $start, DateTime $end) : array
@@ -452,6 +469,7 @@ class IndexCtrl extends PrivateCtrl
 		$params = [$symbol, $start->format(Stuff::datetime_sql_format), $end->format(Stuff::datetime_sql_format)];
 		$data = $db->exec($sql, $params);
 		$res = array_column($data, "candle_size");
+		$res = array_intersect(array_keys(Binance::candles), $res); // sort $res by size ASC, like in Binance::candles
 		return $res;
 		
 	}
