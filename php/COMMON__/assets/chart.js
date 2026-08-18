@@ -264,24 +264,32 @@ document.addEventListener('DOMContentLoaded', () => {
 			getSelectionRange(chart) :
 			getViewportRange(chart);
 		const stats = computeStats(chart, range);
-		if (!stats) {
-			return;
-		}
 		renderStats(stats, statsMode);
 	}
 
 	function renderStats (stats, mode) {
-		document.getElementById('stats-mode').textContent = mode;
-		document.getElementById('stats-points').textContent = stats.points;
-		document.getElementById('stats-min').textContent = stats.min.toFixed(2);
-		document.getElementById('stats-max').textContent = stats.max.toFixed(2);
-		document.getElementById('stats-start').textContent = stats.start.toFixed(2);
-		document.getElementById('stats-end').textContent = stats.end.toFixed(2);
-		document.getElementById('stats-amp-pct').textContent = stats.amplitudePct.toFixed(2);
-
 		const pctEl = document.getElementById('stats-pct');
-		pctEl.textContent = stats.pct.toFixed(2);
-		pctEl.style.color = stats.pct >= 0 ? 'green' : 'red';
+		if (!stats) {
+			document.getElementById('stats-points').textContent = "-";
+			document.getElementById('stats-min').textContent = "-";
+			document.getElementById('stats-max').textContent = "-";
+			document.getElementById('stats-start').textContent = "-";
+			document.getElementById('stats-end').textContent = "-";
+			document.getElementById('stats-amp-pct').textContent = "-";
+			pctEl.textContent = "-";
+			pctEl.style.color = "black";
+		}
+		else {
+			document.getElementById('stats-mode').textContent = mode;
+			document.getElementById('stats-points').textContent = stats.points;
+			document.getElementById('stats-min').textContent = stats.min.toFixed(2);
+			document.getElementById('stats-max').textContent = stats.max.toFixed(2);
+			document.getElementById('stats-start').textContent = stats.start.toFixed(2);
+			document.getElementById('stats-end').textContent = stats.end.toFixed(2);
+			document.getElementById('stats-amp-pct').textContent = stats.amplitudePct.toFixed(2);
+			pctEl.textContent = stats.pct.toFixed(2);
+			pctEl.style.color = stats.pct >= 0 ? 'green' : 'red';
+		}
 	}
 
 	function drawSelectionRect () {
