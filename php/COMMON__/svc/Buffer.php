@@ -4,7 +4,7 @@ namespace COMMON__\svc;
 use ErrorException;
 
 
-class Buffer
+class Buffer //TODO soon useless ?
 {
 
 	private int $max_size;

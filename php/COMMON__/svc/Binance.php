@@ -37,35 +37,35 @@ class Binance
 	];
 	
 	public final const candles = [
-		"1s"	 => 1,
-		"1m"	 => 60,
-		"3m"	 => 3 * 60,
-		"5m"	 => 5 * 60,
+			// "1s"	 => 1,
+			// "1m"	 => 60,
+			// "3m"	 => 3 * 60,
+			// "5m"	 => 5 * 60,
 		"15m"	 => 15 * 60,
 		"30m"	 => 30 * 60,
 		"1h"	 => 60 * 60,
 		"2h"	 => 2 * 60 * 60,
-		"4h"	 => 4 * 60 * 60,
-		"6h"	 => 6 * 60 * 60,
-		"8h"	 => 8 * 60 * 60,
-		"12h"	 => 12 * 60 * 60,
-		"1d"	 => 24 * 60 * 60,
-		"3d"	 => 3 * 24 * 60 * 60,
-		"1w"	 => 7 * 24 * 60 * 60,
-		// "1mo" => 30 * 24 * 60 * 60,
+		// "4h"	 => 4 * 60 * 60,
+		// "6h"	 => 6 * 60 * 60,
+		// "8h"	 => 8 * 60 * 60,
+		// "12h"	 => 12 * 60 * 60,
+		// "1d"	 => 24 * 60 * 60,
+		// "3d"	 => 3 * 24 * 60 * 60,
+		// "1w"	 => 7 * 24 * 60 * 60,
+			// "1mo" => 30 * 24 * 60 * 60,
 	];
 	
 	
 	
 	public static function to_real_timestamp (int $timestamp) : float
 	{
-		if(strlen($timestamp) === 16) {
+		if (strlen($timestamp) === 16) {
 			return $timestamp / 1000000;
 		}
-		elseif(strlen($timestamp) === 13) {
+		elseif (strlen($timestamp) === 13) {
 			return $timestamp / 1000;
 		}
-		elseif(strlen($timestamp) === 0) {
+		elseif (strlen($timestamp) === 0) {
 			return $timestamp;
 		}
 		else {

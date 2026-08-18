@@ -2,6 +2,7 @@
 namespace COMMON__\mdl;
 
 use Base;
+use DateTime;
 use DB\SQL;
 use DB\SQL\Schema;
 
@@ -89,6 +90,36 @@ class Kline extends Mdl
 			ALTER TABLE " . Kline::table . "
 				ADD CONSTRAINT uniq__symbol__candle_size__open_time UNIQUE (symbol, candle_size, open_time); ";
 		$db->exec($sql);
+	}
+	
+	
+	public function aggregateWith (Kline $next) : void
+	{
+		$this_close_ts = (new DateTime($this->close_time))->getTimestamp();
+		$next_open_ts = (new DateTime($next->open_time))->getTimestamp();
+		if ($this_close_ts + 1 !== $next_open_ts) {
+			echo "impossible kline aggregate : dates are not contiguous <br/>" . PHP_EOL;
+			die;
+		}
+		
+		// $this->open_time = $first_candle -> open_time;
+		// $this->open = $first_candle -> open;
+		$this->close = $next -> close;
+		$this->close_time = $next -> close_time;
+		// $this->ignore = 0;
+		$this->high = max ($next->high, $this->high);
+		$this->low = min ($next->low, $this->low);
+		$this->volume += $next->volume;
+		$this->quote_asset_volume += $next->quote_asset_volume;
+		$this->number_of_trades += $next->number_of_trades;
+		$this->taker_buy_base_asset_volume += $next->taker_buy_base_asset_volume;
+		$this->taker_buy_quote_asset_volume += $next->taker_buy_quote_asset_volume;
+	}
+	
+	
+	public function getDuration () : int
+	{
+		return (new DateTime($this->close_time))->getTimestamp() - (new DateTime($this->open_time))->getTimestamp() + 1;
 	}
 	
 }
