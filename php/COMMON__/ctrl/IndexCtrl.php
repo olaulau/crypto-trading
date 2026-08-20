@@ -164,15 +164,37 @@ class IndexCtrl extends PrivateCtrl
 		# init
 		set_time_limit(0);
 		$db = $f3->get("db"); /** @var SQL $db */
+		$db->exec ("SET time_zone = '+00:00';"); // all dates are UTC
 		
 		# lookup for CSV files
-		$files = glob(static::$binance_data_directory . "/*.csv");
+		$files = glob (static::$binance_data_directory . "/*.csv");
 		asort($files);
+
+		$start_dt = new DateTime(static::$start);
+		$end_dt = new DateTime(static::$end);
 		
 		foreach ($files as $file) {
 			// $start_time = microtime(true);
+			
+			# extract infos from filename
+			$filebase = basename($file);
+			echo "{$filebase} <br/>" . PHP_EOL;
+			$regex = '/([[:alpha:]]+)-([[:digit:]]+[[:alpha:]])-([[:digit:]]{4})-([[:digit:]]{2})\.csv/'; // ETHEUR-15m-2020-01.csv
+			$res = preg_match ($regex, $filebase, $matches);
+			if ($res !== 1) {
+				echo "import filename regex match error <br/>" . PHP_EOL;
+				continue;
+			}
+			list(,$symbol, $candle_size, $year, $month) = $matches;
+
+			# check date is in range
+			$file_dt = new DateTime("{$year}-{$month}-01 00:00:00");
+			if (($file_dt->getTimestamp() - $start_dt->getTimestamp()) < 0 || ($end_dt->getTimestamp() - $file_dt->getTimestamp()) < 0) {
+				echo "file is out of date range <br/>" . PHP_EOL;
+				continue;
+			};
+
 			# open CSV file
-			echo basename($file) . "<br/>" . PHP_EOL;
 			$fh = fopen($file, "r");
 			
 			# read CSV rows
@@ -185,8 +207,8 @@ class IndexCtrl extends PrivateCtrl
 				$kline->copyfrom($row);
 				$kline->symbol = static::$symbol;
 				$kline->candle_size = static::$small_candle_size;
-				$kline->open_time = Binance::timestamp_to_datetime($row ["open_time"])->format("Y-m-d H:i:s");
-				$kline->close_time = Binance::timestamp_to_datetime($row ["close_time"])->format("Y-m-d H:i:s");
+				$kline->open_time = gmdate ('Y-m-d H:i:s', round(Binance::to_real_timestamp($row ["open_time"]))); // UTC
+				$kline->close_time = gmdate('Y-m-d H:i:s', round(Binance::to_real_timestamp($row ["close_time"])));
 				try {
 					$kline->save();
 				}
@@ -195,6 +217,7 @@ class IndexCtrl extends PrivateCtrl
 				}
 			}
 			$db->commit();
+
 			// $end_time = microtime(true);
 			// $duration = ($end_time - $start_time) * 1000;
 			// echo number_format($duration, 2, ",", " ") . " ms <br/>" . PHP_EOL;

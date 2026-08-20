@@ -23,7 +23,7 @@ class Kline extends Mdl
 		],
 		
 		'open_time' => [
-			'type'		=> Schema::DT_DATETIME,
+			'type'		=> Schema::DT_TIMESTAMP,
 			'nullable'	=> false,
 		],
 		'open' => [
@@ -49,7 +49,7 @@ class Kline extends Mdl
 			'nullable' => false,
 		],
 		'close_time' => [
-			'type' => Schema::DT_DATETIME,
+			'type' => Schema::DT_TIMESTAMP,
 			'nullable' => false,
 		],
 		'quote_asset_volume' => [
