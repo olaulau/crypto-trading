@@ -679,7 +679,26 @@ class IndexCtrl extends PrivateCtrl
 
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		static::calculate_candle (static::$symbol, "2025-01-01 00:00:00", "2025-01-31 23:59:59", "15m", "30m");
+		# test if 15m candles are continous in DB (false as I suspected, due to mysql not storing timezone in datetime)
+		$close_dt = null;
+		$kline_wrapper = new Kline;
+		$kline_wrapper->load(
+			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", "ETHEUR", "15m", "2025-01-01 00:00:00", "2025-12-31 23:59:59"],
+			["order" => "open_time ASC"]);
+		do {
+			if (!empty($close_dt)) {
+				$open_dt = $kline_wrapper->open_time;
+				if ($close_dt->getTimestamp() + 1 !== $open_dt->getTimestamp()) {
+					echo "not contiguous : " . $close_dt->format(Stuff::datetime_sql_format) . " - " . $open_dt->format(Stuff::datetime_sql_format) .
+						" => " . $close_dt->getTimestamp() . " - " . $open_dt->getTimestamp() . "<br/>" . PHP_EOL;
+					$close_dt = null;
+					continue;
+				}
+			}
+			$close_dt = $kline_wrapper->close_time;
+		}
+		while ($kline_wrapper->next());
+
 		die;
 
 		$page = [
