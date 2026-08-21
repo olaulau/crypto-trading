@@ -207,8 +207,8 @@ class IndexCtrl extends PrivateCtrl
 				$kline->copyfrom($row);
 				$kline->symbol = static::$symbol;
 				$kline->candle_size = static::$small_candle_size;
-				$kline->open_time = gmdate ('Y-m-d H:i:s', round(Binance::to_real_timestamp($row ["open_time"]))); // UTC
-				$kline->close_time = gmdate('Y-m-d H:i:s', round(Binance::to_real_timestamp($row ["close_time"])));
+				$kline->open_time = gmdate ('Y-m-d H:i:s', floor(Binance::to_real_timestamp($row ["open_time"]))); // UTC
+				$kline->close_time = gmdate('Y-m-d H:i:s', floor(Binance::to_real_timestamp($row ["close_time"])));
 				try {
 					$kline->save();
 				}
@@ -439,39 +439,49 @@ class IndexCtrl extends PrivateCtrl
 
 	private static function calculate_candle (string $symbol, string $start, string $end, string $small_candle_size, string $big_candle_size)
 	{
+		$f3 = Base::instance();
+		$db = $f3->get("db"); /** @var SQL $db */
+
 		echo "computing {$symbol} candles from {$small_candle_size} to {$big_candle_size} ... <br/>" . PHP_EOL;
 		
 		# start reading data
 		$candle_seconds = Binance::candles [$big_candle_size];
-		$buffer_size = $candle_seconds / Binance::candles [$small_candle_size];
-		$buffer = new Buffer ($buffer_size);
 		$offset = 0;
 		$kline_wrapper = new Kline;
 
 		while ($kline_wrapper->load(
 			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, $start, $end],
 			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
+			$db->begin();
 			do {
-				$buffer->push (clone $kline_wrapper); ///////
-				$close_time = $kline_wrapper->close_time; /** @var DateTime $close_time */
-				$close_ts = $close_time->getTimestamp();
-				if ((($close_ts+1) % $candle_seconds) === 0) { ////////////////////////////////
-					//TODO rewrite with Kline methods
-					//TODO check kline duration, change candle_size, then save
-					# create big candle
-					
-					$big_candle = static::candles_aggregate ($buffer, $big_candle_size);
-					try {
-						$big_candle->save();
-					}
-					catch (Throwable $t) {
-						echo $t->getMessage() . " <br/>" . PHP_EOL;
-					}
-					$buffer->clear();
+				if (empty ($big_candle)) { # first candle
+					# clone first candle
+					$big_candle = new Kline();
+					$kline_casted = $kline_wrapper->cast();
+					$kline_casted["open_time"] = $kline_casted["open_time"]->format(stuff::datetime_sql_format); //TODO all sql sessions UTC ?
+					$kline_casted["close_time"] = $kline_casted["close_time"]->format(stuff::datetime_sql_format);
+					unset ($kline_casted ["_id"]);
+					$big_candle->copyfrom ($kline_casted);
+					$big_candle->candle_size = $big_candle_size;
 				}
-				
+				else { # Nth candle
+					$big_candle->aggregateWith($kline_wrapper);
+
+					$close_time = $kline_wrapper->close_time; /** @var DateTime $close_time */
+					$close_ts = $close_time->getTimestamp();
+					if ((($close_ts+1) % $candle_seconds) === 0) { ////////////////////////////////
+						try {
+							$big_candle->save();
+						}
+						catch (Throwable $t) {
+							echo $t->getMessage() . " <br/>" . PHP_EOL;
+						}
+						$big_candle = null;
+					}
+				}
 			}
 			while ($kline_wrapper->next());
+			$db->commit();
 			
 			$offset += static::$sql_read_limit;
 			$kline_wrapper->reset();

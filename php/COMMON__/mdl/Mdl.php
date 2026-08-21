@@ -30,7 +30,7 @@ abstract class Mdl extends Cortex
 	
 	
 	// subclasses have to implement this method to use getAsList generic method
-	public function __toString ()
+	public function __toString () : string
 	{
 		throw new ErrorException("__toString() method not implemented for class " . get_class($this));
 	}

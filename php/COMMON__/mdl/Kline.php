@@ -2,6 +2,7 @@
 namespace COMMON__\mdl;
 
 use Base;
+use COMMON__\svc\Stuff;
 use DateTime;
 use DB\SQL;
 use DB\SQL\Schema;
@@ -91,14 +92,15 @@ class Kline extends Mdl
 				ADD CONSTRAINT uniq__symbol__candle_size__open_time UNIQUE (symbol, candle_size, open_time); ";
 		$db->exec($sql);
 	}
-	
-	
+
+
 	public function aggregateWith (Kline $next) : void
 	{
-		$this_close_ts = (new DateTime($this->close_time))->getTimestamp();
-		$next_open_ts = (new DateTime($next->open_time))->getTimestamp();
+		$this_close_ts = $this->close_time->getTimestamp();
+		$next_open_ts = $next->open_time->getTimestamp();
 		if ($this_close_ts + 1 !== $next_open_ts) {
 			echo "impossible kline aggregate : dates are not contiguous <br/>" . PHP_EOL;
+			echo "$this_close_ts + 1 !== $next_open_ts <br/>" . PHP_EOL; ////////////////////////
 			die;
 		}
 		
