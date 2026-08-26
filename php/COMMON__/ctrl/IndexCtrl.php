@@ -164,7 +164,6 @@ class IndexCtrl extends PrivateCtrl
 		# init
 		set_time_limit(0);
 		$db = $f3->get("db"); /** @var SQL $db */
-		$db->exec ("SET time_zone = '+00:00';"); // all dates are UTC
 		
 		# lookup for CSV files
 		$files = glob (static::$binance_data_directory . "/*.csv");
@@ -204,11 +203,11 @@ class IndexCtrl extends PrivateCtrl
 				
 				# write into DB
 				$kline = new Kline;
-				$kline->copyfrom($row);
-				$kline->symbol = static::$symbol;
-				$kline->candle_size = static::$small_candle_size;
+				$kline->copyfrom ($row);
+				$kline->symbol = $symbol;
+				$kline->candle_size = $candle_size;
 				$kline->open_time = gmdate ('Y-m-d H:i:s', floor(Binance::to_real_timestamp($row ["open_time"]))); // UTC
-				$kline->close_time = gmdate('Y-m-d H:i:s', floor(Binance::to_real_timestamp($row ["close_time"])));
+				$kline->close_time = gmdate ('Y-m-d H:i:s', floor(Binance::to_real_timestamp($row ["close_time"])));
 				try {
 					$kline->save();
 				}
@@ -458,8 +457,8 @@ class IndexCtrl extends PrivateCtrl
 					# clone first candle
 					$big_candle = new Kline();
 					$kline_casted = $kline_wrapper->cast();
-					$kline_casted["open_time"] = $kline_casted["open_time"]->format(stuff::datetime_sql_format); //TODO all sql sessions UTC ?
-					$kline_casted["close_time"] = $kline_casted["close_time"]->format(stuff::datetime_sql_format);
+					$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor($kline_casted ["open_time"]->getTimestamp())); // UTC
+					$kline_casted ["close_time"] = gmdate ('Y-m-d H:i:s', floor($kline_casted ["close_time"]->getTimestamp()));
 					unset ($kline_casted ["_id"]);
 					$big_candle->copyfrom ($kline_casted);
 					$big_candle->candle_size = $big_candle_size;

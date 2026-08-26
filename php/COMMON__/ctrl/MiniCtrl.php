@@ -60,6 +60,11 @@ abstract class MiniCtrl
 			);
 			$db->log (false);
 			
+			// all dates are UTC
+			$db->exec ("SET time_zone = '+00:00';");
+			ini_set("date.timezone", "UTC");
+			date_default_timezone_set("UTC");
+			
 			$f3->set("db", $db);
 		}
 		
