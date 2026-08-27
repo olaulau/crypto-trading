@@ -606,21 +606,35 @@ class IndexCtrl extends PrivateCtrl
 		];
 		$klines = $db->exec($sql, $params);
 		
+		$min_x = new DateTime($klines [0] ["open_time"])->getTimestamp() * 1000;
+		$min_y = $klines [0] ["open"];
+		$max_x = new DateTime($klines [0] ["open_time"])->getTimestamp() * 1000;
+		$max_y = $klines [0] ["open"];
 		$data = [];
 		foreach ($klines as $kline) {
+			$x = new DateTime($kline ["open_time"])->getTimestamp() * 1000;
+			$y = $kline ["open"];
 			$data [] = [
-				"x" => new DateTime($kline ["open_time"])->getTimestamp() * 1000,
-				"y" => $kline ["open"],
+				"x" => $x,
+				"y" => $y,
 			];
+			if ($y < $min_y) {
+				$min_y = $y;
+				$min_x = $x;
+			}
+			if ($y > $max_y) {
+				$max_y = $y;
+				$max_x = $x;
+			}
 		}
 
 		// calculate keypoints
 		$keyPoints = [];
 		if (!empty($data)) {
-			$keyPoints [0] = $data [0];
-			$keyPoints [0] ["label"] = "start";
-			$keyPoints [1] = $data [count($data)-1];
-			$keyPoints [1] ["label"] = "end";
+			$keyPoints [0] = ["x" => $min_x, "y" => $min_y];
+			$keyPoints [0] ["label"] = "min";
+			$keyPoints [1] = ["x" => $max_x, "y" => $max_y];
+			$keyPoints [1] ["label"] = "max";
 		}
 
 		$res = ["data" => $data, "keyPoints" => $keyPoints];
