@@ -2,7 +2,6 @@
 namespace COMMON__\mdl;
 
 use Base;
-use COMMON__\svc\Stuff;
 use DateTime;
 use DB\SQL;
 use DB\SQL\Schema;
@@ -76,7 +75,7 @@ class Kline extends Mdl
 	];
 	
 	
-	public static function setup ($db = null, $table = null, $fields = null) 
+	public static function setup ($db = null, $table = null, $fields = null) : void
 	{
 		parent::setup (); # auto create table
 		

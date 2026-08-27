@@ -13,6 +13,7 @@ use COMMON__\mdl\Order;
 use COMMON__\mdl\OrderList;
 use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
+use COMMON__\mdl\Stat;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
 use COMMON__\svc\Stuff;
@@ -32,7 +33,7 @@ class IndexCtrl extends PrivateCtrl
 	public final static $small_candle_size = "15m";
 	public final static $sql_read_limit = 10000;
 	public final static $start = "2025-01-01 00:00:00";
-	public final static $end = "2025-12-31 23:59:59";
+	public final static $end = "2025-01-31 23:59:59";
 	
 
 	public static function beforeRoute ()
@@ -103,6 +104,7 @@ class IndexCtrl extends PrivateCtrl
 		OrderList::setup();
 		SpotExchangeSymbol::setup();
 		SpotTrade::setup();
+		Stat::setup();
 		
 		echo "Ok.";
 	}
@@ -426,6 +428,7 @@ class IndexCtrl extends PrivateCtrl
 			
 			echo "<br/>" . PHP_EOL;
 		}
+		exit;
 	}
 
 	private static function calculate_candle (string $symbol, string $start, string $end, string $small_candle_size, string $big_candle_size)
@@ -449,14 +452,14 @@ class IndexCtrl extends PrivateCtrl
 					# clone first candle
 					$big_candle = new Kline();
 					$kline_casted = $kline_wrapper->cast();
-					$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor($kline_casted ["open_time"]->getTimestamp())); // UTC
-					$kline_casted ["close_time"] = gmdate ('Y-m-d H:i:s', floor($kline_casted ["close_time"]->getTimestamp()));
+					$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
+					$kline_casted ["close_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["close_time"]->getTimestamp()));
 					unset ($kline_casted ["_id"]);
 					$big_candle->copyfrom ($kline_casted);
 					$big_candle->candle_size = $big_candle_size;
 				}
 				else { # Nth candle
-					$big_candle->aggregateWith($kline_wrapper);
+					$big_candle->aggregateWith ($kline_wrapper);
 
 					$close_time = $kline_wrapper->close_time; /** @var DateTime $close_time */
 					$close_ts = $close_time->getTimestamp();
@@ -486,7 +489,7 @@ class IndexCtrl extends PrivateCtrl
 		$db = $f3->get("db"); /** @var SQL $db */
 		
 		$sql = "
-			SELECT	DISTINCT(candle_size)
+			SELECT	DISTINCT (candle_size)
 			FROM	" . Kline::table . "
 			WHERE	symbol = ?
 			AND		open_time >= ?
@@ -539,6 +542,54 @@ class IndexCtrl extends PrivateCtrl
 	}
 	
 	
+	public static function statsGET (Base $f3, $url, $controler)
+	{
+		$db = $f3->get("db"); /** @var SQL $db */
+		ini_set ('max_execution_time', 0);
+		
+		$stat_type = "SMA";
+		$stat_window = 100;
+		$stat_name = "{$stat_type}{$stat_window}";
+
+		echo "computing " . static::$symbol . " {$stat_name} statistics from " . static::$small_candle_size . " candles ... <br/>" . PHP_EOL;
+		
+		# start reading data
+		$offset = 0;
+		$kline_wrapper = new Kline;
+		$window = [];
+
+		while ($kline_wrapper->load(
+			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$start, static::$end],
+			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
+			$db->begin();
+			do {
+				if (count ($window) >= $stat_window) {
+					array_shift($window);
+				}
+				array_push($window, $kline_wrapper ["open"]);
+				$SMA = array_sum ($window) / count ($window);
+				
+				$stat = new Stat;
+				$stat->name = $stat_name;
+				$stat->symbol = static::$symbol;
+				$stat->candle_size = static::$small_candle_size;
+				$stat->open_time = $kline_wrapper ["open_time"];
+				$stat->open = $SMA;
+				$stat->save();
+			}
+			while ($kline_wrapper->next());
+			$db->commit();
+			
+			$offset += static::$sql_read_limit;
+			$kline_wrapper->reset();
+		}
+		echo " OK. <br/>" . PHP_EOL;
+		
+		
+		exit;
+	}
+	
+	
 	public static function chartGET (Base $f3, $url, $controler)
 	{
 		$page = [
@@ -559,7 +610,7 @@ class IndexCtrl extends PrivateCtrl
 		// params
 		$symbol = $f3->get("GET.symbol");
 		$start = $f3->get("GET.start");
-		$start_d = DateTime::createFromTimestamp( Binance::to_real_timestamp ((int)$start));
+		$start_d = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$start));
 		$end = $f3->get("GET.end");
 		$end_d = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$end));
 
