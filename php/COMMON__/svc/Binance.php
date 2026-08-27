@@ -65,7 +65,7 @@ class Binance
 		elseif (strlen($timestamp) === 13) {
 			return $timestamp / 1000;
 		}
-		elseif (strlen($timestamp) === 0) {
+		elseif (strlen($timestamp) === 10) {
 			return $timestamp;
 		}
 		else {

@@ -31,14 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		
 		options: {
 			parsing: false,
-			animation: {
-				duration: 500
-			},
+			animation: false,
 			scales: {
 				x: {
 					type: 'time',
-					min: initialStart,
-					max: initialEnd,
+					min: initialStart * 1000,
+					max: initialEnd * 1000,
 					time: {
 						unit: 'day', // jour, mois, année, etc.
 						// tooltipFormat: 'PP' // format du tooltip
@@ -98,6 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
 						},
 						onZoomComplete: ({ chart }) => {
 							updateStats(chart);
+							loadData(symbol, chart.scales.x.min, chart.scales.x.max);
+
 						}
 					}
 				}
@@ -200,6 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		else {
 			// fin pan
 			goViewport ();
+			loadData(
+				symbol,
+				chart.scales.x.min,
+				chart.scales.x.max
+			);
 		}
 		
 		isPanning = false;
@@ -330,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		chart.data.datasets[0].data = json.data;
 		chart.data.datasets[1].data = json.keyPoints;
 
-		chart.update();
+		chart.update('none');
 		updateStats(chart);
 	}
 

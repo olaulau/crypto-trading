@@ -567,9 +567,9 @@ class IndexCtrl extends PrivateCtrl
 		// params
 		$symbol = $f3->get("GET.symbol");
 		$start = $f3->get("GET.start");
-		$start_d = new DateTime($start);
+		$start_d = DateTime::createFromTimestamp(Binance::to_real_timestamp((int)$start));
 		$end = $f3->get("GET.end");
-		$end_d = new DateTime($end);
+		$end_d = DateTime::createFromTimestamp(Binance::to_real_timestamp((int)$end));
 
 		// margin
 		$margin_tx = 0.2; // add 20% margin on start and end side
