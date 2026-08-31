@@ -104,7 +104,6 @@ class IndexCtrl extends PrivateCtrl
 		OrderList::setup();
 		SpotExchangeSymbol::setup();
 		SpotTrade::setup();
-		Stat::setup();
 		
 		echo "Ok.";
 	}
@@ -568,14 +567,8 @@ class IndexCtrl extends PrivateCtrl
 				}
 				array_push($window, $kline_wrapper ["open"]);
 				$SMA = array_sum ($window) / count ($window);
-				
-				$stat = new Stat;
-				$stat->name = $stat_name;
-				$stat->symbol = static::$symbol;
-				$stat->candle_size = static::$small_candle_size;
-				$stat->open_time = $kline_wrapper ["open_time"];
-				$stat->open = $SMA;
-				$stat->save();
+				$kline_wrapper->SMA100 = $SMA;
+				$kline_wrapper->save();
 			}
 			while ($kline_wrapper->next());
 			$db->commit();
@@ -584,8 +577,6 @@ class IndexCtrl extends PrivateCtrl
 			$kline_wrapper->reset();
 		}
 		echo " OK. <br/>" . PHP_EOL;
-		
-		
 		exit;
 	}
 	
