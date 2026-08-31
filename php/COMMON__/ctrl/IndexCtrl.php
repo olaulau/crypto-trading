@@ -32,8 +32,8 @@ class IndexCtrl extends PrivateCtrl
 	public final static $symbol = "ETHEUR";
 	public final static $small_candle_size = "15m";
 	public final static $sql_read_limit = 10000;
-	public final static $start = "2025-01-01 00:00:00";
-	public final static $end = "2025-01-31 23:59:59";
+	public final static $start_sql = "2025-01-01 00:00:00";
+	public final static $end_sql = "2025-01-31 23:59:59";
 	
 
 	public static function beforeRoute ()
@@ -170,8 +170,8 @@ class IndexCtrl extends PrivateCtrl
 		$files = glob (static::$binance_data_directory . "/*.csv");
 		asort($files);
 
-		$start_dt = new DateTime(static::$start);
-		$end_dt = new DateTime(static::$end);
+		$start_dt = new DateTime(static::$start_sql);
+		$end_dt = new DateTime(static::$end_sql);
 		
 		foreach ($files as $file) {
 			// $start_time = microtime(true);
@@ -255,7 +255,7 @@ class IndexCtrl extends PrivateCtrl
 		$price_window = [];
 		$kline_wrapper = new Kline;
 		while ($kline_wrapper->load (["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?",
-			static::$symbol, static::$small_candle_size, static::$start, static::$end],
+			static::$symbol, static::$small_candle_size, static::$start_sql, static::$end_sql],
 			["limit" => static::$sql_read_limit, "offset" => $offset])) {
 			do {
 				$dt_formated = $kline_wrapper ["open_time"];
@@ -390,7 +390,7 @@ class IndexCtrl extends PrivateCtrl
 	{
 		ini_set('max_execution_time', 0);
 
-		$candles_available = self::candles_available (static::$symbol, static::$start, static::$end);
+		$candles_available = self::candles_available (static::$symbol, static::$start_sql, static::$end_sql);
 		
 		foreach (Binance::candles as $big_candle_size => $big_candle_duration) {
 			echo "<b>$big_candle_size = $big_candle_duration</b> <br/>" . PHP_EOL;
@@ -421,8 +421,8 @@ class IndexCtrl extends PrivateCtrl
 				echo "ERROR : no candle suitable for calculation of " . static::$symbol . " {$big_candle_size} <br/>" . PHP_EOL;
 			}
 			else {
-				self::calculate_candle (static::$symbol, static::$start, static::$end, $small_candle_size, $big_candle_size);
-				$candles_available = self::candles_available(static::$symbol, static::$start, static::$end);
+				self::calculate_candle (static::$symbol, static::$start_sql, static::$end_sql, $small_candle_size, $big_candle_size);
+				$candles_available = self::candles_available(static::$symbol, static::$start_sql, static::$end_sql);
 			}
 			
 			echo "<br/>" . PHP_EOL;
@@ -558,7 +558,7 @@ class IndexCtrl extends PrivateCtrl
 		$window = [];
 
 		while ($kline_wrapper->load(
-			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$start, static::$end],
+			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$start_sql, static::$end_sql],
 			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
 			$db->begin();
 			do {
@@ -600,21 +600,26 @@ class IndexCtrl extends PrivateCtrl
 		
 		// params
 		$symbol = $f3->get("GET.symbol");
-		$start = $f3->get("GET.start");
-		$start_d = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$start));
-		$end = $f3->get("GET.end");
-		$end_d = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$end));
+		$start_ts = $f3->get("GET.start");
+		$start_dt = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$start_ts));
+		$end_ts = $f3->get("GET.end");
+		$end_dt = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$end_ts));
 
 		// margin
 		$margin_tx = 0.2; // add 20% margin on start and end side
-		$x_width = $end_d->getTimestamp() - $start_d->getTimestamp();
+		$x_width = $end_dt->getTimestamp() - $start_dt->getTimestamp();
 		$margin_s = round ($x_width * $margin_tx);
-		$start_d->modify ("-$margin_s seconds");
-		$end_d->modify ("+$margin_s seconds");
+		$start_dt->modify ("-$margin_s seconds");
+		$end_dt->modify ("+$margin_s seconds");
+		
+		$start_sql = $start_dt->format(Stuff::datetime_sql_format);
+		$end_sql = $end_dt->format(Stuff::datetime_sql_format);
 		
 		// calculate candle size
 		$max_candles = 1000;
-		foreach (Binance::candles as $candle_name => $candle_duration) {
+		$candles_available = static::candles_available($symbol, $start_sql, $end_sql);
+		foreach ($candles_available as $candle_name) {
+			$candle_duration = Binance::candles [$candle_name];
 			$candles_count = $x_width / $candle_duration;
 			if ($candles_count <= $max_candles) {
 				break;
@@ -634,11 +639,14 @@ class IndexCtrl extends PrivateCtrl
 		$params = [
 			$symbol,
 			$candle_name,
-			$start_d->format(Stuff::datetime_sql_format),
-			$end_d->format(Stuff::datetime_sql_format),
+			$start_sql,
+			$end_sql,
 			$candle_duration,
 		];
-		$klines = $db->exec($sql, $params);
+		$klines = $db->exec ($sql, $params);
+		if (empty ($klines)) {
+			throw new ErrorException("no data retrieved");
+		}
 		
 		$min_x = new DateTime ($klines [0] ["open_time"])->getTimestamp() * 1000;
 		$min_y = $klines [0] ["open"];
@@ -710,8 +718,8 @@ class IndexCtrl extends PrivateCtrl
 		";
 		$args = [
 			static::$symbol,
-			static::$start,
-			static::$end,
+			static::$start_sql,
+			static::$end_sql,
 			$max_result,
 		];
 		$data = $db->exec($sql, $args);
@@ -731,8 +739,8 @@ class IndexCtrl extends PrivateCtrl
 			";
 			$args = [
 				static::$symbol,
-				static::$start,
-				static::$end,
+				static::$start_sql,
+				static::$end_sql,
 				$max_result,
 			];
 			$data = $db->exec($sql, $args);
@@ -755,8 +763,8 @@ class IndexCtrl extends PrivateCtrl
 		$args = [
 			static::$symbol,
 			$candle_size,
-			static::$start,
-			static::$end,
+			static::$start_sql,
+			static::$end_sql,
 		];
 		$data = $db->exec($sql, $args);
 		
