@@ -5,28 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	chart = new Chart (chartCanvas, {
 		type: 'line',
 		data: {
-			datasets:
-			[
-				{
-					label: 'ETHEUR',
-					data: [],
-					borderWidth: 2,
-
-					pointRadius: 0, // ❌ pas de points
-					pointHoverRadius: 0, // ❌ même au survol
-
-					tension: 0.3, // ✅ lissage (0 → lignes droites)
-					cubicInterpolationMode: 'monotone' // ✅ lissage propre (finance-friendly)
-				},
-				{
-					label: 'Points clés',
-					data: [],
-					type: 'scatter', // important pour avoir seulement des points
-					pointRadius: 6, // taille des points
-					pointBackgroundColor: 'red',
-					showLine: false, // pas de ligne
-				}
-			]
+			datasets: []
 		},
 		
 		options: {
@@ -261,15 +240,20 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 	
 	function updateStats (chart) {
+		console.log(chart.data);
+		console.log(chart.data.datasets);
+		if (chart.data.datasets == []) { ///////////////////
+			return;
+		}
 		const data = chart.data.datasets[0].data;
 		if (data.length < 2) {
 			return;
 		}
 		const range = (statsMode === 'selection') ?
-			getSelectionRange(chart) :
+			getSelectionRange (chart) :
 			getViewportRange(chart);
-		const stats = computeStats(chart, range);
-		renderStats(stats, statsMode);
+		const stats = computeStats (chart, range);
+		renderStats (stats, statsMode);
 	}
 
 	function renderStats (stats, mode) {
@@ -331,10 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		);
 
 		const json = await response.json();
-
-		chart.data.datasets[0].data = json.data;
-		chart.data.datasets[1].data = json.keyPoints;
-
+		chart.data.datasets = json;
 		chart.update('none');
 		updateStats(chart);
 	}

@@ -687,10 +687,33 @@ class IndexCtrl extends PrivateCtrl
 				]
 			];
 		}
+		// $res = ["data" => $data, "keyPoints" => $keyPoints];
+		// header('Content-Type: application/json; charset=utf-8');
+		// echo json_encode($res);
+		// exit;
 
-		$res = ["data" => $data, "keyPoints" => $keyPoints];
+		$datasets = 
+			[
+				[
+					"label" => 'ETHEUR',
+					"data" => $data,
+					"borderWidth" => 2,
+					"pointRadius" => 0, // ❌ pas de points
+					"pointHoverRadius" => 0, // ❌ même au survol
+					"tension" => 0.3, // ✅ lissage (0 → lignes droites)
+					"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
+				],
+				[
+					"label" => 'Points clés',
+					"data" => $keyPoints,
+					"type" => 'scatter', // important pour avoir seulement des points
+					"pointRadius" => 6, // taille des points
+					"pointBackgroundColor" => 'red',
+					"showLine" => false, // pas de ligne
+				],
+			];
 		header('Content-Type: application/json; charset=utf-8');
-		echo json_encode($res);
+		echo json_encode($datasets);
 		exit;
 	}
 	
