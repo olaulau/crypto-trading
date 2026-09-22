@@ -240,9 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 	
 	function updateStats (chart) {
-		console.log(chart.data);
-		console.log(chart.data.datasets);
-		if (chart.data.datasets == []) { ///////////////////
+		if (chart.data.datasets.length === 0) {
 			return;
 		}
 		const data = chart.data.datasets[0].data;

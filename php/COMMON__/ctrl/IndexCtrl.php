@@ -617,7 +617,7 @@ class IndexCtrl extends PrivateCtrl
 		
 		// calculate candle size
 		$max_candles = 1000;
-		$candles_available = static::candles_available($symbol, $start_sql, $end_sql);
+		$candles_available = static::candles_available ($symbol, $start_sql, $end_sql);
 		foreach ($candles_available as $candle_name) {
 			$candle_duration = Binance::candles [$candle_name];
 			$candles_count = $x_width / $candle_duration;
