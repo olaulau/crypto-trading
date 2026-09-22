@@ -628,7 +628,7 @@ class IndexCtrl extends PrivateCtrl
 		
 		// get klines
 		$sql = "
-			SELECT	open_time, open
+			SELECT	open_time, open, SMA100
 			FROM	" . Kline::table . "
 			WHERE	symbol = ?
 			AND		candle_size = ?
@@ -652,12 +652,13 @@ class IndexCtrl extends PrivateCtrl
 		$min_y = $klines [0] ["open"];
 		$max_x = new DateTime ($klines [0] ["open_time"])->getTimestamp() * 1000;
 		$max_y = $klines [0] ["open"];
-		$data = [];
+		$klines_data = [];
+		$sma_data = [];
 		
 		foreach ($klines as $kline) {
 			$x = new DateTime($kline ["open_time"])->getTimestamp() * 1000;
 			$y = $kline ["open"];
-			$data [] = [
+			$klines_data [] = [
 				"x" => $x,
 				"y" => $y,
 			];
@@ -669,11 +670,15 @@ class IndexCtrl extends PrivateCtrl
 				$max_y = $y;
 				$max_x = $x;
 			}
+			$sma_data [] = [
+				"x" => $x,
+				"y" => $kline ["SMA100"],
+			];
 		}
 
 		// calculate keypoints
 		$keyPoints = [];
-		if (!empty ($data)) {
+		if (!empty ($klines_data)) {
 			$keyPoints = [
 				[
 					"x"		=> $min_x,
@@ -687,16 +692,12 @@ class IndexCtrl extends PrivateCtrl
 				]
 			];
 		}
-		// $res = ["data" => $data, "keyPoints" => $keyPoints];
-		// header('Content-Type: application/json; charset=utf-8');
-		// echo json_encode($res);
-		// exit;
 
 		$datasets = 
 			[
 				[
 					"label" => 'ETHEUR',
-					"data" => $data,
+					"data" => $klines_data,
 					"borderWidth" => 2,
 					"pointRadius" => 0, // ❌ pas de points
 					"pointHoverRadius" => 0, // ❌ même au survol
@@ -710,6 +711,15 @@ class IndexCtrl extends PrivateCtrl
 					"pointRadius" => 6, // taille des points
 					"pointBackgroundColor" => 'red',
 					"showLine" => false, // pas de ligne
+				],
+				[
+					"label" => 'SMA100',
+					"data" => $sma_data,
+					"borderWidth" => 2,
+					"pointRadius" => 0, // ❌ pas de points
+					"pointHoverRadius" => 0, // ❌ même au survol
+					"tension" => 0.3, // ✅ lissage (0 → lignes droites)
+					"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
 				],
 			];
 		header('Content-Type: application/json; charset=utf-8');
