@@ -316,6 +316,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		chart.data.datasets = json;
 		chart.update('none');
 		updateStats(chart);
+		chart.data.datasets.forEach(dataset => {
+			dataset.pointBackgroundColor = ctx => ctx.raw.color;
+		});
 	}
 
 });

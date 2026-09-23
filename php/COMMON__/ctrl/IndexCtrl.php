@@ -689,6 +689,7 @@ class IndexCtrl extends PrivateCtrl
 					"x"		=> $max_x,
 					"y"		=> $max_y,
 					"label"	=> "max",
+					"color" => "yellow",
 				]
 			];
 		}
@@ -698,6 +699,8 @@ class IndexCtrl extends PrivateCtrl
 				[
 					"label" => 'ETHEUR',
 					"data" => $klines_data,
+					"borderColor" => 'blue',
+    				"backgroundColor" => 'rgba(0, 0, 255, 0.1)',
 					"borderWidth" => 2,
 					"pointRadius" => 0, // ❌ pas de points
 					"pointHoverRadius" => 0, // ❌ même au survol
@@ -715,6 +718,8 @@ class IndexCtrl extends PrivateCtrl
 				[
 					"label" => 'SMA100',
 					"data" => $sma_data,
+					"borderColor" => 'green',
+    				"backgroundColor" => 'rgba(0, 255, 0, 0.1)',
 					"borderWidth" => 2,
 					"pointRadius" => 0, // ❌ pas de points
 					"pointHoverRadius" => 0, // ❌ même au survol
