@@ -36,30 +36,28 @@ class IndexCtrl extends PrivateCtrl
 	public final static $end_sql = "2025-01-31 23:59:59";
 
 	public final static $stats = [
+		//TODO index by name
 		[
 			"type"		=> "SMA",
-			"size"	=> 4,
+			"size"		=> 4,
 			"name"		=> "SMA4",
 		],
 		[
 			"type"		=> "SMA",
-			"size"	=> 10,
+			"size"		=> 10,
 			"name"		=> "SMA10",
 		],
 		[
 			"type"		=> "SMA",
-			"size"	=> 25,
+			"size"		=> 25,
 			"name"		=> "SMA25",
 		],
 		[
 			"type"		=> "SMA",
-			"size"	=> 100,
+			"size"		=> 100,
 			"name"		=> "SMA100",
 		],
 	];
-	// public final static $stat_type = "SMA";
-	// public final static $stat_window = 4;
-	// public final static $stat_name = "SMA4";
 	
 
 	public static function beforeRoute ()
@@ -585,7 +583,7 @@ class IndexCtrl extends PrivateCtrl
 		$candles_available = self::candles_available(static::$symbol, static::$start_sql, static::$end_sql);
 		
 		# start reading data
-		foreach ($candles_available as $candle) {
+		foreach ($candles_available as $candle) { //TODO don't calculate big stat on big candles, but derivess tat aggregates from small stats instead (probably fix strange zoom behaviour)
 			echo "computing " . static::$symbol . " statistics from {$candle} candles ... <br/>" . PHP_EOL;
 			$offset = 0;
 			$kline_wrapper = new Kline;
@@ -600,8 +598,7 @@ class IndexCtrl extends PrivateCtrl
 						if (empty ($stats_windows [$stat_conf["name"]])) {
 							$stats_windows [$stat_conf["name"]] = [];
 						}
-						$stat_window = $stats_windows [$stat_conf["name"]];
-						
+						$stat_window = &$stats_windows [$stat_conf["name"]];
 						
 						if (count ($stat_window) >= $stat_conf["size"]) {
 							array_shift($stat_window);
@@ -771,15 +768,14 @@ class IndexCtrl extends PrivateCtrl
 				];
 			}
 		}
-		// var_dump($stats_data); die;
 
 		$datasets = 
 			[
 				[
 					"label" => 'ETHEUR',
 					"data" => $klines_data,
-					"borderColor" => 'blue',
-    				"backgroundColor" => 'rgba(0, 0, 255, 0.1)',
+					"borderColor" => "#55F",
+    				"backgroundColor" => "#55F",
 					"borderWidth" => 2,
 					"pointRadius" => 0, // ❌ pas de points
 					"pointHoverRadius" => 0, // ❌ même au survol
@@ -794,32 +790,23 @@ class IndexCtrl extends PrivateCtrl
 					"pointBackgroundColor" => 'red',
 					"showLine" => false, // pas de ligne
 				],
-				[ ////////////////////////////
-					"label" => "SMA4",
-					"data" => $stats_data ["SMA4"],
-					"borderColor" => 'green',
-    				"backgroundColor" => 'rgba(0, 255, 0, 0.1)',
+			];
+		foreach (self::$stats as $i => $stat_conf) {
+			$nb_stats = count (self::$stats);
+			$alpha = 1 - ($i * (1/$nb_stats));
+			$datasets [] =
+				[
+					"label" => $stat_conf ["name"],
+					"data" => $stats_data [$stat_conf ["name"]],
+					"borderColor" => "rgba(0, 175, 0, {$alpha})",
+    				"backgroundColor" => "rgba(0, 175, 0, {$alpha})",
 					"borderWidth" => 2,
 					"pointRadius" => 0, // ❌ pas de points
 					"pointHoverRadius" => 0, // ❌ même au survol
 					"tension" => 0.3, // ✅ lissage (0 → lignes droites)
 					"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
-				],
-			];
-		// foreach (self::$stats as $stat_conf) {
-		// 	$datasets [] =
-		// 		[
-		// 			"label" => $stat_conf ["name"],
-		// 			"data" => $stats_data [$stat_conf ["name"]],
-		// 			"borderColor" => 'green',
-    	// 			"backgroundColor" => 'rgba(0, 255, 0, 0.1)',
-		// 			"borderWidth" => 2,
-		// 			"pointRadius" => 0, // ❌ pas de points
-		// 			"pointHoverRadius" => 0, // ❌ même au survol
-		// 			"tension" => 0.3, // ✅ lissage (0 → lignes droites)
-		// 			"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
-		// 		];
-		// }
+				];
+		}
 
 		header ('Content-Type: application/json; charset=utf-8');
 		echo json_encode ($datasets);
