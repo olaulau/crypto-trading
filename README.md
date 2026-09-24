@@ -75,13 +75,11 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## TODO
-- graph
-	- values
-	- SMA
-	- buyings & sellings
-
-- store simulation results
-
+- simulation
+	- adapt current simulation algoryth to databased stored SMA
+	- store simulation results into DB
+	- show simulation results on graph
+	
 - manual simulation
 	- graph with only values
 	- click to buy / sell (date AJAX)

@@ -581,50 +581,105 @@ class IndexCtrl extends PrivateCtrl
 		$res = $db->exec($sql, $params);
 
 		$candles_available = self::candles_available(static::$symbol, static::$start_sql, static::$end_sql);
-		
-		# start reading data
-		foreach ($candles_available as $candle) { //TODO don't calculate big stat on big candles, but derivess tat aggregates from small stats instead (probably fix strange zoom behaviour)
-			echo "computing " . static::$symbol . " statistics from {$candle} candles ... <br/>" . PHP_EOL;
-			$offset = 0;
-			$kline_wrapper = new Kline;
-			$stats_windows = [];
-	
-			while ($kline_wrapper->load(
-				["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $candle, static::$start_sql, static::$end_sql],
-				["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
-				$db->begin();
-				do {
-					foreach (self::$stats as $stat_conf) {
-						if (empty ($stats_windows [$stat_conf["name"]])) {
-							$stats_windows [$stat_conf["name"]] = [];
-						}
-						$stat_window = &$stats_windows [$stat_conf["name"]];
-						
-						if (count ($stat_window) >= $stat_conf["size"]) {
-							array_shift($stat_window);
-						}
-						array_push($stat_window, $kline_wrapper ["open"]);
-						$SMA = array_sum ($stat_window) / count ($stat_window);
-		
-						$kline_casted = $kline_wrapper->cast();
-						$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
-						unset ($kline_casted ["_id"]);
-						$stat = new Stat;
-						$stat->copyfrom ($kline_casted);
-						$stat->name = $stat_conf["name"];
-						$stat->open = $SMA;
-						$stat->save();
-					}
-				}
-				while ($kline_wrapper->next());
-				$db->commit();
-				
-				$offset += static::$sql_read_limit;
-				$kline_wrapper->reset();
-			}
+		if (empty ($candles_available)) {
+			throw new ErrorException("no candles available");
 		}
+		
+		# calculate stat for smallest candle
+		$small_candle = $candles_available [0];
+		echo "computing " . static::$symbol . " statistics from {$small_candle} candles ... <br/>" . PHP_EOL;
+		$offset = 0;
+		$kline_wrapper = new Kline;
+		$stats_windows = [];
+
+		while ($kline_wrapper->load (
+			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $small_candle, static::$start_sql, static::$end_sql],
+			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
+			$db->begin();
+			do {
+				foreach (self::$stats as $stat_conf) {
+					if (empty ($stats_windows [$stat_conf["name"]])) {
+						$stats_windows [$stat_conf["name"]] = [];
+					}
+					$stat_window = &$stats_windows [$stat_conf["name"]];
+					
+					if (count ($stat_window) >= $stat_conf["size"]) {
+						array_shift($stat_window);
+					}
+					array_push($stat_window, $kline_wrapper ["open"]);
+					$SMA = array_sum ($stat_window) / count ($stat_window);
+	
+					$kline_casted = $kline_wrapper->cast();
+					$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
+					unset ($kline_casted ["_id"]);
+					$stat = new Stat;
+					$stat->copyfrom ($kline_casted);
+					$stat->name = $stat_conf ["name"];
+					$stat->open = $SMA;
+					$stat->save();
+				}
+			}
+			while ($kline_wrapper->next());
+			$db->commit();
+			
+			$offset += static::$sql_read_limit;
+			$kline_wrapper->reset();
+		}
+		
+		// calculate stats for bigger candles based on previously calculated stat on smallest candle
+		foreach ($candles_available as $big_candle) { //TODO we could also no start each from small candle ...
+			if ($big_candle === $small_candle) {
+				continue; # don't recalculate small candle
+			}
+			self::substat_calculate (static::$symbol, static::$start_sql, static::$end_sql, $small_candle, $big_candle);
+		}
+		
 		echo " OK. <br/>" . PHP_EOL;
 		exit;
+	}
+	
+	private static function substat_calculate (string $symbol, string $start, string $end, string $small_candle_size, string $big_candle_size)
+	{
+		$f3 = Base::instance();
+		$db = $f3->get("db"); /** @var SQL $db */
+
+		echo "computing {$symbol} stats from {$small_candle_size} to {$big_candle_size} ... <br/>" . PHP_EOL;
+		
+		# start reading data
+		$candle_seconds = Binance::candles [$big_candle_size];
+		$offset = 0;
+		$stat_wrapper = new Stat;
+
+		while ($stat_wrapper->load(
+			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, $start, $end],
+			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
+			$db->begin();
+			do {
+				if (empty ($big_candle)) { # first candle
+					# clone first candle
+					$big_candle = new Stat();
+					$stat_casted = $stat_wrapper->cast();
+					$stat_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($stat_casted ["open_time"]->getTimestamp())); // UTC
+					unset ($stat_casted ["_id"]);
+					$big_candle->copyfrom ($stat_casted);
+					$big_candle->candle_size = $big_candle_size;
+					
+					try {
+						$big_candle->save();
+					}
+					catch (Throwable $t) {
+						echo $t->getMessage() . " <br/>" . PHP_EOL;
+					}
+					$big_candle = null;
+				}
+			}
+			while ($stat_wrapper->next());
+			$db->commit();
+			
+			$offset += static::$sql_read_limit;
+			$stat_wrapper->reset();
+		}
+		echo " OK. <br/>" . PHP_EOL;
 	}
 	
 	
@@ -758,7 +813,7 @@ class IndexCtrl extends PrivateCtrl
 			];
 			$stats = $db->exec ($sql, $params);
 			if (empty ($stats)) {
-				throw new ErrorException("no stat retrieved");
+				throw new ErrorException("no stat retrieved for {$stat_conf["name"]} with candle {$candle_name}");
 			}
 			
 			$stats_data [$stat_conf ["name"]] = [];

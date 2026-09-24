@@ -99,7 +99,7 @@ class Kline extends Mdl
 		$next_open_ts = $next->open_time->getTimestamp();
 		if ($this_close_ts + 1 !== $next_open_ts) {
 			echo "impossible kline aggregate : dates are not contiguous <br/>" . PHP_EOL;
-			echo "$this_close_ts + 1 !== $next_open_ts <br/>" . PHP_EOL; ////////////////////////
+			echo "$this_close_ts + 1 !== $next_open_ts <br/>" . PHP_EOL;
 			die;
 		}
 		
