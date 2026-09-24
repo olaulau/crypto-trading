@@ -725,6 +725,7 @@ class IndexCtrl extends PrivateCtrl
 					"x"		=> $min_x,
 					"y"		=> $min_y,
 					"label" => "min",
+					"color"	=> "orange",
 				],
 				[
 					"x"		=> $max_x,

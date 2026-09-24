@@ -302,23 +302,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
 	//// data loading /////
 	loadData (symbol, initialStart, initialEnd);
 	
-	async function loadData(symbol, start, end) {
+	async function loadData (symbol, start, end) {
 		url = `${charDataUrl}?symbol=${symbol}&start=${start}&end=${end}`;
 		const response = await fetch(
 			url
 		);
-
 		const json = await response.json();
 		chart.data.datasets = json;
-		chart.update('none');
-		updateStats(chart);
-		chart.data.datasets.forEach(dataset => {
+		chart.data.datasets.forEach (dataset => {
 			dataset.pointBackgroundColor = ctx => ctx.raw.color;
 		});
+		chart.update ('none');
+		updateStats (chart);
 	}
 
 });
