@@ -34,6 +34,10 @@ class IndexCtrl extends PrivateCtrl
 	public final static $sql_read_limit = 10000;
 	public final static $start_sql = "2025-01-01 00:00:00";
 	public final static $end_sql = "2025-01-31 23:59:59";
+
+	public final static $stat_type = "SMA";
+	public final static $stat_window = 4;
+	public final static $stat_name = "SMA4";
 	
 
 	public static function beforeRoute ()
@@ -104,6 +108,7 @@ class IndexCtrl extends PrivateCtrl
 		OrderList::setup();
 		SpotExchangeSymbol::setup();
 		SpotTrade::setup();
+		Stat::setup();
 		
 		echo "Ok.";
 	}
@@ -421,7 +426,7 @@ class IndexCtrl extends PrivateCtrl
 				echo "ERROR : no candle suitable for calculation of " . static::$symbol . " {$big_candle_size} <br/>" . PHP_EOL;
 			}
 			else {
-				self::calculate_candle (static::$symbol, static::$start_sql, static::$end_sql, $small_candle_size, $big_candle_size);
+				self::candle_calculate (static::$symbol, static::$start_sql, static::$end_sql, $small_candle_size, $big_candle_size);
 				$candles_available = self::candles_available(static::$symbol, static::$start_sql, static::$end_sql);
 			}
 			
@@ -430,7 +435,7 @@ class IndexCtrl extends PrivateCtrl
 		exit;
 	}
 
-	private static function calculate_candle (string $symbol, string $start, string $end, string $small_candle_size, string $big_candle_size)
+	private static function candle_calculate (string $symbol, string $start, string $end, string $small_candle_size, string $big_candle_size)
 	{
 		$f3 = Base::instance();
 		$db = $f3->get("db"); /** @var SQL $db */
@@ -546,35 +551,50 @@ class IndexCtrl extends PrivateCtrl
 		$db = $f3->get("db"); /** @var SQL $db */
 		ini_set ('max_execution_time', 0);
 		
-		$stat_type = "SMA";
-		$stat_window = 100;
-		$stat_name = "{$stat_type}{$stat_window}";
+		# cleanup
+		echo "cleaning up statistics for " . static::$symbol . " ... <br/>" . PHP_EOL;
+		$sql = "
+			DELETE FROM " . Stat::table . "
+			WHERE	symbol = ?
+		";
+		$params = [static::$symbol];
+		$res = $db->exec($sql, $params);
 
-		echo "computing " . static::$symbol . " {$stat_name} statistics from " . static::$small_candle_size . " candles ... <br/>" . PHP_EOL;
+		$candles_available = self::candles_available(static::$symbol, static::$start_sql, static::$end_sql);
 		
 		# start reading data
-		$offset = 0;
-		$kline_wrapper = new Kline;
-		$window = [];
-
-		while ($kline_wrapper->load(
-			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, static::$small_candle_size, static::$start_sql, static::$end_sql],
-			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
-			$db->begin();
-			do {
-				if (count ($window) >= $stat_window) {
-					array_shift($window);
+		foreach ($candles_available as $candle) {
+			echo "computing " . static::$symbol . " " . self::$stat_name . " statistics from {$candle} candles ... <br/>" . PHP_EOL;
+			$offset = 0;
+			$kline_wrapper = new Kline;
+			$window = [];
+	
+			while ($kline_wrapper->load(
+				["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $candle, static::$start_sql, static::$end_sql],
+				["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
+				$db->begin();
+				do {
+					if (count ($window) >= self::$stat_window) {
+						array_shift($window);
+					}
+					array_push($window, $kline_wrapper ["open"]);
+					$SMA = array_sum ($window) / count ($window);
+	
+					$kline_casted = $kline_wrapper->cast();
+					$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
+					unset ($kline_casted ["_id"]);
+					$stat = new Stat;
+					$stat->copyfrom ($kline_casted);
+					$stat->name = self::$stat_name;
+					$stat->open = $SMA;
+					$stat->save();
 				}
-				array_push($window, $kline_wrapper ["open"]);
-				$SMA = array_sum ($window) / count ($window);
-				$kline_wrapper->SMA100 = $SMA;
-				$kline_wrapper->save();
+				while ($kline_wrapper->next());
+				$db->commit();
+				
+				$offset += static::$sql_read_limit;
+				$kline_wrapper->reset();
 			}
-			while ($kline_wrapper->next());
-			$db->commit();
-			
-			$offset += static::$sql_read_limit;
-			$kline_wrapper->reset();
 		}
 		echo " OK. <br/>" . PHP_EOL;
 		exit;
@@ -628,7 +648,7 @@ class IndexCtrl extends PrivateCtrl
 		
 		// get klines
 		$sql = "
-			SELECT	open_time, open, SMA100
+			SELECT	open_time, open
 			FROM	" . Kline::table . "
 			WHERE	symbol = ?
 			AND		candle_size = ?
@@ -647,16 +667,39 @@ class IndexCtrl extends PrivateCtrl
 		if (empty ($klines)) {
 			throw new ErrorException("no data retrieved");
 		}
+
+		// get stats (SMA4)
+		$stat_name = "SMA4";
+		$sql = "
+			SELECT	open_time, open
+			FROM	" . Stat::table . "
+			WHERE	symbol = ?
+			AND		candle_size = ?
+			AND		open_time >= ?
+			AND 	open_time <= ?
+			AND 	UNIX_TIMESTAMP(open_time) % ? = 0
+			AND		name = ?
+		";
+		$params = [
+			$symbol,
+			$candle_name,
+			$start_sql,
+			$end_sql,
+			$candle_duration,
+			"SMA4",
+		];
+		$stats = $db->exec ($sql, $params);
+		if (empty ($stats)) {
+			throw new ErrorException("no stat retrieved");
+		}
 		
 		$min_x = new DateTime ($klines [0] ["open_time"])->getTimestamp() * 1000;
 		$min_y = $klines [0] ["open"];
 		$max_x = new DateTime ($klines [0] ["open_time"])->getTimestamp() * 1000;
 		$max_y = $klines [0] ["open"];
 		$klines_data = [];
-		$sma_data = [];
-		
 		foreach ($klines as $kline) {
-			$x = new DateTime($kline ["open_time"])->getTimestamp() * 1000;
+			$x = new DateTime ($kline ["open_time"])->getTimestamp() * 1000;
 			$y = $kline ["open"];
 			$klines_data [] = [
 				"x" => $x,
@@ -670,9 +713,15 @@ class IndexCtrl extends PrivateCtrl
 				$max_y = $y;
 				$max_x = $x;
 			}
+		}
+
+		$sma_data = [];
+		foreach ($stats as $stat) {
+			$x = new DateTime ($stat ["open_time"])->getTimestamp() * 1000;
+			$y = $stat ["open"];
 			$sma_data [] = [
 				"x" => $x,
-				"y" => $kline ["SMA100"],
+				"y" => $y,
 			];
 		}
 
@@ -716,7 +765,7 @@ class IndexCtrl extends PrivateCtrl
 					"showLine" => false, // pas de ligne
 				],
 				[
-					"label" => 'SMA100',
+					"label" => self::$stat_name,
 					"data" => $sma_data,
 					"borderColor" => 'green',
     				"backgroundColor" => 'rgba(0, 255, 0, 0.1)',

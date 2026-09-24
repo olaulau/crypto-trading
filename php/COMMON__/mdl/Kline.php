@@ -72,10 +72,6 @@ class Kline extends Mdl
 			'type' => Schema::DT_FLOAT,
 			'nullable' => false,
 		],
-		'SMA100' => [
-			'type' => Schema::DT_FLOAT,
-			'nullable' => true,
-		],
 	];
 	
 	
