@@ -35,9 +35,31 @@ class IndexCtrl extends PrivateCtrl
 	public final static $start_sql = "2025-01-01 00:00:00";
 	public final static $end_sql = "2025-01-31 23:59:59";
 
-	public final static $stat_type = "SMA";
-	public final static $stat_window = 4;
-	public final static $stat_name = "SMA4";
+	public final static $stats = [
+		[
+			"type"		=> "SMA",
+			"size"	=> 4,
+			"name"		=> "SMA4",
+		],
+		[
+			"type"		=> "SMA",
+			"size"	=> 10,
+			"name"		=> "SMA10",
+		],
+		[
+			"type"		=> "SMA",
+			"size"	=> 25,
+			"name"		=> "SMA25",
+		],
+		[
+			"type"		=> "SMA",
+			"size"	=> 100,
+			"name"		=> "SMA100",
+		],
+	];
+	// public final static $stat_type = "SMA";
+	// public final static $stat_window = 4;
+	// public final static $stat_name = "SMA4";
 	
 
 	public static function beforeRoute ()
@@ -546,7 +568,7 @@ class IndexCtrl extends PrivateCtrl
 	}
 	
 	
-	public static function statsGET (Base $f3, $url, $controler)
+	public static function statisticsCalculateGET (Base $f3, $url, $controler)
 	{
 		$db = $f3->get("db"); /** @var SQL $db */
 		ini_set ('max_execution_time', 0);
@@ -564,30 +586,38 @@ class IndexCtrl extends PrivateCtrl
 		
 		# start reading data
 		foreach ($candles_available as $candle) {
-			echo "computing " . static::$symbol . " " . self::$stat_name . " statistics from {$candle} candles ... <br/>" . PHP_EOL;
+			echo "computing " . static::$symbol . " statistics from {$candle} candles ... <br/>" . PHP_EOL;
 			$offset = 0;
 			$kline_wrapper = new Kline;
-			$window = [];
+			$stats_windows = [];
 	
 			while ($kline_wrapper->load(
 				["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $candle, static::$start_sql, static::$end_sql],
 				["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
 				$db->begin();
 				do {
-					if (count ($window) >= self::$stat_window) {
-						array_shift($window);
+					foreach (self::$stats as $stat_conf) {
+						if (empty ($stats_windows [$stat_conf["name"]])) {
+							$stats_windows [$stat_conf["name"]] = [];
+						}
+						$stat_window = $stats_windows [$stat_conf["name"]];
+						
+						
+						if (count ($stat_window) >= $stat_conf["size"]) {
+							array_shift($stat_window);
+						}
+						array_push($stat_window, $kline_wrapper ["open"]);
+						$SMA = array_sum ($stat_window) / count ($stat_window);
+		
+						$kline_casted = $kline_wrapper->cast();
+						$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
+						unset ($kline_casted ["_id"]);
+						$stat = new Stat;
+						$stat->copyfrom ($kline_casted);
+						$stat->name = $stat_conf["name"];
+						$stat->open = $SMA;
+						$stat->save();
 					}
-					array_push($window, $kline_wrapper ["open"]);
-					$SMA = array_sum ($window) / count ($window);
-	
-					$kline_casted = $kline_wrapper->cast();
-					$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
-					unset ($kline_casted ["_id"]);
-					$stat = new Stat;
-					$stat->copyfrom ($kline_casted);
-					$stat->name = self::$stat_name;
-					$stat->open = $SMA;
-					$stat->save();
 				}
 				while ($kline_wrapper->next());
 				$db->commit();
@@ -668,31 +698,6 @@ class IndexCtrl extends PrivateCtrl
 			throw new ErrorException("no data retrieved");
 		}
 
-		// get stats (SMA4)
-		$stat_name = "SMA4";
-		$sql = "
-			SELECT	open_time, open
-			FROM	" . Stat::table . "
-			WHERE	symbol = ?
-			AND		candle_size = ?
-			AND		open_time >= ?
-			AND 	open_time <= ?
-			AND 	UNIX_TIMESTAMP(open_time) % ? = 0
-			AND		name = ?
-		";
-		$params = [
-			$symbol,
-			$candle_name,
-			$start_sql,
-			$end_sql,
-			$candle_duration,
-			"SMA4",
-		];
-		$stats = $db->exec ($sql, $params);
-		if (empty ($stats)) {
-			throw new ErrorException("no stat retrieved");
-		}
-		
 		$min_x = new DateTime ($klines [0] ["open_time"])->getTimestamp() * 1000;
 		$min_y = $klines [0] ["open"];
 		$max_x = new DateTime ($klines [0] ["open_time"])->getTimestamp() * 1000;
@@ -715,16 +720,6 @@ class IndexCtrl extends PrivateCtrl
 			}
 		}
 
-		$sma_data = [];
-		foreach ($stats as $stat) {
-			$x = new DateTime ($stat ["open_time"])->getTimestamp() * 1000;
-			$y = $stat ["open"];
-			$sma_data [] = [
-				"x" => $x,
-				"y" => $y,
-			];
-		}
-
 		// calculate keypoints
 		$keyPoints = [];
 		if (!empty ($klines_data)) {
@@ -742,6 +737,41 @@ class IndexCtrl extends PrivateCtrl
 				]
 			];
 		}
+
+		// get stats
+		foreach (self::$stats as $stat_conf) {
+			$sql = "
+				SELECT	open_time, open
+				FROM	" . Stat::table . "
+				WHERE	symbol = ?
+				AND		candle_size = ?
+				AND		open_time >= ?
+				AND 	open_time <= ?
+				AND 	UNIX_TIMESTAMP(open_time) % ? = 0
+				AND		name = ?
+			";
+			$params = [
+				$symbol,
+				$candle_name,
+				$start_sql,
+				$end_sql,
+				$candle_duration,
+				$stat_conf ["name"],
+			];
+			$stats = $db->exec ($sql, $params);
+			if (empty ($stats)) {
+				throw new ErrorException("no stat retrieved");
+			}
+			
+			$stats_data [$stat_conf ["name"]] = [];
+			foreach ($stats as $stat) {
+				$stats_data [$stat_conf ["name"]] [] = [
+					"x" => new DateTime ($stat ["open_time"])->getTimestamp() * 1000,
+					"y" => $stat ["open"],
+				];
+			}
+		}
+		// var_dump($stats_data); die;
 
 		$datasets = 
 			[
@@ -764,9 +794,9 @@ class IndexCtrl extends PrivateCtrl
 					"pointBackgroundColor" => 'red',
 					"showLine" => false, // pas de ligne
 				],
-				[
-					"label" => self::$stat_name,
-					"data" => $sma_data,
+				[ ////////////////////////////
+					"label" => "SMA4",
+					"data" => $stats_data ["SMA4"],
 					"borderColor" => 'green',
     				"backgroundColor" => 'rgba(0, 255, 0, 0.1)',
 					"borderWidth" => 2,
@@ -776,8 +806,23 @@ class IndexCtrl extends PrivateCtrl
 					"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
 				],
 			];
-		header('Content-Type: application/json; charset=utf-8');
-		echo json_encode($datasets);
+		// foreach (self::$stats as $stat_conf) {
+		// 	$datasets [] =
+		// 		[
+		// 			"label" => $stat_conf ["name"],
+		// 			"data" => $stats_data [$stat_conf ["name"]],
+		// 			"borderColor" => 'green',
+    	// 			"backgroundColor" => 'rgba(0, 255, 0, 0.1)',
+		// 			"borderWidth" => 2,
+		// 			"pointRadius" => 0, // ❌ pas de points
+		// 			"pointHoverRadius" => 0, // ❌ même au survol
+		// 			"tension" => 0.3, // ✅ lissage (0 → lignes droites)
+		// 			"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
+		// 		];
+		// }
+
+		header ('Content-Type: application/json; charset=utf-8');
+		echo json_encode ($datasets);
 		exit;
 	}
 	
