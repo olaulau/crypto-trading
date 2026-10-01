@@ -276,16 +276,14 @@ class IndexCtrl extends PrivateCtrl
 		$sell_floor_margin = 1;
 		$buy_min_margin = 3;
 		$buy_floor_margin = 2;
-		$start_ETH = 1;
-		$start_EUR = 0;
-		$price_window_size = 100; # 100 * 15m = 1500m = 25h
+		$start_ETH = 0;
+		$start_EUR = 1000;
 		$sma_name = "SMA100";
 
 		$sma_conf = self::$stats [$sma_name]; #TODO useless ?
 		
 		# start reading data
 		$offset = 0;
-		$price_window = [];
 		$kline_wrapper = new Kline;
 		$sql = "
 			SELECT	k.*, s.open as $sma_name
@@ -300,10 +298,7 @@ class IndexCtrl extends PrivateCtrl
 			OFFSET	?";
 		$params = [static::$symbol, static::$small_candle_size, static::$start_sql, static::$end_sql, $sma_name, static::$sql_read_limit, $offset];
 		while ($data = $db->exec ($sql, $params)) {
-			$data_cpt = 0;
-			do {
-				$kline_wrapper = $data [$data_cpt];
-
+			foreach ($data as $kline_wrapper) {
 				$dt_formated = $kline_wrapper ["open_time"];
 				$price = $kline_wrapper ["open"];
 				$price_formated = Stuff::format_float_significative ($price, 6);
@@ -389,10 +384,8 @@ class IndexCtrl extends PrivateCtrl
 				}
 				$last_kline = $kline_wrapper;
 				$offset ++;
-				$data_cpt ++;
 				$params = [static::$symbol, static::$small_candle_size, static::$start_sql, static::$end_sql, $sma_name, static::$sql_read_limit, $offset];
 			}
-			while ($data_cpt < count($data));
 		}
 		
 		
