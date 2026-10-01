@@ -36,23 +36,23 @@ class IndexCtrl extends PrivateCtrl
 	public final static $end_sql = "2025-01-31 23:59:59";
 
 	public final static $stats = [
-		//TODO index by name
-		[
+		//TODO use index in code, and remove "name" property
+		"SMA4" => [
 			"type"		=> "SMA",
 			"size"		=> 4,
 			"name"		=> "SMA4",
 		],
-		[
+		"SMA10" => [
 			"type"		=> "SMA",
 			"size"		=> 10,
 			"name"		=> "SMA10",
 		],
-		[
+		"SMA25" => [
 			"type"		=> "SMA",
 			"size"		=> 25,
 			"name"		=> "SMA25",
 		],
-		[
+		"SMA100" => [
 			"type"		=> "SMA",
 			"size"		=> 100,
 			"name"		=> "SMA100",
@@ -266,6 +266,11 @@ class IndexCtrl extends PrivateCtrl
 	
 	public static function trading_simulate () : void
 	{
+		# init
+		set_time_limit (0);
+		$f3 = Base::instance();
+		$db = $f3->get("db"); /** @var SQL $db */
+
 		# config
 		$sell_min_margin = 4;
 		$sell_floor_margin = 1;
@@ -274,15 +279,31 @@ class IndexCtrl extends PrivateCtrl
 		$start_ETH = 1;
 		$start_EUR = 0;
 		$price_window_size = 100; # 100 * 15m = 1500m = 25h
+		$sma_name = "SMA100";
+
+		$sma_conf = self::$stats [$sma_name]; #TODO useless ?
 		
 		# start reading data
 		$offset = 0;
 		$price_window = [];
 		$kline_wrapper = new Kline;
-		while ($kline_wrapper->load (["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?",
-			static::$symbol, static::$small_candle_size, static::$start_sql, static::$end_sql],
-			["limit" => static::$sql_read_limit, "offset" => $offset])) {
+		$sql = "
+			SELECT	k.*, s.open as $sma_name
+			FROM	kline k
+			LEFT JOIN stat s ON (k.symbol, k.candle_size, k.open_time) = (s.symbol, s.candle_size, s.open_time)
+			WHERE	k.symbol = ?
+			AND	k.candle_size = ?
+			AND ? <= k.open_time AND k.open_time <= ?
+			AND s.name = ?
+			ORDER BY id ASC
+			LIMIT	?
+			OFFSET	?";
+		$params = [static::$symbol, static::$small_candle_size, static::$start_sql, static::$end_sql, $sma_name, static::$sql_read_limit, $offset];
+		while ($data = $db->exec ($sql, $params)) {
+			$data_cpt = 0;
 			do {
+				$kline_wrapper = $data [$data_cpt];
+
 				$dt_formated = $kline_wrapper ["open_time"];
 				$price = $kline_wrapper ["open"];
 				$price_formated = Stuff::format_float_significative ($price, 6);
@@ -318,11 +339,7 @@ class IndexCtrl extends PrivateCtrl
 					echo " <br/>" . PHP_EOL;
 				}
 				
-				if (count ($price_window) >= $price_window_size) { # window is full
-					array_shift ($price_window);
-				}
-				array_push ($price_window, $price);
-				$SMA_price = array_sum ($price_window) / count ($price_window);
+				$SMA_price = $kline_wrapper [$sma_name];
 				$price_smoothed = $SMA_price; # we use SMA as smoothed price
 				
 				$high = max ($price_smoothed, $high);
@@ -370,11 +387,12 @@ class IndexCtrl extends PrivateCtrl
 						}
 					}
 				}
-				$last_kline = clone $kline_wrapper;
+				$last_kline = $kline_wrapper;
 				$offset ++;
+				$data_cpt ++;
+				$params = [static::$symbol, static::$small_candle_size, static::$start_sql, static::$end_sql, $sma_name, static::$sql_read_limit, $offset];
 			}
-			while ($kline_wrapper->next());
-			// $kline_wrapper->reset(); ///////////
+			while ($data_cpt < count($data));
 		}
 		
 		
@@ -404,9 +422,9 @@ class IndexCtrl extends PrivateCtrl
 		$end_total = $ETH * $price + $EUR;
 		$PaL = ($end_total - $start_total); # Profit and Loss
 		$PaL_formated = Stuff::format_EUR ($PaL);
-		$ROI = $PaL / $start_total; # Return On Investment
-		$ROI_formated = Stuff::format_percent ($ROI * 100, 2);
-		echo "<b>==> ROI = {$ROI_formated} ({$PaL_formated})</b> <br/>" . PHP_EOL;
+		$RoI = $PaL / $start_total; # Return on Investment
+		$RoI_formated = Stuff::format_percent ($RoI * 100, 2);
+		echo "<b>==> ROI = {$RoI_formated} ({$PaL_formated})</b> <br/>" . PHP_EOL;
 	}
 	
 	
