@@ -11,6 +11,8 @@ use COMMON__\mdl\KeyValue;
 use COMMON__\mdl\Kline;
 use COMMON__\mdl\Order;
 use COMMON__\mdl\OrderList;
+use COMMON__\mdl\Simulation;
+use COMMON__\mdl\SimulationStep;
 use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
 use COMMON__\mdl\Stat;
@@ -126,6 +128,8 @@ class IndexCtrl extends PrivateCtrl
 		Kline::setup();
 		Order::setup();
 		OrderList::setup();
+		Simulation::setup();
+		SimulationStep::setup();
 		SpotExchangeSymbol::setup();
 		SpotTrade::setup();
 		Stat::setup();
@@ -272,13 +276,13 @@ class IndexCtrl extends PrivateCtrl
 		$db = $f3->get("db"); /** @var SQL $db */
 
 		# config
-		$sell_min_margin = 4;
+		$sell_min_margin = 2;
 		$sell_floor_margin = 1;
-		$buy_min_margin = 3;
-		$buy_floor_margin = 2;
+		$buy_min_margin = 2;
+		$buy_floor_margin = 1;
 		$start_ETH = 0;
 		$start_EUR = 1000;
-		$sma_name = "SMA100";
+		$sma_name = "SMA4";
 
 		$sma_conf = self::$stats [$sma_name]; #TODO useless ?
 		
