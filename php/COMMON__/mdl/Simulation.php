@@ -9,29 +9,33 @@ use DB\SQL\Schema;
 class Simulation extends Mdl
 {
 	
-	public const string table = "stat";
+	public const string table = "simulation";
 	
 	protected $fieldConf = [
 		'symbol' => [
-			'type' => Schema::DT_VARCHAR128,
-			'nullable' => false,
+			'type'		=> Schema::DT_VARCHAR128,
+			'nullable'	=> false,
+			'default'	=> '',
 		],
 		'open_time' => [
 			'type'		=> Schema::DT_TIMESTAMP,
 			'nullable'	=> false,
+			'default'	=> '1970-01-01 00:00:01',
 		],
 		'close_time' => [
 			'type'		=> Schema::DT_TIMESTAMP,
 			'nullable'	=> false,
+			'default'	=> '1970-01-01 00:00:01',
 		],
 
 		'execution_time' => [
 			'type'		=> Schema::DT_TIMESTAMP,
 			'nullable'	=> false,
+			'default'	=> '1970-01-01 00:00:01',
 		],
 		'description' => [
-			'type' => Schema::DT_TEXT,
-			'nullable' => false,
+			'type'		=> Schema::DT_TEXT,
+			'nullable'	=> false,
 		],
 
 		//TODO start money, end money, RoI

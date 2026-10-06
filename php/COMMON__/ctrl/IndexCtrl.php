@@ -862,9 +862,11 @@ class IndexCtrl extends PrivateCtrl
 					"showLine" => false, // pas de ligne
 				],
 			];
-		foreach (self::$stats as $i => $stat_conf) {
+		
+		$i = 0;
+		foreach (self::$stats as $stat_name => $stat_conf) {
 			$nb_stats = count (self::$stats);
-			$alpha = 1 - ($i * (1/$nb_stats));
+			$alpha = 1 - ($i * (1 / $nb_stats));
 			$datasets [] =
 				[
 					"label" => $stat_conf ["name"],
@@ -877,6 +879,7 @@ class IndexCtrl extends PrivateCtrl
 					"tension" => 0.3, // ✅ lissage (0 → lignes droites)
 					"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
 				];
+			$i ++;
 		}
 
 		header ('Content-Type: application/json; charset=utf-8');

@@ -4,6 +4,7 @@ namespace COMMON__\ctrl;
 use Base;
 use COMMON__\svc\CSRF;
 use DB\SQL;
+use Exception;
 use Log;
 use PDO;
 use Session;
