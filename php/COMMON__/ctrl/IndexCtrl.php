@@ -20,6 +20,7 @@ use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
 use COMMON__\svc\Stuff;
 use DateTime;
+use DateTimeImmutable;
 use DateTimeZone;
 use DB\SQL;
 use ErrorException;
@@ -285,7 +286,17 @@ class IndexCtrl extends PrivateCtrl
 		$sma_name = "SMA4";
 
 		$sma_conf = self::$stats [$sma_name]; #TODO useless ?
-		
+
+		$now = new DateTimeImmutable;
+
+		$simulation = new Simulation;
+		$simulation->symbol =			static::$symbol;
+		$simulation->open_time =		static::$start_sql;
+		$simulation->close_time =		static::$end_sql;
+		$simulation->execution_time =	$now->format(Stuff::datetime_sql_format);
+		$simulation->description =		""; //TODO
+		$simulation->save();
+
 		# start reading data
 		$offset = 0;
 		$kline_wrapper = new Kline;
@@ -306,6 +317,7 @@ class IndexCtrl extends PrivateCtrl
 				$dt_formated = $kline_wrapper ["open_time"];
 				$price = $kline_wrapper ["open"];
 				$price_formated = Stuff::format_float_significative ($price, 6);
+				$simulation_step = new SimulationStep;
 				
 				if ($offset === 0) { # start variables
 					$ETH = $start_ETH;
@@ -324,6 +336,15 @@ class IndexCtrl extends PrivateCtrl
 						$buy_assets_history = [$ETH];
 						$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
 						echo "<li>{$ETH} ETH = {$ETH_converted_formated} € </li>" . PHP_EOL;
+
+						$simulation_step->simulation_id =		$simulation;
+						$simulation_step->time =				$kline_wrapper ["open_time"];
+						$simulation_step->order_type =			"buy";
+						$simulation_step->base_amount =			$ETH;
+						$simulation_step->base_currency =		"ETH";
+						$simulation_step->quote_amount =		0;
+						$simulation_step->quote_currency =		"EUR";
+						$simulation_step->save();
 					}
 					if ($EUR > 0) {
 						$EUR_converted = $EUR / $price;
@@ -331,6 +352,15 @@ class IndexCtrl extends PrivateCtrl
 						$buy_assets_history = [$EUR_converted];
 						$EUR_converted_formated = Stuff::format_float_significative ($EUR_converted, 6);
 						echo "<li>{$EUR} € = {$EUR_converted_formated} ETH </li>" . PHP_EOL;
+
+						$simulation_step->simulation_id =		$simulation;
+						$simulation_step->time =				$kline_wrapper ["open_time"];
+						$simulation_step->order_type =			"buy";
+						$simulation_step->base_amount =			$EUR;
+						$simulation_step->base_currency =		"EUR";
+						$simulation_step->quote_amount =		0;
+						$simulation_step->quote_currency =		"EUR";
+						$simulation_step->save();
 					}
 					echo "</ul>" . PHP_EOL;
 					echo " <br/>" . PHP_EOL;
@@ -366,6 +396,14 @@ class IndexCtrl extends PrivateCtrl
 								?>
 								</div>
 								<?php
+								$simulation_step->simulation_id =		$simulation;
+								$simulation_step->time =				$kline_wrapper ["open_time"];
+								$simulation_step->order_type =			"sell";
+								$simulation_step->base_amount =			$EUR;
+								$simulation_step->base_currency =		"EUR";
+								$simulation_step->quote_amount =		$ETH;
+								$simulation_step->quote_currency =		"ETH";
+								$simulation_step->save();
 							// }
 						}
 					}
@@ -378,11 +416,20 @@ class IndexCtrl extends PrivateCtrl
 							$ETH_formated = Stuff::format_float_significative($ETH, 6);
 							$EUR = 0;
 							$low = $high = $reference_price = $price;
-							$last_buy_assets = $buy_assets_history [array_key_last($buy_assets_history)];
+							$last_buy_assets = $buy_assets_history [array_key_last ($buy_assets_history)];
 							$delta_pct = ($ETH - $last_buy_assets) / $last_buy_assets * 100;
 							$delta_pct_formated = Stuff::format_percent($delta_pct);
 							$buy_assets_history [] = $ETH;
 							echo "[{$dt_formated}] ({$price_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated}) <br/>" . PHP_EOL;
+							
+							$simulation_step->simulation_id =		$simulation;
+							$simulation_step->time =				$kline_wrapper ["open_time"];
+							$simulation_step->order_type =			"buy";
+							$simulation_step->base_amount =			$ETH;
+							$simulation_step->base_currency =		"ETH";
+							$simulation_step->quote_amount =		$EUR;
+							$simulation_step->quote_currency =		"EUR";
+							$simulation_step->save();
 						}
 					}
 				}
@@ -415,6 +462,7 @@ class IndexCtrl extends PrivateCtrl
 			echo "<li>{$EUR_formated} € </li>" . PHP_EOL;
 		}
 		echo "</ul>" . PHP_EOL;
+		//TODO calculate and store simulation result
 		
 		$end_total = $ETH * $price + $EUR;
 		$PaL = ($end_total - $start_total); # Profit and Loss

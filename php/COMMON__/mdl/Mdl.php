@@ -372,5 +372,32 @@ abstract class Mdl extends Cortex
 		$db = $f3->get("db"); /** @var SQL $db */
 		$db->exec("DELETE FROM `" . static::table . "`");
 	}
+
+
+	public static function dropForeignKeyIfExists (string $fk): void
+	{
+		$f3 = Base::instance();
+		$db = $f3->get("db"); /** @var SQL $db */
+
+		$sql = "
+			SELECT COUNT(*)
+			FROM information_schema.TABLE_CONSTRAINTS
+			WHERE CONSTRAINT_SCHEMA = DATABASE()
+			AND TABLE_NAME = ?
+			AND CONSTRAINT_NAME = ?
+			AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+		";
+		$params = [static::table , $fk];
+		$data = $db->exec ($sql, $params);
+
+		if ($data [0] ["COUNT(*)"] > 0) {
+			// table/fk provenant de ta migration, pas de données utilisateur
+			$sql = "
+				ALTER TABLE `" . static::table . "`
+				DROP FOREIGN KEY `{$fk}`
+			";
+			$db->exec ($sql, []);
+		}
+	}
 	
 }

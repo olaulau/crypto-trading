@@ -12,10 +12,8 @@ class SimulationStep extends Mdl
 	public const string table = "simulation_step";
 	
 	protected $fieldConf = [
-		'simulation_id' => [ //TODO relation
-			'type'		=> Schema::DT_INT,
-			'nullable'	=> false,
-			'default'	=> 0,
+		'simulation_id' => [
+			'belongs-to-one'	=> Simulation::class
 		],
 
 		'time' => [
@@ -28,22 +26,22 @@ class SimulationStep extends Mdl
 			'nullable'	=> false,
 			'default'	=> 0,
 		],
-		'amount' => [
+		'base_amount' => [
 			'type'		=> Schema::DT_FLOAT,
 			'nullable'	=> false,
 			'default'	=> 0,
 		],
-		'amount_money' => [
+		'base_currency' => [
 			'type'		=> Schema::DT_VARCHAR128,
 			'nullable'	=> false,
 			'default'	=> '',
 		],
-		'couterpart' => [
+		'quote_amount' => [
 			'type'		=> Schema::DT_FLOAT,
 			'nullable'	=> false,
 			'default'	=> 0,
 		],
-		'counterpart_money' => [
+		'quote_currency' => [
 			'type'		=> Schema::DT_VARCHAR128,
 			'nullable'	=> false,
 			'default'	=> '',
@@ -62,8 +60,13 @@ class SimulationStep extends Mdl
 		/** @var SQL $db */
 
 		# add indexes
-		// $sql = "";
-		// $db->exec($sql);
+		static::dropForeignKeyIfExists ("simulation_step_fk_simulation");
+		$sql = "
+			DROP INDEX IF EXISTS `simulation_step_fk_simulation` ON `simulation_step`;
+			ALTER TABLE `simulation_step`
+				ADD CONSTRAINT `simulation_step_fk_simulation` FOREIGN KEY (`simulation_id`) REFERENCES `simulation` (`id`);
+			";
+		$db->exec($sql);
 	}
 
 }

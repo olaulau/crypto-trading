@@ -12,6 +12,10 @@ class Simulation extends Mdl
 	public const string table = "simulation";
 	
 	protected $fieldConf = [
+		'simulation_step' => [
+			'has-many'	=> [SimulationStep::class, 'simulation_id']
+		],
+
 		'symbol' => [
 			'type'		=> Schema::DT_VARCHAR128,
 			'nullable'	=> false,
