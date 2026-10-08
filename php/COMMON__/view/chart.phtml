@@ -22,10 +22,11 @@ use COMMON__\ctrl\IndexCtrl;
 		
 		<script>
 			// const
-			const charDataUrl = "<?= $BASE . $f3->alias("chartData", [], []) ?>";
+			const charDataUrl = "<?= $BASE . $f3->alias("chartData") ?>";
 			const symbol = "ETHEUR";
 			const initialStart = "<?= new DateTime(IndexCtrl::$start_sql)->getTimeStamp() ?>";
 			const initialEnd = "<?= new DateTime(IndexCtrl::$end_sql)->getTimeStamp() ?>";
+			const simulation_id = <?= $GET ["simulation_id"] ?>;
 		</script>
 		
 		<script src="<?= $BASE . "/node_modules/chart.js/dist/chart.umd.js" ?>"></script>

@@ -463,6 +463,7 @@ class IndexCtrl extends PrivateCtrl
 		}
 		echo "</ul>" . PHP_EOL;
 		//TODO calculate and store simulation result
+		echo '<a href="' . $f3->get("BASE") . $f3->alias("chart", [], ["simulation_id" => $simulation->id]) . '">chart</a> <br/> <br/>' . PHP_EOL;
 		
 		$end_total = $ETH * $price + $EUR;
 		$PaL = ($end_total - $start_total); # Profit and Loss

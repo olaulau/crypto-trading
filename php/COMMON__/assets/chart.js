@@ -303,10 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 	//// data loading /////
-	loadData (symbol, initialStart, initialEnd);
+	loadData (symbol, initialStart, initialEnd, simulation_id);
 	
-	async function loadData (symbol, start, end) {
-		url = `${charDataUrl}?symbol=${symbol}&start=${start}&end=${end}`;
+	async function loadData (symbol, start, end, simulation_id) {
+		url = `${charDataUrl}?symbol=${symbol}&start=${start}&end=${end}&simulation_id=${simulation_id}`;
 		const response = await fetch(
 			url
 		);
