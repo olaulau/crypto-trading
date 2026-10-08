@@ -75,10 +75,10 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## TODO
+chart fait pas mal d'erreur (color), même sans simu
 - simulation
-	- adapt current simulation algoryth to databased stored SMA
-	- store simulation results into DB
 	- show simulation results on graph
+chart simu : pour y, récupérer la valeur de l'ETH à la date x précise
 	
 - manual simulation
 	- graph with only values
