@@ -294,7 +294,13 @@ class IndexCtrl extends PrivateCtrl
 		$simulation->open_time =		static::$start_sql;
 		$simulation->close_time =		static::$end_sql;
 		$simulation->execution_time =	$now->format(Stuff::datetime_sql_format);
-		$simulation->description =		""; //TODO
+		$simulation->description =		trim("
+			simple margin algorythm
+			candle size = " . static::$small_candle_size . "
+			smoothing stat = {$sma_name}
+			sell min margin : {$sell_min_margin}% ({$sell_floor_margin}% floor)
+			buy min margin : {$buy_min_margin}% ({$buy_floor_margin}% floor)
+		"); //TODO
 		$simulation->save();
 
 		# start reading data
@@ -305,9 +311,9 @@ class IndexCtrl extends PrivateCtrl
 			FROM	kline k
 			LEFT JOIN stat s ON (k.symbol, k.candle_size, k.open_time) = (s.symbol, s.candle_size, s.open_time)
 			WHERE	k.symbol = ?
-			AND	k.candle_size = ?
-			AND ? <= k.open_time AND k.open_time <= ?
-			AND s.name = ?
+			AND		k.candle_size = ?
+			AND		? <= k.open_time AND k.open_time <= ?
+			AND		s.name = ?
 			ORDER BY id ASC
 			LIMIT	?
 			OFFSET	?";
@@ -386,6 +392,7 @@ class IndexCtrl extends PrivateCtrl
 								// echo "value = $value <br/>" . PHP_EOL;
 								$EUR = $ETH * $price;
 								$EUR_formated = Stuff::format_float_significative($EUR, 6);
+								$quote_amount = $ETH;
 								$ETH = 0;
 								$low = $high = $reference_price = $price;
 								$last_sell_assets = $sell_assets_history [array_key_last($sell_assets_history)];
@@ -401,7 +408,7 @@ class IndexCtrl extends PrivateCtrl
 								$simulation_step->order_type =			"sell";
 								$simulation_step->base_amount =			$EUR;
 								$simulation_step->base_currency =		"EUR";
-								$simulation_step->quote_amount =		$ETH;
+								$simulation_step->quote_amount =		$quote_amount;
 								$simulation_step->quote_currency =		"ETH";
 								$simulation_step->save();
 							// }
@@ -414,6 +421,7 @@ class IndexCtrl extends PrivateCtrl
 						if ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
 							$ETH = $EUR / $price;
 							$ETH_formated = Stuff::format_float_significative($ETH, 6);
+							$quote_amount = $EUR;
 							$EUR = 0;
 							$low = $high = $reference_price = $price;
 							$last_buy_assets = $buy_assets_history [array_key_last ($buy_assets_history)];
@@ -427,7 +435,7 @@ class IndexCtrl extends PrivateCtrl
 							$simulation_step->order_type =			"buy";
 							$simulation_step->base_amount =			$ETH;
 							$simulation_step->base_currency =		"ETH";
-							$simulation_step->quote_amount =		$EUR;
+							$simulation_step->quote_amount =		$quote_amount;
 							$simulation_step->quote_currency =		"EUR";
 							$simulation_step->save();
 						}
@@ -770,6 +778,7 @@ class IndexCtrl extends PrivateCtrl
 		$start_dt = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$start_ts));
 		$end_ts = $f3->get("GET.end");
 		$end_dt = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$end_ts));
+		$simulation_id = $f3->get("GET.simulation_id") ?? 0;
 
 		// margin
 		$margin_tx = 0.2; // add 20% margin on start and end side
@@ -888,29 +897,29 @@ class IndexCtrl extends PrivateCtrl
 				];
 			}
 		}
-
+		
 		$datasets = 
+		[
 			[
-				[
-					"label" => 'ETHEUR',
-					"data" => $klines_data,
-					"borderColor" => "#55F",
-    				"backgroundColor" => "#55F",
-					"borderWidth" => 2,
-					"pointRadius" => 0, // ❌ pas de points
-					"pointHoverRadius" => 0, // ❌ même au survol
-					"tension" => 0.3, // ✅ lissage (0 → lignes droites)
-					"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
-				],
-				[
-					"label" => 'Points clés',
-					"data" => $keyPoints,
-					"type" => 'scatter', // important pour avoir seulement des points
-					"pointRadius" => 6, // taille des points
-					"pointBackgroundColor" => 'red',
-					"showLine" => false, // pas de ligne
-				],
-			];
+				"label" => 'ETHEUR',
+				"data" => $klines_data,
+				"borderColor" => "#55F",
+				"backgroundColor" => "#55F",
+				"borderWidth" => 2,
+				"pointRadius" => 0, // ❌ pas de points
+				"pointHoverRadius" => 0, // ❌ même au survol
+				"tension" => 0.3, // ✅ lissage (0 → lignes droites)
+				"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
+			],
+			[
+				"label" => 'Points clés',
+				"data" => $keyPoints,
+				"type" => 'scatter', // important pour avoir seulement des points
+				"pointRadius" => 6, // taille des points
+				"pointBackgroundColor" => 'red',
+				"showLine" => false, // pas de ligne
+			],
+		];
 		
 		$i = 0;
 		foreach (self::$stats as $stat_name => $stat_conf) {
@@ -921,7 +930,7 @@ class IndexCtrl extends PrivateCtrl
 					"label" => $stat_conf ["name"],
 					"data" => $stats_data [$stat_conf ["name"]],
 					"borderColor" => "rgba(0, 175, 0, {$alpha})",
-    				"backgroundColor" => "rgba(0, 175, 0, {$alpha})",
+					"backgroundColor" => "rgba(0, 175, 0, {$alpha})",
 					"borderWidth" => 2,
 					"pointRadius" => 0, // ❌ pas de points
 					"pointHoverRadius" => 0, // ❌ même au survol
@@ -929,6 +938,35 @@ class IndexCtrl extends PrivateCtrl
 					"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
 				];
 			$i ++;
+		}
+		
+		// get simulation
+		if (!empty ($simulation_id)) {
+			$simulation_data = [];
+			$simulation_step_wrapper = new SimulationStep;
+			$simulation_steps = $simulation_step_wrapper->find(["simulation_id = ?", $simulation_id], ["order" => "id ASC"]);
+			foreach ($simulation_steps as $simulation_step) {
+				// var_dump($simulation_step->cast()); die;
+				$simulation_data [] = 
+					[
+						"x"		=> $simulation_step->time->getTimestamp() * 1000,
+						"y"		=> 2800, //TODO ETH price
+						"label" => "{$simulation_step->order_type} : {$simulation_step->quote_amount} {$simulation_step->quote_currency} -> {$simulation_step->base_amount} {$simulation_step->base_currency}",
+						"color"	=> "black",
+					]
+				;
+			}
+			// var_dump($simulation_data); die;
+			$simulation_dataset = 
+			[
+				"label" => 'simulation',
+				"data" => $simulation_data,
+				"type" => 'scatter', // important pour avoir seulement des points
+				"pointRadius" => 6, // taille des points
+				"pointBackgroundColor" => 'blue',
+				"showLine" => false, // pas de ligne
+			];
+			$datasets [] = $simulation_dataset;
 		}
 
 		header ('Content-Type: application/json; charset=utf-8');
