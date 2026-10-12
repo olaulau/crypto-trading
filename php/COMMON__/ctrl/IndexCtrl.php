@@ -942,7 +942,7 @@ class IndexCtrl extends PrivateCtrl
 		if (!empty ($simulation_id)) {
 			$simulation_data = [];
 			$simulation_step_wrapper = new SimulationStep;
-			$simulation_steps = $simulation_step_wrapper->find(["simulation_id = ?", $simulation_id], ["order" => "id ASC"]);
+			$simulation_steps = $simulation_step_wrapper->find(["simulation_id = ? AND ? <= time AND time <= ?", $simulation_id, $start_sql, $end_sql], ["order" => "time ASC"]);
 			foreach ($simulation_steps as $simulation_step) {
 				$kline = $simulation_step->kline_id;
 				$simulation_data [] = 
