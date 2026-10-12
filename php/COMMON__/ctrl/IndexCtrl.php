@@ -950,7 +950,7 @@ class IndexCtrl extends PrivateCtrl
 						"x"		=> $simulation_step->time->getTimestamp() * 1000,
 						"y"		=> $kline->open,
 						"label" => "{$simulation_step->order_type} : {$simulation_step->quote_amount} {$simulation_step->quote_currency} -> {$simulation_step->base_amount} {$simulation_step->base_currency}",
-						"color"	=> "black",
+						"color"	=> $simulation_step->order_type === "buy" ? "#00AA55" : "#DD0000",
 					]
 				;
 			}

@@ -47,11 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					intersect: false, // montre tooltip même si pas exactement sur un point
 					callbacks: {
 						label: function (context) {
-							if (context.dataset.label === 'Points clés') {
+							if (context.raw.label) {
 								return context.raw.label + ' : ' + context.parsed.y;
-							} else {
-								return context.parsed.y;
 							}
+							return context.dataset.label + ' : ' + context.parsed.y;
 						}
 					}
 				},
