@@ -98,47 +98,59 @@ document.addEventListener('DOMContentLoaded', () => {
 	let isSelecting = false;
 	let selectionStart = null;
 	let selectionRange = null;
+	let clickInLegend = false;
 
 	chartCanvas.addEventListener ('mousedown', e => {
+		const rect = chartCanvas.getBoundingClientRect();
+		const x = e.clientX - rect.left;
+		const y = e.clientY - rect.top;
+
+		clickInLegend = !!(
+			chart.legend &&
+			x >= chart.legend.left && x <= chart.legend.right &&
+			y >= chart.legend.top && y <= chart.legend.bottom
+		);
+
+		if (clickInLegend) {
+			isPanning = false;
+			isSelecting = false;
+			return;
+		}
+
 		if (e.shiftKey) {
 			isSelecting = true;
 			selectionStart = {
 				x: e.offsetX,
 				y: e.offsetY
 			};
-			overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-		}
-		else {
+			overlayCtx.clearRect (0, 0, overlay.width, overlay.height);
+		} else {
 			isPanning = true;
 			startX = e.clientX;
 		}
 	});
 
 	chartCanvas.addEventListener ('mousemove', e => {
+		if (clickInLegend) return;
+
 		/* --- SÉLECTION --- */
 		if (isSelecting) {
-			// Position actuelle de la souris
 			const currentX = e.offsetX;
 			const currentY = e.offsetY;
 
-			// Calcul des coordonnées du rectangle
 			const x = Math.min(selectionStart.x, currentX);
 			const y = Math.min(selectionStart.y, currentY);
 			const w = Math.abs(currentX - selectionStart.x);
 			const h = Math.abs(currentY - selectionStart.y);
 
-			// Nettoyage de l'overlay avant de dessiner
 			overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 
-			// Style du rectangle
 			overlayCtx.fillStyle = 'rgba(0,123,255,0.15)';
 			overlayCtx.strokeStyle = 'rgba(0,123,255,0.8)';
 
-			// Dessin du rectangle
 			overlayCtx.fillRect(x, y, w, h);
 			overlayCtx.strokeRect(x, y, w, h);
 
-			// On ne continue pas vers le pan
 			return;
 		}
 
@@ -147,18 +159,24 @@ document.addEventListener('DOMContentLoaded', () => {
 			const deltaX = e.clientX - startX;
 			startX = e.clientX;
 
-			// Pan via l'instance chart.js
 			chart.pan({ x: deltaX, y: 0 });
 
 			statsMode = 'viewport';
-			updateStats (chart);
+			updateStats(chart);
 			overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 		}
 	});
 
 	chartCanvas.addEventListener ('mouseup', e => {
+		if (clickInLegend) {
+			clickInLegend = false;
+			isPanning = false;
+			isSelecting = false;
+			isZooming = false;
+			return;
+		}
+
 		if (isSelecting) {
-			// Fin de la sélection
 			const x1 = selectionStart.x;
 			const y1 = selectionStart.y;
 			const x2 = e.offsetX;
@@ -170,13 +188,14 @@ document.addEventListener('DOMContentLoaded', () => {
 				xMax: Math.max(x1, x2),
 				yMax: Math.max(y1, y2)
 			};
+
 			statsMode = 'selection';
 			isSelecting = false;
 			drawSelectionRect ();
 			updateStats (chart);
 		}
 		else {
-			// fin pan
+			// Fin du pan
 			goViewport ();
 			loadData(
 				symbol,
@@ -185,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				simulation_id
 			);
 		}
-		
+
 		isPanning = false;
 		isZooming = false;
 	});
