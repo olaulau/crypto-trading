@@ -324,6 +324,8 @@ class IndexCtrl extends PrivateCtrl
 				$price = $kline_wrapper ["open"];
 				$price_formated = Stuff::format_float_significative ($price, 6);
 				$simulation_step = new SimulationStep;
+				$simulation_step->simulation_id = $simulation;
+				$simulation_step->kline_id = $kline_wrapper ["id"];
 				
 				if ($offset === 0) { # start variables
 					$ETH = $start_ETH;
@@ -343,7 +345,6 @@ class IndexCtrl extends PrivateCtrl
 						$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
 						echo "<li>{$ETH} ETH = {$ETH_converted_formated} € </li>" . PHP_EOL;
 
-						$simulation_step->simulation_id =		$simulation;
 						$simulation_step->time =				$kline_wrapper ["open_time"];
 						$simulation_step->order_type =			"buy";
 						$simulation_step->base_amount =			$ETH;
@@ -359,7 +360,6 @@ class IndexCtrl extends PrivateCtrl
 						$EUR_converted_formated = Stuff::format_float_significative ($EUR_converted, 6);
 						echo "<li>{$EUR} € = {$EUR_converted_formated} ETH </li>" . PHP_EOL;
 
-						$simulation_step->simulation_id =		$simulation;
 						$simulation_step->time =				$kline_wrapper ["open_time"];
 						$simulation_step->order_type =			"buy";
 						$simulation_step->base_amount =			$EUR;
@@ -403,7 +403,6 @@ class IndexCtrl extends PrivateCtrl
 								?>
 								</div>
 								<?php
-								$simulation_step->simulation_id =		$simulation;
 								$simulation_step->time =				$kline_wrapper ["open_time"];
 								$simulation_step->order_type =			"sell";
 								$simulation_step->base_amount =			$EUR;
@@ -430,7 +429,6 @@ class IndexCtrl extends PrivateCtrl
 							$buy_assets_history [] = $ETH;
 							echo "[{$dt_formated}] ({$price_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated}) <br/>" . PHP_EOL;
 							
-							$simulation_step->simulation_id =		$simulation;
 							$simulation_step->time =				$kline_wrapper ["open_time"];
 							$simulation_step->order_type =			"buy";
 							$simulation_step->base_amount =			$ETH;
@@ -946,17 +944,16 @@ class IndexCtrl extends PrivateCtrl
 			$simulation_step_wrapper = new SimulationStep;
 			$simulation_steps = $simulation_step_wrapper->find(["simulation_id = ?", $simulation_id], ["order" => "id ASC"]);
 			foreach ($simulation_steps as $simulation_step) {
-				// var_dump($simulation_step->cast()); die;
+				$kline = $simulation_step->kline_id;
 				$simulation_data [] = 
 					[
 						"x"		=> $simulation_step->time->getTimestamp() * 1000,
-						"y"		=> 2800, //TODO ETH price
+						"y"		=> $kline->open,
 						"label" => "{$simulation_step->order_type} : {$simulation_step->quote_amount} {$simulation_step->quote_currency} -> {$simulation_step->base_amount} {$simulation_step->base_currency}",
 						"color"	=> "black",
 					]
 				;
 			}
-			// var_dump($simulation_data); die;
 			$simulation_dataset = 
 			[
 				"label" => 'simulation',

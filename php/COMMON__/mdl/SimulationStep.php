@@ -15,6 +15,9 @@ class SimulationStep extends Mdl
 		'simulation_id' => [
 			'belongs-to-one'	=> Simulation::class
 		],
+		'kline_id' => [
+			'belongs-to-one'	=> Kline::class
+		],
 
 		'time' => [
 			'type'		=> Schema::DT_TIMESTAMP,
@@ -66,6 +69,14 @@ class SimulationStep extends Mdl
 			ALTER TABLE `simulation_step`
 				ADD CONSTRAINT `simulation_step_fk_simulation` FOREIGN KEY (`simulation_id`) REFERENCES `simulation` (`id`);
 			";
+		$db->exec($sql);
+
+		static::dropForeignKeyIfExists ("simulation_step_fk_kline");
+		$sql = "
+		DROP INDEX IF EXISTS `simulation_step_fk_kline` ON `simulation_step`;
+		ALTER TABLE `simulation_step`
+			ADD CONSTRAINT `simulation_step_fk_kline` FOREIGN KEY (`kline_id`) REFERENCES `kline` (`id`);
+		";
 		$db->exec($sql);
 	}
 
