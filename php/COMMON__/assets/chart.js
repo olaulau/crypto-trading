@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			scales: {
 				x: {
 					type: 'time',
-					min: initialStart * 1000,
-					max: initialEnd * 1000,
+					min: initialStart,
+					max: initialEnd,
 					time: {
 						unit: 'day', // jour, mois, année, etc.
 						// tooltipFormat: 'PP' // format du tooltip

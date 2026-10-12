@@ -75,9 +75,6 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## TODO
-- chart
-	- first query is in timestamp (s), other refreshes are in timestamp (ms)
-
 - manual simulation
 	- graph with only values
 	- click to buy / sell (date AJAX)
