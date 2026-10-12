@@ -75,8 +75,6 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## TODO
-chart fait pas mal d'erreur (color), même sans simu
-	
 - manual simulation
 	- graph with only values
 	- click to buy / sell (date AJAX)
