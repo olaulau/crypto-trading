@@ -16,6 +16,8 @@ use ErrorException;
 
 class SimulCtrl extends PrivateCtrl
 {
+	public final static $sma_name = "SMA4";
+	
 	
 	public static function beforeRoute ()
 	{
@@ -62,7 +64,7 @@ class SimulCtrl extends PrivateCtrl
 		$buy_floor_margin = 1;
 		$start_ETH = 0;
 		$start_EUR = 1000;
-		$sma_name = "SMA4";
+		$sma_name = static::$sma_name;
 
 		$sma_conf = IndexCtrl::$stats [$sma_name]; #TODO useless ?
 
@@ -306,7 +308,7 @@ class SimulCtrl extends PrivateCtrl
 			}
 		}
 		
-		// get klines
+		// klines
 		$sql = "
 			SELECT	open_time, open
 			FROM	" . Kline::table . "
@@ -350,7 +352,7 @@ class SimulCtrl extends PrivateCtrl
 			}
 		}
 
-		// calculate keypoints
+		// keypoints
 		$keyPoints = [];
 		if (!empty ($klines_data)) {
 			$keyPoints = [
@@ -369,7 +371,30 @@ class SimulCtrl extends PrivateCtrl
 			];
 		}
 
-		// get stats
+		$datasets = 
+		[
+			[
+				"label"						=> 'ETHEUR',
+				"data"						=> $klines_data,
+				"borderColor" 				=> "#55F",
+				"backgroundColor" 			=> "#55F",
+				"borderWidth" 				=> 2,
+				"pointRadius"				=> 0, // ❌ pas de points
+				"pointHoverRadius" 			=> 0, // ❌ même au survol
+				"tension" 					=> 0.3, // ✅ lissage (0 → lignes droites)
+				"cubicInterpolationMode" 	=> 'monotone' // ✅ lissage propre (finance-friendly)
+			],
+			[
+				"label" 					=> 'Points clés',
+				"data" 						=> $keyPoints,
+				"type" 						=> 'scatter', // important pour avoir seulement des points
+				"pointRadius" 				=> 6, // taille des points
+				"pointBackgroundColor" 		=> 'red',
+				"showLine" 					=> false, // pas de ligne
+			],
+		];
+		
+		// stats
 		foreach (IndexCtrl::$stats as $stat_conf) {
 			$sql = "
 				SELECT	open_time, open
@@ -403,49 +428,27 @@ class SimulCtrl extends PrivateCtrl
 			}
 		}
 		
-		$datasets = 
-		[
-			[
-				"label" => 'ETHEUR',
-				"data" => $klines_data,
-				"borderColor" => "#55F",
-				"backgroundColor" => "#55F",
-				"borderWidth" => 2,
-				"pointRadius" => 0, // ❌ pas de points
-				"pointHoverRadius" => 0, // ❌ même au survol
-				"tension" => 0.3, // ✅ lissage (0 → lignes droites)
-				"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
-			],
-			[
-				"label" => 'Points clés',
-				"data" => $keyPoints,
-				"type" => 'scatter', // important pour avoir seulement des points
-				"pointRadius" => 6, // taille des points
-				"pointBackgroundColor" => 'red',
-				"showLine" => false, // pas de ligne
-			],
-		];
-		
 		$i = 0;
 		foreach (IndexCtrl::$stats as $stat_name => $stat_conf) {
 			$nb_stats = count (IndexCtrl::$stats);
 			$alpha = 1 - ($i * (1 / $nb_stats));
 			$datasets [] =
 				[
-					"label" => $stat_conf ["name"],
-					"data" => $stats_data [$stat_conf ["name"]],
-					"borderColor" => "rgba(0, 175, 0, {$alpha})",
-					"backgroundColor" => "rgba(0, 175, 0, {$alpha})",
-					"borderWidth" => 2,
-					"pointRadius" => 0, // ❌ pas de points
-					"pointHoverRadius" => 0, // ❌ même au survol
-					"tension" => 0.3, // ✅ lissage (0 → lignes droites)
+					"label"				=> $stat_name,
+					"data"				=> $stats_data [$stat_name],
+					"hidden"			=> ($stat_name !== static::$sma_name),
+					"borderColor"		=> "rgba(0, 175, 0, {$alpha})",
+					"backgroundColor" 	=> "rgba(0, 175, 0, {$alpha})",
+					"borderWidth"		=> 2,
+					"pointRadius"		=> 0, // ❌ pas de points
+					"pointHoverRadius"	=> 0, // ❌ même au survol
+					"tension"			=> 0.3, // ✅ lissage (0 → lignes droites)
 					"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
 				];
 			$i ++;
 		}
 		
-		// get simulation
+		// simulation
 		if (!empty ($simulation_id)) {
 			$simulation_data = [];
 			$simulation_step_wrapper = new SimulationStep;
@@ -463,12 +466,12 @@ class SimulCtrl extends PrivateCtrl
 			}
 			$simulation_dataset = 
 			[
-				"label" => 'simulation',
-				"data" => $simulation_data,
-				"type" => 'scatter', // important pour avoir seulement des points
-				"pointRadius" => 6, // taille des points
-				"pointBackgroundColor" => 'blue',
-				"showLine" => false, // pas de ligne
+				"label" 				=> 'simulation',
+				"data" 					=> $simulation_data,
+				"type" 					=> 'scatter', // important pour avoir seulement des points
+				"pointRadius" 			=> 6, // taille des points
+				"pointBackgroundColor" 	=> 'blue',
+				"showLine" 				=> false, // pas de ligne
 			];
 			$datasets [] = $simulation_dataset;
 		}
