@@ -70,12 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
 						mode: 'x',
 						onZoomStart: ({ chart, event, point }) => {
 							statsMode = 'viewport';
-							drawSelectionRect();
+							drawSelectionRect ();
 						},
 						onZoomComplete: ({ chart }) => {
 							updateStats (chart);
-							loadData (symbol, chart.scales.x.min, chart.scales.x.max, simulation_id);
-
+							clearTimeout (zoomReloadTimer);
+							zoomReloadTimer = setTimeout (() => {
+								loadData (symbol, chart.scales.x.min, chart.scales.x.max, simulation_id);
+							}, 100);
 						}
 					}
 				}
@@ -92,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 	////// zoom & pan & select /////
+	let zoomReloadTimer = null;
 	let startX = 0;
 	let isZooming = false;
 	let isPanning = false;
