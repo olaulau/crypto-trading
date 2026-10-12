@@ -283,19 +283,20 @@ class SimulCtrl extends PrivateCtrl
 		$symbol = $f3->get("GET.symbol");
 		$start_ts = $f3->get("GET.start");
 		$start_dt = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$start_ts));
+		$start_tsms = $start_dt->getTimestamp() * 1000;
 		$end_ts = $f3->get("GET.end");
 		$end_dt = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$end_ts));
+		$end_tsms = $end_dt->getTimestamp() * 1000;
 		$simulation_id = $f3->get("GET.simulation_id") ?? 0;
 
 		// margin
 		$margin_tx = 0.2; // add 20% margin on start and end side
 		$x_width = $end_dt->getTimestamp() - $start_dt->getTimestamp();
 		$margin_s = round ($x_width * $margin_tx);
-		$start_dt->modify ("-$margin_s seconds");
-		$end_dt->modify ("+$margin_s seconds");
-		
-		$start_sql = $start_dt->format(Stuff::datetime_sql_format);
-		$end_sql = $end_dt->format(Stuff::datetime_sql_format);
+		$start_with_margin_dt = (clone $start_dt)->modify ("-$margin_s seconds");
+		$end_with_margin_dt = (clone $end_dt)->modify ("+$margin_s seconds");
+		$start_sql = $start_with_margin_dt->format(Stuff::datetime_sql_format);
+		$end_sql = $end_with_margin_dt->format(Stuff::datetime_sql_format);
 		
 		// calculate candle size
 		$max_candles = 1000;
@@ -330,10 +331,6 @@ class SimulCtrl extends PrivateCtrl
 			throw new ErrorException("no data retrieved");
 		}
 
-		$min_x = new DateTime ($klines [0] ["open_time"])->getTimestamp() * 1000;
-		$min_y = $klines [0] ["open"];
-		$max_x = new DateTime ($klines [0] ["open_time"])->getTimestamp() * 1000;
-		$max_y = $klines [0] ["open"];
 		$klines_data = [];
 		foreach ($klines as $kline) {
 			$x = new DateTime ($kline ["open_time"])->getTimestamp() * 1000;
@@ -342,17 +339,30 @@ class SimulCtrl extends PrivateCtrl
 				"x" => $x,
 				"y" => $y,
 			];
-			if ($y < $min_y) {
-				$min_y = $y;
-				$min_x = $x;
-			}
-			if ($y > $max_y) {
-				$max_y = $y;
-				$max_x = $x;
-			}
 		}
 
 		// keypoints
+		foreach ($klines as $kline) {
+			$x = new DateTime ($kline ["open_time"])->getTimestamp() * 1000;
+			if ($start_tsms <= $x && $x <= $end_tsms) {
+				$y = $kline ["open"];
+				if (empty($min_x)) { // first value
+					$min_x = $max_x = $x;
+					$min_y = $max_y = $y;
+				}
+				else {
+					if ($y < $min_y) {
+						$min_y = $y;
+						$min_x = $x;
+					}
+					if ($y > $max_y) {
+						$max_y = $y;
+						$max_x = $x;
+					}
+				}
+			}
+		}
+		
 		$keyPoints = [];
 		if (!empty ($klines_data)) {
 			$keyPoints = [
