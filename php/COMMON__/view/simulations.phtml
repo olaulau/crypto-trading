@@ -1,0 +1,46 @@
+<?php
+use COMMON__\mdl\Simulation;
+use COMMON__\svc\Stuff;
+?>
+
+		<div class="d-flex justify-content-between">
+			<h1><?= $page["title"] ?></h1>
+			<a class="btn btn-lg btn-success" href="<?= $BASE . $f3->alias("simulate") ?>"><i class="fa-solid fa-rocket"></i> run</a>
+		</div>
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th>execution_time</th>
+					<th>symbol</th>
+					<th>open_time</th>
+					<th>close_time</th>
+					<th>description</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				foreach ($simulations as $simulation) { /** @var Simulation $simulation */
+					?>
+					<tr>
+						<td>
+							<a href="<?= $BASE . $f3->alias("chart", [], ["simulation_id" => $simulation->id]) ?>">
+								<?= $simulation->execution_time->format (Stuff::datetime_french_format) ?>
+							</a>
+						</td>
+						<td><?= $simulation->symbol ?></td>
+						<td><?= $simulation->open_time->format (Stuff::datetime_french_format) ?></td>
+						<td><?= $simulation->close_time->format (Stuff::datetime_french_format) ?></td>
+						<td><?= nl2br($simulation->description) ?></td>
+					</tr>
+					<?php
+				}
+				?>
+			</tbody>
+			<tfoot>
+				<tr>
+					<th><?= count($simulations) ?></th>
+				</tr>
+			</tfoot>
+		</table>
+		
+	</main>

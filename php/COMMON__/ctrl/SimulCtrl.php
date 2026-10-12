@@ -38,6 +38,22 @@ class SimulCtrl extends PrivateCtrl
 	}
 	
 	
+	public static function simulationsGET (Base $f3, $url, $controler)
+	{
+		$simulations = Simulation::getAll();
+		$f3->set("simulations", $simulations);
+		
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"default",
+			"name"		=>	"simulations",
+			"title"		=>	"Simulations",
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		static::renderPage($page);
+	}
+	
+	
 	public static function simulateGET (Base $f3, $url, $controler)
 	{
 		$page = [
