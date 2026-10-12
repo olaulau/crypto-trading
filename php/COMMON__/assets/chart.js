@@ -74,8 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
 							drawSelectionRect();
 						},
 						onZoomComplete: ({ chart }) => {
-							updateStats(chart);
-							loadData(symbol, chart.scales.x.min, chart.scales.x.max);
+							updateStats (chart);
+							loadData (symbol, chart.scales.x.min, chart.scales.x.max, simulation_id);
 
 						}
 					}
@@ -182,7 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			loadData(
 				symbol,
 				chart.scales.x.min,
-				chart.scales.x.max
+				chart.scales.x.max,
+				simulation_id
 			);
 		}
 		
@@ -304,12 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//// data loading /////
 	loadData (symbol, initialStart, initialEnd, simulation_id);
-	
+
 	async function loadData (symbol, start, end, simulation_id) {
 		url = `${charDataUrl}?symbol=${symbol}&start=${start}&end=${end}&simulation_id=${simulation_id}`;
-		const response = await fetch(
-			url
-		);
+		const response = await fetch (url);
 		const json = await response.json();
 		chart.data.datasets = json;
 		chart.data.datasets.forEach (dataset => {
