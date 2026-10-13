@@ -275,6 +275,29 @@ class SimulCtrl extends PrivateCtrl
 		$RoI_formated = Stuff::format_percent ($RoI * 100, 2);
 		echo "<b>==> ROI = {$RoI_formated} ({$PaL_formated})</b> <br/>" . PHP_EOL;
 	}
+
+
+	public static function SimulationDeleteGET (Base $f3, $url, $controler)
+	{
+		$id = (int) $f3->get ("PARAMS.id");
+		if (empty ($id) || !is_int ($id)) {
+			throw new ErrorException ("id empty or not integer");
+		}
+
+		$simulation = Simulation::findOneBy ("id", $id);
+		if (empty ($simulation)) {
+			throw new ErrorException ("couldn't find simulation #$id");
+		}
+
+		$simulation_step_wrapper = new SimulationStep;
+		$simulation_steps = $simulation_step_wrapper->find (["simulation_id = ?", $id], []);
+		foreach ($simulation_steps as $simulation_step) {
+			$simulation_step->erase ();
+		}
+		$simulation->erase();
+
+		$f3->reroute (["simulations"]);
+	}
 	
 	
 	

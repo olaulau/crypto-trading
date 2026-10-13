@@ -13,10 +13,10 @@ class SimulationStep extends Mdl
 	
 	protected $fieldConf = [
 		'simulation_id' => [
-			'belongs-to-one'	=> Simulation::class
+			'belongs-to-one'	=> Simulation::class,
 		],
 		'kline_id' => [
-			'belongs-to-one'	=> Kline::class
+			'belongs-to-one'	=> Kline::class,
 		],
 
 		'time' => [
