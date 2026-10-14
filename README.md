@@ -75,6 +75,11 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## TODO
+- simualte
+	- only store into do
+	- then show text result from DB
+	- then link to chart
+
 - manual simulation
 	- graph with only values
 	- click to buy / sell (date AJAX)
