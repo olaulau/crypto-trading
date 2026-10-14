@@ -82,8 +82,6 @@ class SimulCtrl extends PrivateCtrl
 		$start_EUR = 1000;
 		$sma_name = static::$sma_name;
 
-		$sma_conf = IndexCtrl::$stats [$sma_name]; #TODO useless ?
-
 		$now = new DateTimeImmutable;
 
 		$simulation = new Simulation;
@@ -134,15 +132,12 @@ class SimulCtrl extends PrivateCtrl
 					$low = $price; # lowest value since last action
 					$start_total = $start_ETH * $price + $start_EUR;
 					
-					echo "[{$dt_formated}] ({$price_formated}) simulation start <br/>" . PHP_EOL;
-					echo "<ul>" . PHP_EOL;
 					$simulation_step->type =				"start";
 					if ($ETH > 0) {
 						$ETH_converted = $ETH * $price;
 						$sell_assets_history = [$ETH_converted];
 						$buy_assets_history = [$ETH];
 						$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
-						echo "<li>{$ETH} ETH = {$ETH_converted_formated} € </li>" . PHP_EOL;
 
 						$simulation_step->base_amount =			$ETH;
 						$simulation_step->base_currency =		"ETH";
@@ -155,7 +150,6 @@ class SimulCtrl extends PrivateCtrl
 						$sell_assets_history = [$EUR];
 						$buy_assets_history = [$EUR_converted];
 						$EUR_converted_formated = Stuff::format_float_significative ($EUR_converted, 6);
-						echo "<li>{$EUR} € = {$EUR_converted_formated} ETH </li>" . PHP_EOL;
 
 						$simulation_step->base_amount =			$EUR;
 						$simulation_step->base_currency =		"EUR";
@@ -165,10 +159,6 @@ class SimulCtrl extends PrivateCtrl
 					}
 					$simulation_step->save();
 					$simulation_steps [] = $simulation_step;
-					echo "</ul>" . PHP_EOL;
-					echo " <br/>" . PHP_EOL;
-					echo " <hr>" . PHP_EOL;
-					echo " <br/>" . PHP_EOL;
 				}
 				
 				$SMA_price = $kline_wrapper [$sma_name];
@@ -181,12 +171,6 @@ class SimulCtrl extends PrivateCtrl
 					if ($price_smoothed > ($reference_price * (1 + $sell_min_margin/100))) { # price raised a lot
 						if ($price_smoothed < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
 							// if ($price > ($reference_price * (1 + $sell_min_margin/100))) { # also check current price
-								?>
-								<div class="text-end">
-								<?php
-								// echo "reference = $reference_price <br/>" . PHP_EOL;
-								// echo "value_ = $value_ <br/>" . PHP_EOL;
-								// echo "value = $value <br/>" . PHP_EOL;
 								$EUR = $ETH * $price;
 								$EUR_formated = Stuff::format_float_significative($EUR, 6);
 								$quote_amount = $ETH;
@@ -196,10 +180,7 @@ class SimulCtrl extends PrivateCtrl
 								$delta_pct = ($EUR - $last_sell_assets) / $last_sell_assets * 100;
 								$delta_pct_formated = Stuff::format_percent($delta_pct);
 								$sell_assets_history [] = $EUR;
-								echo "[{$dt_formated}] ({$price_formated}) : selling --> {$EUR_formated} € ({$delta_pct_formated})" . PHP_EOL;
-								?>
-								</div>
-								<?php
+								
 								$simulation_step->type =				"sell";
 								$simulation_step->base_amount =			$EUR;
 								$simulation_step->base_currency =		"EUR";
@@ -225,7 +206,6 @@ class SimulCtrl extends PrivateCtrl
 							$delta_pct = ($ETH - $last_buy_assets) / $last_buy_assets * 100;
 							$delta_pct_formated = Stuff::format_percent($delta_pct);
 							$buy_assets_history [] = $ETH;
-							echo "[{$dt_formated}] ({$price_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated}) <br/>" . PHP_EOL;
 							
 							$simulation_step->type =				"buy";
 							$simulation_step->base_amount =			$ETH;
@@ -258,25 +238,17 @@ class SimulCtrl extends PrivateCtrl
 			echo "no data loaded. </br>" . PHP_EOL;
 			exit;
 		}
-		echo " <br/>" . PHP_EOL;
-		echo " <hr/>" . PHP_EOL;
-		echo " <br/>" . PHP_EOL;
 		$dt_formated = $last_kline ["open_time"];
-		echo "[{$dt_formated}] ({$price_formated}) simulation end <br/>" . PHP_EOL;
-		echo "<ul>" . PHP_EOL;
 		if ($ETH > 0) {
 			$ETH_formated = Stuff::format_float_significative ($ETH, 6);
 			$ETH_converted = $ETH * $price;
 			$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
-			echo "<li>{$ETH_formated} ETH @ {$price_formated} => {$ETH_converted_formated} € </li/>" . PHP_EOL;
 			$simulation_step->description = "simulation end : {$ETH_formated} ETH @ {$price_formated} => {$ETH_converted_formated} €";
 		}
 		if ($EUR > 0) {
 			$EUR_formated = Stuff::format_float_significative ($EUR, 6);
-			echo "<li>{$EUR_formated} € </li>" . PHP_EOL;
 			$simulation_step->description = "simulation end : {$EUR_formated} €";
 		}
-		echo "</ul>" . PHP_EOL;
 		$simulation_step->save();
 		$simulation_steps [] = $simulation_step;
 
@@ -284,11 +256,12 @@ class SimulCtrl extends PrivateCtrl
 		
 		# stats
 		$end_total = $ETH * $price + $EUR;
-		$PaL = ($end_total - $start_total); # Profit and Loss
+		$PaL = $end_total - $start_total; # Profit and Loss
 		$PaL_formated = Stuff::format_EUR ($PaL);
 		$RoI = $PaL / $start_total; # Return on Investment
 		$RoI_formated = Stuff::format_percent ($RoI * 100, 2);
-		echo "<b>==> ROI = {$RoI_formated} ({$PaL_formated})</b> <br/>" . PHP_EOL;
+		
+		$f3->reroute(["chart", [], ["simulation_id" => $simulation->id]]);
 	}
 
 

@@ -75,7 +75,7 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## TODO
-- simualte
+- simulate
 	- only store into do
 	- then show text result from DB
 	- then link to chart
