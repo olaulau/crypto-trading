@@ -44,6 +44,9 @@ class SimulationStep extends Mdl
 			'nullable'	=> false,
 			'default'	=> '',
 		],
+		'description' => [
+			'type'		=> Schema::DT_TEXT,
+		],
 
 	];
 	

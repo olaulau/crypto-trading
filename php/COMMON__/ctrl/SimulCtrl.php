@@ -115,6 +115,7 @@ class SimulCtrl extends PrivateCtrl
 			LIMIT	?
 			OFFSET	?";
 		$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
+		$simulation_steps = [];
 		while ($data = $db->exec ($sql, $params)) {
 			foreach ($data as $kline_wrapper) {
 				$dt_formated = $kline_wrapper ["open_time"];
@@ -147,6 +148,7 @@ class SimulCtrl extends PrivateCtrl
 						$simulation_step->base_currency =		"ETH";
 						$simulation_step->quote_amount =		0;
 						$simulation_step->quote_currency =		"EUR";
+						$simulation_step->description = "simulation start : {$ETH} ETH = {$ETH_converted_formated} €";
 					}
 					if ($EUR > 0) {
 						$EUR_converted = $EUR / $price;
@@ -159,8 +161,10 @@ class SimulCtrl extends PrivateCtrl
 						$simulation_step->base_currency =		"EUR";
 						$simulation_step->quote_amount =		0;
 						$simulation_step->quote_currency =		"EUR";
+						$simulation_step->description = "simulation start : {$EUR} € = {$EUR_converted_formated} ETH";
 					}
 					$simulation_step->save();
+					$simulation_steps [] = $simulation_step;
 					echo "</ul>" . PHP_EOL;
 					echo " <br/>" . PHP_EOL;
 					echo " <hr>" . PHP_EOL;
@@ -201,7 +205,9 @@ class SimulCtrl extends PrivateCtrl
 								$simulation_step->base_currency =		"EUR";
 								$simulation_step->quote_amount =		$quote_amount;
 								$simulation_step->quote_currency =		"ETH";
+								$simulation_step->description = "({$price_formated}) : selling --> {$EUR_formated} € ({$delta_pct_formated})";
 								$simulation_step->save();
+								$simulation_steps [] = $simulation_step;
 							// }
 						}
 					}
@@ -226,7 +232,9 @@ class SimulCtrl extends PrivateCtrl
 							$simulation_step->base_currency =		"ETH";
 							$simulation_step->quote_amount =		$quote_amount;
 							$simulation_step->quote_currency =		"EUR";
+							$simulation_step->description = "({$price_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated})";
 							$simulation_step->save();
+							$simulation_steps [] = $simulation_step;
 						}
 					}
 				}
@@ -236,8 +244,16 @@ class SimulCtrl extends PrivateCtrl
 			}
 		}
 		
+		// end of simulation state
+		$simulation_step = new SimulationStep;
+		$simulation_step->simulation_id =		$simulation;
+		$simulation_step->kline_id =			$kline_wrapper ["id"];
+		$simulation_step->type =				"end";
+		$simulation_step->base_amount =			$EUR;
+		$simulation_step->base_currency =		"EUR";
+		$simulation_step->quote_amount =		$ETH;
+		$simulation_step->quote_currency =		"ETH";
 		
-		# stats
 		if (empty ($last_kline)) {
 			echo "no data loaded. </br>" . PHP_EOL;
 			exit;
@@ -253,26 +269,20 @@ class SimulCtrl extends PrivateCtrl
 			$ETH_converted = $ETH * $price;
 			$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
 			echo "<li>{$ETH_formated} ETH @ {$price_formated} => {$ETH_converted_formated} € </li/>" . PHP_EOL;
+			$simulation_step->description = "simulation end : {$ETH_formated} ETH @ {$price_formated} => {$ETH_converted_formated} €";
 		}
 		if ($EUR > 0) {
 			$EUR_formated = Stuff::format_float_significative ($EUR, 6);
 			echo "<li>{$EUR_formated} € </li>" . PHP_EOL;
+			$simulation_step->description = "simulation end : {$EUR_formated} €";
 		}
 		echo "</ul>" . PHP_EOL;
-
-		// end of simulation state
-		$simulation_step = new SimulationStep;
-		$simulation_step->simulation_id =		$simulation;
-		$simulation_step->kline_id =			$kline_wrapper ["id"];
-		$simulation_step->type =				"end";
-		$simulation_step->base_amount =			$EUR;
-		$simulation_step->base_currency =		"EUR";
-		$simulation_step->quote_amount =		$ETH;
-		$simulation_step->quote_currency =		"ETH";
 		$simulation_step->save();
+		$simulation_steps [] = $simulation_step;
 
 		echo '<a href="' . $f3->get("BASE") . $f3->alias("chart", [], ["simulation_id" => $simulation->id]) . '">chart</a> <br/> <br/>' . PHP_EOL;
 		
+		# stats
 		$end_total = $ETH * $price + $EUR;
 		$PaL = ($end_total - $start_total); # Profit and Loss
 		$PaL_formated = Stuff::format_EUR ($PaL);
@@ -514,7 +524,7 @@ class SimulCtrl extends PrivateCtrl
 					[
 						"x"		=> $simulation_step->kline_id->open_time->getTimestamp() * 1000,
 						"y"		=> $kline->open,
-						"label" => "{$simulation_step->type} : {$simulation_step->quote_amount} {$simulation_step->quote_currency} -> {$simulation_step->base_amount} {$simulation_step->base_currency}",
+						"label" => $simulation_step->description,
 						"color"	=> $simulation_step->type === "buy" ? "#00AA55" : "#DD0000",
 					]
 				;
