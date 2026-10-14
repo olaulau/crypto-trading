@@ -4,6 +4,7 @@ namespace COMMON__\mdl;
 use Base;
 use DB\SQL;
 use DB\SQL\Schema;
+use ErrorException;
 
 
 class Simulation extends Mdl
@@ -61,4 +62,21 @@ class Simulation extends Mdl
 		// $db->exec($sql);
 	}
 
+
+	public function RoI () : float
+	{
+		$simulation_step_wrapper = new SimulationStep;
+		$simulation_steps = $simulation_step_wrapper->find (["simulation_id = ?", $this->id], ["order" => "id ASC"]);
+		if (empty ($simulation_steps)) {
+			throw new ErrorException("simulation has no step");
+		}
+
+		$start_step = $simulation_steps [0];
+		$start_base = $start_step->base_amount;
+		$end_step = $simulation_steps [$simulation_steps->count() - 1];
+		$end_base = $end_step->base_amount;
+
+		$roi = ($end_base - $start_base) / $start_base;
+		return $roi;
+	}
 }

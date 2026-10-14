@@ -91,13 +91,13 @@ class SimulCtrl extends PrivateCtrl
 		$simulation->open_time =		IndexCtrl::$start_sql;
 		$simulation->close_time =		IndexCtrl::$end_sql;
 		$simulation->execution_time =	$now->format(Stuff::datetime_sql_format);
-		$simulation->description =		trim("
+		$simulation->description =		str_replace("\t", "", trim("
 			simple margin algorythm
 			candle size = " . IndexCtrl::$small_candle_size . "
 			smoothing stat = {$sma_name}
 			sell min margin : {$sell_min_margin}% ({$sell_floor_margin}% floor)
 			buy min margin : {$buy_min_margin}% ({$buy_floor_margin}% floor)
-		");
+		"));
 		$simulation->save();
 
 		# start reading data
