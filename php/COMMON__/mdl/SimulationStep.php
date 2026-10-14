@@ -19,12 +19,7 @@ class SimulationStep extends Mdl
 			'belongs-to-one'	=> Kline::class,
 		],
 
-		'time' => [
-			'type'		=> Schema::DT_TIMESTAMP,
-			'nullable'	=> false,
-			'default'	=> '1970-01-01 00:00:01',
-		],
-		'order_type' => [ // sell / buy
+		'type' => [ // start / sell / buy / end
 			'type'		=> Schema::DT_VARCHAR128,
 			'nullable'	=> false,
 			'default'	=> 0,

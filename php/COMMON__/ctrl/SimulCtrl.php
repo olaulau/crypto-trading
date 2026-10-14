@@ -97,7 +97,7 @@ class SimulCtrl extends PrivateCtrl
 			smoothing stat = {$sma_name}
 			sell min margin : {$sell_min_margin}% ({$sell_floor_margin}% floor)
 			buy min margin : {$buy_min_margin}% ({$buy_floor_margin}% floor)
-		"); //TODO
+		");
 		$simulation->save();
 
 		# start reading data
@@ -135,6 +135,7 @@ class SimulCtrl extends PrivateCtrl
 					
 					echo "[{$dt_formated}] ({$price_formated}) simulation start <br/>" . PHP_EOL;
 					echo "<ul>" . PHP_EOL;
+					$simulation_step->type =				"start";
 					if ($ETH > 0) {
 						$ETH_converted = $ETH * $price;
 						$sell_assets_history = [$ETH_converted];
@@ -142,13 +143,10 @@ class SimulCtrl extends PrivateCtrl
 						$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
 						echo "<li>{$ETH} ETH = {$ETH_converted_formated} € </li>" . PHP_EOL;
 
-						$simulation_step->time =				$kline_wrapper ["open_time"];
-						$simulation_step->order_type =			"buy";
 						$simulation_step->base_amount =			$ETH;
 						$simulation_step->base_currency =		"ETH";
 						$simulation_step->quote_amount =		0;
 						$simulation_step->quote_currency =		"EUR";
-						$simulation_step->save();
 					}
 					if ($EUR > 0) {
 						$EUR_converted = $EUR / $price;
@@ -157,14 +155,12 @@ class SimulCtrl extends PrivateCtrl
 						$EUR_converted_formated = Stuff::format_float_significative ($EUR_converted, 6);
 						echo "<li>{$EUR} € = {$EUR_converted_formated} ETH </li>" . PHP_EOL;
 
-						$simulation_step->time =				$kline_wrapper ["open_time"];
-						$simulation_step->order_type =			"buy";
 						$simulation_step->base_amount =			$EUR;
 						$simulation_step->base_currency =		"EUR";
 						$simulation_step->quote_amount =		0;
 						$simulation_step->quote_currency =		"EUR";
-						$simulation_step->save();
 					}
+					$simulation_step->save();
 					echo "</ul>" . PHP_EOL;
 					echo " <br/>" . PHP_EOL;
 					echo " <hr>" . PHP_EOL;
@@ -200,8 +196,7 @@ class SimulCtrl extends PrivateCtrl
 								?>
 								</div>
 								<?php
-								$simulation_step->time =				$kline_wrapper ["open_time"];
-								$simulation_step->order_type =			"sell";
+								$simulation_step->type =				"sell";
 								$simulation_step->base_amount =			$EUR;
 								$simulation_step->base_currency =		"EUR";
 								$simulation_step->quote_amount =		$quote_amount;
@@ -226,8 +221,7 @@ class SimulCtrl extends PrivateCtrl
 							$buy_assets_history [] = $ETH;
 							echo "[{$dt_formated}] ({$price_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated}) <br/>" . PHP_EOL;
 							
-							$simulation_step->time =				$kline_wrapper ["open_time"];
-							$simulation_step->order_type =			"buy";
+							$simulation_step->type =				"buy";
 							$simulation_step->base_amount =			$ETH;
 							$simulation_step->base_currency =		"ETH";
 							$simulation_step->quote_amount =		$quote_amount;
@@ -265,7 +259,18 @@ class SimulCtrl extends PrivateCtrl
 			echo "<li>{$EUR_formated} € </li>" . PHP_EOL;
 		}
 		echo "</ul>" . PHP_EOL;
-		//TODO calculate and store simulation result
+
+		// end of simulation state
+		$simulation_step = new SimulationStep;
+		$simulation_step->simulation_id =		$simulation;
+		$simulation_step->kline_id =			$kline_wrapper ["id"];
+		$simulation_step->type =				"end";
+		$simulation_step->base_amount =			$EUR;
+		$simulation_step->base_currency =		"EUR";
+		$simulation_step->quote_amount =		$ETH;
+		$simulation_step->quote_currency =		"ETH";
+		$simulation_step->save();
+
 		echo '<a href="' . $f3->get("BASE") . $f3->alias("chart", [], ["simulation_id" => $simulation->id]) . '">chart</a> <br/> <br/>' . PHP_EOL;
 		
 		$end_total = $ETH * $price + $EUR;
@@ -501,15 +506,16 @@ class SimulCtrl extends PrivateCtrl
 		if (!empty ($simulation_id)) {
 			$simulation_data = [];
 			$simulation_step_wrapper = new SimulationStep;
-			$simulation_steps = $simulation_step_wrapper->find(["simulation_id = ? AND ? <= time AND time <= ?", $simulation_id, $start_sql, $end_sql], ["order" => "time ASC"]);
+			$simulation_step_wrapper->has("kline_id", ["? <= open_time AND open_time <= ?", $start_sql, $end_sql]);
+			$simulation_steps = $simulation_step_wrapper->find(["simulation_id = ?", $simulation_id], ["order" => "id ASC"]);
 			foreach ($simulation_steps as $simulation_step) {
 				$kline = $simulation_step->kline_id;
 				$simulation_data [] = 
 					[
-						"x"		=> $simulation_step->time->getTimestamp() * 1000,
+						"x"		=> $simulation_step->kline_id->open_time->getTimestamp() * 1000,
 						"y"		=> $kline->open,
-						"label" => "{$simulation_step->order_type} : {$simulation_step->quote_amount} {$simulation_step->quote_currency} -> {$simulation_step->base_amount} {$simulation_step->base_currency}",
-						"color"	=> $simulation_step->order_type === "buy" ? "#00AA55" : "#DD0000",
+						"label" => "{$simulation_step->type} : {$simulation_step->quote_amount} {$simulation_step->quote_currency} -> {$simulation_step->base_amount} {$simulation_step->base_currency}",
+						"color"	=> $simulation_step->type === "buy" ? "#00AA55" : "#DD0000",
 					]
 				;
 			}
