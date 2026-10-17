@@ -56,17 +56,10 @@ class SimulCtrl extends PrivateCtrl
 	
 	public static function simulateGET (Base $f3, $url, $controler)
 	{
-		$page = [
-			"module"	=>	"COMMON__",
-			"layout"	=>	"default",
-			"name"		=>	"simulate",
-			"title"		=>	"Simulate",
-			"breadcrumbs" => static::breadcrumbs(),
-		];
-		static::renderPage ($page);
+		SimulCtrl::run_simulation ();
 	}
 	
-	public static function trading_simulate () : void
+	public static function run_simulation () : void
 	{
 		# init
 		set_time_limit (0);
