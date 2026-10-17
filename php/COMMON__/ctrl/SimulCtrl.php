@@ -56,24 +56,15 @@ class SimulCtrl extends PrivateCtrl
 	
 	public static function simulateGET (Base $f3, $url, $controler)
 	{
-		SimulCtrl::run_simulation ();
+		SimulCtrl::simulation_run (0, 1000, static::$sma_name, 2, 1, 2, 1);
 	}
 	
-	public static function run_simulation () : void
+	private static function simulation_run (float $start_ETH, float $start_EUR, string $sma_name, $sell_min_margin , $sell_floor_margin, $buy_min_margin, $buy_floor_margin) : void
 	{
 		# init
 		set_time_limit (0);
 		$f3 = Base::instance();
 		$db = $f3->get("db"); /** @var SQL $db */
-
-		# config
-		$sell_min_margin = 2;
-		$sell_floor_margin = 1;
-		$buy_min_margin = 2;
-		$buy_floor_margin = 1;
-		$start_ETH = 0;
-		$start_EUR = 1000;
-		$sma_name = static::$sma_name;
 
 		$now = new DateTimeImmutable;
 
@@ -81,15 +72,15 @@ class SimulCtrl extends PrivateCtrl
 		$simulation->symbol =			IndexCtrl::$symbol;
 		$simulation->open_time =		IndexCtrl::$start_sql;
 		$simulation->close_time =		IndexCtrl::$end_sql;
-		$simulation->execution_time =	$now->format(Stuff::datetime_sql_format);
-		$simulation->description =		str_replace("\t", "", trim("
-			simple margin algorythm
+		$simulation->execution_time =	$now->format (Stuff::datetime_sql_format);
+		$simulation->description =		str_replace ("\t", "", trim("
+			simple margin algorithm
 			candle size = " . IndexCtrl::$small_candle_size . "
 			smoothing stat = {$sma_name}
 			sell min margin : {$sell_min_margin}% ({$sell_floor_margin}% floor)
 			buy min margin : {$buy_min_margin}% ({$buy_floor_margin}% floor)
 		"));
-		$simulation->save();
+		$simulation->save ();
 
 		# start reading data
 		$offset = 0;
