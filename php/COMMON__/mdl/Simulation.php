@@ -13,7 +13,7 @@ class Simulation extends Mdl
 	public const string table = "simulation";
 	
 	protected $fieldConf = [
-		'simulation_step' => [
+		'simulation_steps' => [
 			'has-many'	=> [SimulationStep::class, 'simulation_id']
 		],
 

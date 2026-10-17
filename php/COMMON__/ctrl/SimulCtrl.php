@@ -63,7 +63,7 @@ class SimulCtrl extends PrivateCtrl
 			"title"		=>	"Simulate",
 			"breadcrumbs" => static::breadcrumbs(),
 		];
-		static::renderPage($page);
+		static::renderPage ($page);
 	}
 	
 	public static function trading_simulate () : void
@@ -186,7 +186,7 @@ class SimulCtrl extends PrivateCtrl
 								$simulation_step->base_currency =		"EUR";
 								$simulation_step->quote_amount =		$quote_amount;
 								$simulation_step->quote_currency =		"ETH";
-								$simulation_step->description = "({$price_formated}) : selling --> {$EUR_formated} € ({$delta_pct_formated})";
+								$simulation_step->description = "({$price_formated}) selling --> {$EUR_formated} € ({$delta_pct_formated})";
 								$simulation_step->save();
 								$simulation_steps [] = $simulation_step;
 							// }
@@ -261,10 +261,34 @@ class SimulCtrl extends PrivateCtrl
 		$RoI = $PaL / $start_total; # Return on Investment
 		$RoI_formated = Stuff::format_percent ($RoI * 100, 2);
 		
-		$f3->reroute(["chart", [], ["simulation_id" => $simulation->id]]);
+		$f3->reroute(["simulation", ["id" => $simulation->id]]);
 	}
 
 
+	public static function SimulationGET (Base $f3, $url, $controler)
+	{
+		$id = (int) $f3->get ("PARAMS.id");
+		if (empty ($id) || !is_int ($id)) {
+			throw new ErrorException ("id empty or not integer");
+		}
+
+		$simulation = Simulation::findOneBy ("id", $id);
+		if (empty ($simulation)) {
+			throw new ErrorException ("couldn't find simulation #$id");
+		}
+		$f3->set("simulation", $simulation);
+		
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"default",
+			"name"		=>	"simulation",
+			"title"		=>	"Simulation #{$simulation->id}",
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		static::renderPage($page);
+	}
+	
+	
 	public static function SimulationDeleteGET (Base $f3, $url, $controler)
 	{
 		$id = (int) $f3->get ("PARAMS.id");
