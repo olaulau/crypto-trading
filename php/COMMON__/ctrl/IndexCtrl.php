@@ -36,6 +36,7 @@ class IndexCtrl extends PrivateCtrl
 	public final static $sql_read_limit = 10000;
 	public final static $start_sql = "2025-01-01 00:00:00";
 	public final static $end_sql = "2025-01-31 23:59:59";
+	// public final static $end_sql = "2025-12-31 23:59:59";
 
 	public final static $stats = [
 		//TODO use index in code, and remove "name" property
@@ -107,7 +108,11 @@ class IndexCtrl extends PrivateCtrl
 		ConvertTrade::drop_table();
 		FiatTrade::drop_table();
 		KeyValue::drop_table();
+		
+		SimulationStep::drop_table();
+		Simulation::drop_table();
 		Kline::drop_table();
+		
 		Order::drop_table();
 		OrderList::drop_table();
 		SpotExchangeSymbol::drop_table();

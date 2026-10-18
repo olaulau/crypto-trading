@@ -76,9 +76,17 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 ## TODO
 - simulate
-	- only store into do
-	- then show text result from DB
-	- then link to chart
+	- intermediate form to enter simulation params
+		- also input date range
+		- pre-calculate default values, based on context
+		- try to remove static const from code
+	- simulation bulk : ability to make each param variable -> generate many simulations
+	- implement stop loss
+	- better algo initiate (abiliti to buy earlier)
+	- store reason of buy / sell (last min / max, threshold reached ...) with point on graph ?
+- code refacto
+	- generalize simulation
+	- walk through data with a SimContext class able to give some cached data quickly, or by query (for real time computing)
 
 - manual simulation
 	- graph with only values

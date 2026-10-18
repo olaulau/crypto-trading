@@ -75,7 +75,7 @@ class Simulation extends Mdl
 		$start_base = $start_step->base_amount;
 		$end_step = $simulation_steps [$simulation_steps->count() - 1];
 		$end_base = $end_step->base_amount;
-
+		
 		$roi = ($end_base - $start_base) / $start_base;
 		return $roi;
 	}

@@ -51,7 +51,7 @@ abstract class Mdl extends Cortex
 	}
 	
 	
-	public function find($filter = NULL, ?array $options = NULL, $ttl = 0) : CortexCollection
+	public function find ($filter = NULL, ?array $options = NULL, $ttl = 0) : CortexCollection
 	{
 		$res = parent::find($filter, $options, $ttl);
 		if(empty($res)) {
@@ -64,7 +64,7 @@ abstract class Mdl extends Cortex
 	
 	
 	
-	public static function findBy($key, $value)
+	public static function findBy ($key, $value)
 	{
 		$entity = new static();
 		
@@ -83,7 +83,7 @@ abstract class Mdl extends Cortex
 		return $data;
 	}
 	
-	public static function findOneBy($key, $value) : ?static
+	public static function findOneBy ($key, $value) : ?static
 	{
 		$data = self::findBy($key, $value);
 		if(empty($data)) {
@@ -96,19 +96,19 @@ abstract class Mdl extends Cortex
 	}
 	
 	
-	public static function getAll ($order_field=null) : CortexCollection
+	public static function getAll ($order_field=null, $order_direction="ASC") : CortexCollection
 	{
 		$entity = new static(); /** @var Cortex $entity */
 		$order_field = $order_field ?? "name";
 		// if the entity has a property "name", order results with it
-		if(in_array($order_field, $entity->fields())) {
-			$res = $entity->find([], ["order" => "$order_field ASC"]);
+		if (in_array ($order_field, $entity->fields())) {
+			$res = $entity->find([], ["order" => "{$order_field} {$order_direction}"]);
 		}
 		else {
 			$res = $entity->find();
 		}
 		
-		if(empty($res)) {
+		if (empty ($res)) {
 			return new CortexCollection();
 		}
 		else {
@@ -306,13 +306,13 @@ abstract class Mdl extends Cortex
     /**
      * cast : retourne toutes les valeurs typées
      */
-    public function cast($obj = null, $rel_depths = 1)
+    public function cast ($obj = null, $rel_depths = 1)
     {
-        $data = parent::cast($obj, $rel_depths);
+        $data = parent::cast ($obj, $rel_depths);
 
         foreach ($this->fieldConf as $field => $conf) {
-            if (!isset($data[$field])) continue;
-            $data[$field] = static::castTheField($data[$field], $conf['type']);
+            if (!isset ($data[$field])) continue;
+            $data [$field] = static::castTheField ($data[$field], $conf['type']);
         }
 
         return $data;
@@ -334,20 +334,20 @@ abstract class Mdl extends Cortex
             case 'INT':
             case 'INTEGER':
             case 'BIGINT':
-                return (int)$value;
+                return (int) $value;
 
             case 'FLOAT':
             case 'DOUBLE':
             case 'DECIMAL':
-                return (float)$value;
+                return (float) $value;
 
             case 'BOOL':
             case 'BOOLEAN':
-                return (bool)$value;
+                return (bool) $value;
 
             case 'JSON':
             case 'JSONB':
-                $decoded = json_decode($value, true);
+                $decoded = json_decode ($value, true);
                 return $decoded === null ? [] : $decoded;
 
             case 'VARCHAR':

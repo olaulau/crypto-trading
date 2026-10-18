@@ -59,7 +59,7 @@ abstract class MiniCtrl
 					PDO::ATTR_PERSISTENT => true,
 				]
 			);
-			$db->log (false);
+			$db->log (true); //TODO config ?
 			
 			// all dates are UTC
 			$db->exec ("SET time_zone = '+00:00';");
