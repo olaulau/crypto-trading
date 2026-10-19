@@ -30,7 +30,7 @@ use COMMON__\svc\Stuff;
 						<td><?= $simulation_step->base_amount ?></td>
 						<td><?= $simulation_step->quote_amount ?></td>
 						<td><?= $simulation_step->description ?></td>
-						<td><?= $simulation_step->is_transaction() ? Stuff::format_percent($simulation_step->margin() * 100) : "" ?></td>
+						<td class="<?= $simulation_step->type === "buy" ? "text-secondary" : ""?>"><?= ($i !== 0) ? Stuff::format_percent($simulation_step->margin() * 100) : "" ?></td>
 					</tr>
 					<?php
 				}

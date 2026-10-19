@@ -74,7 +74,7 @@ class SimulationStep extends Mdl
 	public function previous () : SimulationStep
 	{
 		$simulation_step_wrapper = new SimulationStep;
-		$time_formated = $this->kline_id->open_time->format(Stuff::datetime_sql_format);
+		$time_formated = $this->kline_id->open_time->format(Stuff::datetime_sql_format); //TODO GMT ?
 		$simulation_step_wrapper->has ("kline_id", ["open_time < ?", $time_formated]);
 		$res = $simulation_step_wrapper->find (["simulation_id = ?", $this->simulation_id->id], ["order" => "@kline_id.open_time DESC", "limit" => 1]);
 		return $res[0];
@@ -89,6 +89,10 @@ class SimulationStep extends Mdl
 			$after = $this->base_amount;
 		}
 		elseif ($this->type === "sell") {
+			$before = $previous->quote_amount;
+			$after = $this->quote_amount;
+		}
+		elseif ($this->type === "end") {
 			$before = $previous->quote_amount;
 			$after = $this->quote_amount;
 		}
