@@ -11,16 +11,26 @@ use COMMON__\svc\Stuff;
 			<thead>
 				<tr>
 					<th>time</th>
+					<th>price</th>
+					<th>type</th>
+					<th>base</th>
+					<th>quote</th>
 					<th>description</th>
+					<th>margin</th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php
-				foreach ($simulation->simulation_steps as $simulation_step) { /** @var SimulationStep $simulation_step */
+				foreach ($simulation->simulation_steps as $i => $simulation_step) { /** @var SimulationStep $simulation_step */
 					?>
 					<tr>
 						<td><?= $simulation_step->kline_id->open_time->format(Stuff::datetime_french_format) ?></td>
+						<td><?= $simulation_step->kline_id->open ?></td>
+						<td><?= $simulation_step->type ?></td>
+						<td><?= $simulation_step->base_amount ?></td>
+						<td><?= $simulation_step->quote_amount ?></td>
 						<td><?= $simulation_step->description ?></td>
+						<td><?= $simulation_step->is_transaction() ? Stuff::format_percent($simulation_step->margin() * 100) : "" ?></td>
 					</tr>
 					<?php
 				}
@@ -29,6 +39,11 @@ use COMMON__\svc\Stuff;
 			<tfoot>
 				<tr>
 					<th><?= count ($simulation->simulation_steps) ?> steps</th>
+					<th>&nbsp;</th>
+					<th>&nbsp;</th>
+					<th>&nbsp;</th>
+					<th>volume =  <?= $simulation->volume() ?></th>
+					<th>&nbsp;</th>
 					<th>RoI = <?= $simulation->RoI () * 100 ?> %</th>
 				</tr>
 			</tfoot>

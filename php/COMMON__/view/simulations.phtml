@@ -25,10 +25,10 @@ use COMMON__\svc\Stuff;
 				foreach ($simulations as $simulation) { /** @var Simulation $simulation */
 					?>
 					<tr>
-						<td>
+						<td class="fs-5">
 							<a href="<?= $BASE . $f3->alias ("simulation", ["id" => $simulation->id]) ?>">
 								<i class="fa-solid fa-eye"></i>
-							</a>
+							</a> <br/>
 							<a href="<?= $BASE . $f3->alias ("chart", [], ["simulation_id" => $simulation->id]) ?>">
 								<i class="fa-solid fa-chart-line"></i>
 							</a>
@@ -39,7 +39,7 @@ use COMMON__\svc\Stuff;
 						<td><?= $simulation->close_time->format (Stuff::datetime_french_format) ?></td>
 						<td><?= nl2br ($simulation->description) ?></td>
 						<td><?= $simulation->RoI () * 100 ?> %</td>
-						<td>
+						<td class="fs-5">
 							<a href="<?= $BASE . $f3->alias ("simulationDelete", ["id" => $simulation->id]) ?>">
 								<i class="fa-solid fa-trash"></i>
 							</a>

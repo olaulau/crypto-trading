@@ -65,10 +65,9 @@ class Simulation extends Mdl
 
 	public function RoI () : float
 	{
-		$simulation_step_wrapper = new SimulationStep;
-		$simulation_steps = $simulation_step_wrapper->find (["simulation_id = ?", $this->id], ["order" => "id ASC"]);
+		$simulation_steps = $this->simulation_steps;
 		if ($simulation_steps->count () === 0) {
-			throw new ErrorException("simulation has no step");
+			throw new ErrorException ("simulation has no step");
 		}
 
 		$start_step = $simulation_steps [0];
@@ -79,4 +78,22 @@ class Simulation extends Mdl
 		$roi = ($end_base - $start_base) / $start_base;
 		return $roi;
 	}
+	
+	
+	public function volume () : float
+	{
+		$simulation_steps = $this->simulation_steps;
+		if ($simulation_steps->count () === 0) {
+			throw new ErrorException ("simulation has no step");
+		}
+
+		$res = 0.0;
+		foreach ($simulation_steps as $simulation_step) {
+			if ($simulation_step->is_transaction()) {
+				$res += $simulation_step->quote_amount;
+			}
+		}
+		return $res;
+	}
+	
 }
