@@ -29,20 +29,10 @@ class SimulationStep extends Mdl
 			'nullable'	=> false,
 			'default'	=> 0,
 		],
-		'base_currency' => [
-			'type'		=> Schema::DT_VARCHAR128,
-			'nullable'	=> false,
-			'default'	=> '',
-		],
 		'quote_amount' => [
 			'type'		=> Schema::DT_FLOAT,
 			'nullable'	=> false,
 			'default'	=> 0,
-		],
-		'quote_currency' => [
-			'type'		=> Schema::DT_VARCHAR128,
-			'nullable'	=> false,
-			'default'	=> '',
 		],
 		'description' => [
 			'type'		=> Schema::DT_TEXT,

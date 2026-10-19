@@ -96,7 +96,7 @@ class SimulCtrl extends PrivateCtrl
 			OFFSET	?
 		";
 		$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
-		$simulation_steps = []; ///////////////
+		$simulation_steps = []; //todo use !
 		while ($klines = $db->exec ($sql, $params)) {
 			foreach ($klines as $kline) {
 				$price = $kline ["open"];
@@ -109,101 +109,78 @@ class SimulCtrl extends PrivateCtrl
 					$ETH = $start_base_amount;
 					$EUR = $start_quote_amount;
 					
-					$reference_price = $price; # value of my last crypto movement #TODO remove and use $sell_assets_history & $buy_assets_history
+					$reference_price = $price; # value of my last crypto movement #TODO remove and use $simulation_steps
 					$high = $price; # highest value since last action
 					$low = $price; # lowest value since last action
-					$start_total = $start_base_amount * $price + $start_quote_amount;
 					
 					$simulation_step->type =					"start";
 					if ($ETH > 0) {
 						$ETH_converted = $ETH * $price;
-						$sell_assets_history = [$ETH_converted];
-						$buy_assets_history = [$ETH];
 						$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
 
 						$simulation_step->base_amount =			$ETH;
-						$simulation_step->base_currency =		"ETH";
-						$simulation_step->quote_amount =		0;
-						$simulation_step->quote_currency =		"EUR";
+						$simulation_step->quote_amount =		$ETH_converted;
 						$simulation_step->description =			"simulation start : {$ETH} ETH = {$ETH_converted_formated} €";
 					}
 					if ($EUR > 0) {
 						$EUR_converted = $EUR / $price;
-						$sell_assets_history = [$EUR];
-						$buy_assets_history = [$EUR_converted];
 						$EUR_converted_formated = Stuff::format_float_significative ($EUR_converted, 6);
 
-						$simulation_step->base_amount =			$EUR;
-						$simulation_step->base_currency =		"EUR";
-						$simulation_step->quote_amount =		0;
-						$simulation_step->quote_currency =		"EUR";
+						$simulation_step->base_amount =			$EUR_converted;
+						$simulation_step->quote_amount =		$EUR;
 						$simulation_step->description =			"simulation start : {$EUR} € = {$EUR_converted_formated} ETH";
 					}
-					$simulation_step->save();
+					$simulation_step->save ();
 					$simulation_steps [] = $simulation_step;
 				}
-				
-				$SMA_price = $kline [$sma_name];
-				$price_smoothed = $SMA_price; # we use SMA as smoothed price
-				
-				$high = max ($price_smoothed, $high);
-				$low = min ($price_smoothed, $low);
-				
-				if ($ETH > 0) { # I own crypto
-					if ($price_smoothed > ($reference_price * (1 + $sell_min_margin/100))) { # price raised a lot
-						if ($price_smoothed < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
-							// if ($price > ($reference_price * (1 + $sell_min_margin/100))) { # also check current price
+				else {
+					$SMA_price = $kline [$sma_name];
+					$price_smoothed = $SMA_price; # we use SMA as smoothed price
+					
+					$high = max ($price_smoothed, $high);
+					$low = min ($price_smoothed, $low);
+					
+					if ($ETH > 0) { # I own crypto
+						if ($price_smoothed > ($reference_price * (1 + $sell_min_margin/100))) { # price raised a lot
+							if ($price_smoothed < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
 								$EUR = $ETH * $price;
 								$EUR_formated = Stuff::format_float_significative ($EUR, 6);
-								$quote_amount = $ETH;
-								$ETH = 0;
-								$low = $high = $reference_price = $price;
-								$last_sell_assets = $sell_assets_history [array_key_last ($sell_assets_history)];
-								$delta_pct = ($EUR - $last_sell_assets) / $last_sell_assets * 100;
-								$delta_pct_formated = Stuff::format_percent ($delta_pct);
-								$sell_assets_history [] = $EUR;
 								
 								$simulation_step->type =				"sell";
-								$simulation_step->base_amount =			$EUR;
-								$simulation_step->base_currency =		"EUR";
-								$simulation_step->quote_amount =		$quote_amount;
-								$simulation_step->quote_currency =		"ETH";
-								$simulation_step->description = "({$price_formated}) selling --> {$EUR_formated} € ({$delta_pct_formated})";
-								$simulation_step->save();
+								$simulation_step->base_amount =			$ETH;
+								$simulation_step->quote_amount =		$EUR;
+								$simulation_step->description =			"({$price_formated}) selling --> {$EUR_formated} €";
+								$simulation_step->save ();
 								$simulation_steps [] = $simulation_step;
-							// }
+								
+								$ETH = 0;
+								$low = $high = $reference_price = $price;
+							}
+						}
+					}
+					
+					if ($EUR > 0) { # I own euros
+						if ($price_smoothed < ($reference_price * (1 - $buy_min_margin / 100))) { # value dropped a lot
+							if ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
+								$ETH = $EUR / $price;
+								$ETH_formated = Stuff::format_float_significative ($ETH, 6);
+								
+								$simulation_step->type =				"buy";
+								$simulation_step->base_amount =			$ETH;
+								$simulation_step->quote_amount =		$EUR;
+								$simulation_step->description =			"({$price_formated}) buying --> {$ETH_formated} ETH";
+								$simulation_step->save ();
+								$simulation_steps [] = $simulation_step;
+								
+								$EUR = 0;
+								$low = $high = $reference_price = $price;
+							}
 						}
 					}
 				}
-				
-				if ($EUR > 0) { # I own euros
-					if ($price_smoothed < ($reference_price * (1 - $buy_min_margin / 100))) { # value dropped a lot
-						if ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
-							$ETH = $EUR / $price;
-							$ETH_formated = Stuff::format_float_significative ($ETH, 6);
-							$quote_amount = $EUR;
-							$EUR = 0;
-							$low = $high = $reference_price = $price;
-							$last_buy_assets = $buy_assets_history [array_key_last ($buy_assets_history)];
-							$delta_pct = ($ETH - $last_buy_assets) / $last_buy_assets * 100;
-							$delta_pct_formated = Stuff::format_percent ($delta_pct);
-							$buy_assets_history [] = $ETH;
-							
-							$simulation_step->type =				"buy";
-							$simulation_step->base_amount =			$ETH;
-							$simulation_step->base_currency =		"ETH";
-							$simulation_step->quote_amount =		$quote_amount;
-							$simulation_step->quote_currency =		"EUR";
-							$simulation_step->description = "({$price_formated}) buying --> {$ETH_formated} ETH ({$delta_pct_formated})";
-							$simulation_step->save();
-							$simulation_steps [] = $simulation_step;
-						}
-					}
-				}
-				$last_kline = $kline;
 				$offset ++;
+				$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
 			}
-			$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
 		}
 		
 		// end of simulation state
@@ -211,34 +188,32 @@ class SimulCtrl extends PrivateCtrl
 		$simulation_step->simulation_id =		$simulation;
 		$simulation_step->kline_id =			$kline ["id"];
 		$simulation_step->type =				"end";
-		$simulation_step->base_amount =			$EUR; /////////////////////////
-		$simulation_step->base_currency =		"EUR";
-		$simulation_step->quote_amount =		$ETH;
-		$simulation_step->quote_currency =		"ETH";
-		
-		if (empty ($last_kline)) {
-			echo "no data loaded. </br>" . PHP_EOL;
-			exit;
-		}
+		$simulation_step->base_amount =			$ETH;
+		$simulation_step->quote_amount =		$EUR;
 		
 		if ($ETH > 0) {
 			$ETH_formated = Stuff::format_float_significative ($ETH, 6);
 			$ETH_converted = $ETH * $price;
 			$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
-			$simulation_step->description = "simulation end : {$ETH_formated} ETH @ {$price_formated} => {$ETH_converted_formated} €";
+			$simulation_step->quote_amount =	$ETH_converted;
+			$simulation_step->description =		"simulation end : {$ETH_formated} ETH @ {$price_formated} <=> {$ETH_converted_formated} €";
 		}
 		if ($EUR > 0) {
 			$EUR_formated = Stuff::format_float_significative ($EUR, 6);
-			$simulation_step->description = "simulation end : {$EUR_formated} €";
+			$EUR_converted = $EUR / $price;
+			$EUR_converted_formated = Stuff::format_float_significative ($EUR_converted, 6);
+			$simulation_step->base_amount =		$EUR_converted;
+			$simulation_step->description = 	"simulation end : {$EUR_formated} € <=> {$EUR_converted_formated} ETH";
 		}
-		$simulation_step->save();
+		
+		$simulation_step->save ();
 		$simulation_steps [] = $simulation_step;
 		
-		$f3->reroute(["simulation", ["id" => $simulation->id]]);
+		$f3->reroute (["simulation", ["id" => $simulation->id]]);
 	}
 
 
-	public static function SimulationGET (Base $f3, $url, $controler)
+	public static function simulationGET (Base $f3, $url, $controler)
 	{
 		$id = (int) $f3->get ("PARAMS.id");
 		if (empty ($id) || !is_int ($id)) {
@@ -262,7 +237,7 @@ class SimulCtrl extends PrivateCtrl
 	}
 	
 	
-	public static function SimulationDeleteGET (Base $f3, $url, $controler)
+	public static function simulationDeleteGET (Base $f3, $url, $controler)
 	{
 		$id = (int) $f3->get ("PARAMS.id");
 		if (empty ($id) || !is_int ($id)) {

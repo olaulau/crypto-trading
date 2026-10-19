@@ -74,8 +74,7 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## bugs
-intégration fichiers CSV ultra lents (sur NAS), processus PHP fpm 8.4 à 100%, environ 100 lignes par secondes
-chart qui ne semble pas marcher avec simulation_id=0
+
 
 
 ## TODO

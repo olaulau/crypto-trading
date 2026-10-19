@@ -67,14 +67,14 @@ class Simulation extends Mdl
 	{
 		$simulation_step_wrapper = new SimulationStep;
 		$simulation_steps = $simulation_step_wrapper->find (["simulation_id = ?", $this->id], ["order" => "id ASC"]);
-		if (empty ($simulation_steps)) {
+		if ($simulation_steps->count () === 0) {
 			throw new ErrorException("simulation has no step");
 		}
 
 		$start_step = $simulation_steps [0];
-		$start_base = $start_step->base_amount;
+		$start_base = $start_step->quote_amount;
 		$end_step = $simulation_steps [$simulation_steps->count() - 1];
-		$end_base = $end_step->base_amount;
+		$end_base = $end_step->quote_amount;
 		
 		$roi = ($end_base - $start_base) / $start_base;
 		return $roi;
