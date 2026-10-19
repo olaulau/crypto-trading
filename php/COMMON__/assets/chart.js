@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const json = await response.json();
 		chart.data.datasets = json;
 		chart.data.datasets.forEach (dataset => {
-			dataset.pointBackgroundColor = ctx => ctx.raw.color;
+			dataset.pointBackgroundColor = ctx => ctx.raw?.color ?? 'red';
 		});
 		chart.update ('none');
 		updateStats (chart);

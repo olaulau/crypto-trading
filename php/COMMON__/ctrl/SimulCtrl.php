@@ -325,122 +325,26 @@ class SimulCtrl extends PrivateCtrl
 		// calculate candle size
 		$max_candles = 1000;
 		$candles_available = IndexCtrl::candles_available ($symbol, $start_sql, $end_sql);
-		foreach ($candles_available as $candle_name) {
-			$candle_duration = Binance::candles [$candle_name];
-			$candles_count = $x_width / $candle_duration;
-			if ($candles_count <= $max_candles) {
-				break;
-			}
-		}
 		
-		// klines
-		$sql = "
-			SELECT	open_time, open
-			FROM	" . Kline::table . "
-			WHERE	symbol = ?
-			AND		candle_size = ?
-			AND		open_time >= ?
-			AND 	open_time <= ?
-			AND 	UNIX_TIMESTAMP(open_time) % ? = 0
-		";
-		$params = [
-			$symbol,
-			$candle_name,
-			$start_sql,
-			$end_sql,
-			$candle_duration,
-		];
-		$klines = $db->exec ($sql, $params);
-		if (empty ($klines)) {
-			throw new ErrorException("no data retrieved");
-		}
-
 		$klines_data = [];
-		foreach ($klines as $kline) {
-			$x = new DateTime ($kline ["open_time"])->getTimestamp() * 1000;
-			$y = $kline ["open"];
-			$klines_data [] = [
-				"x" => $x,
-				"y" => $y,
-			];
-		}
-
-		// keypoints
-		foreach ($klines as $kline) {
-			$x = new DateTime ($kline ["open_time"])->getTimestamp() * 1000;
-			if ($start_tsms <= $x && $x <= $end_tsms) {
-				$y = $kline ["open"];
-				if (empty($min_x)) { // first value
-					$min_x = $max_x = $x;
-					$min_y = $max_y = $y;
-				}
-				else {
-					if ($y < $min_y) {
-						$min_y = $y;
-						$min_x = $x;
-					}
-					if ($y > $max_y) {
-						$max_y = $y;
-						$max_x = $x;
-					}
+		if (!empty ($candles_available)) {
+			foreach ($candles_available as $candle_name) {
+				$candle_duration = Binance::candles [$candle_name];
+				$candles_count = $x_width / $candle_duration;
+				if ($candles_count <= $max_candles) {
+					break;
 				}
 			}
-		}
-		
-		$keyPoints = [];
-		if (!empty ($klines_data)) {
-			$keyPoints = [
-				[
-					"x"		=> $min_x,
-					"y"		=> $min_y,
-					"label" => "min",
-					"color"	=> "orange",
-				],
-				[
-					"x"		=> $max_x,
-					"y"		=> $max_y,
-					"label"	=> "max",
-					"color" => "yellow",
-				]
-			];
-		}
-
-		$datasets = 
-		[
-			[
-				"label"						=> 'ETHEUR',
-				"data"						=> $klines_data,
-				"borderColor" 				=> "#55F",
-				"backgroundColor" 			=> "#55F",
-				"borderWidth" 				=> 2,
-				"pointRadius"				=> 0, // ❌ pas de points
-				"pointHoverRadius" 			=> 0, // ❌ même au survol
-				"tension" 					=> 0.3, // ✅ lissage (0 → lignes droites)
-				"cubicInterpolationMode" 	=> 'monotone' // ✅ lissage propre (finance-friendly)
-			],
-			[
-				"label" 					=> 'Points clés',
-				"data" 						=> $keyPoints,
-				"type" 						=> 'scatter', // important pour avoir seulement des points
-				"pointRadius" 				=> 6, // taille des points
-				"pointBackgroundColor" 		=> 'red',
-				"showLine" 					=> false, // pas de ligne
-			],
-		];
-		
-		// stats
-		$nb_stats = count (IndexCtrl::$stats);
-		$i = 0;
-		foreach (IndexCtrl::$stats as $stat_name => $stat_conf) {
+			
+			// klines
 			$sql = "
 				SELECT	open_time, open
-				FROM	" . Stat::table . "
+				FROM	" . Kline::table . "
 				WHERE	symbol = ?
 				AND		candle_size = ?
 				AND		open_time >= ?
 				AND 	open_time <= ?
 				AND 	UNIX_TIMESTAMP(open_time) % ? = 0
-				AND		name = ?
 			";
 			$params = [
 				$symbol,
@@ -448,33 +352,133 @@ class SimulCtrl extends PrivateCtrl
 				$start_sql,
 				$end_sql,
 				$candle_duration,
-				$stat_conf ["name"],
 			];
-			$stats = $db->exec ($sql, $params);
-			if (! empty ($stats)) {
-				$stats_data [$stat_name] = [];
-				foreach ($stats as $stat) {
-					$stats_data [$stat_name] [] = [
-						"x" => new DateTime ($stat ["open_time"])->getTimestamp() * 1000,
-						"y" => $stat ["open"],
-					];
-				}
+			$klines = $db->exec ($sql, $params);
+			if (empty ($klines)) {
+				throw new ErrorException("no data retrieved");
+			}
+	
 			
-				$alpha = 1 - ($i * (1 / $nb_stats));
-				$datasets [] =
+			foreach ($klines as $kline) {
+				$x = new DateTime ($kline ["open_time"])->getTimestamp() * 1000;
+				$y = $kline ["open"];
+				$klines_data [] = [
+					"x" => $x,
+					"y" => $y,
+				];
+			}
+	
+			// keypoints
+			foreach ($klines as $kline) {
+				$x = new DateTime ($kline ["open_time"])->getTimestamp() * 1000;
+				if ($start_tsms <= $x && $x <= $end_tsms) {
+					$y = $kline ["open"];
+					if (empty($min_x)) { // first value
+						$min_x = $max_x = $x;
+						$min_y = $max_y = $y;
+					}
+					else {
+						if ($y < $min_y) {
+							$min_y = $y;
+							$min_x = $x;
+						}
+						if ($y > $max_y) {
+							$max_y = $y;
+							$max_x = $x;
+						}
+					}
+				}
+			}
+			
+			$keyPoints = [];
+			if (!empty ($klines_data)) {
+				$keyPoints = [
 					[
-						"label"				=> $stat_name,
-						"data"				=> $stats_data [$stat_name],
-						"hidden"			=> ($stat_name !== static::$sma_name),
-						"borderColor"		=> "rgba(0, 175, 0, {$alpha})",
-						"backgroundColor" 	=> "rgba(0, 175, 0, {$alpha})",
-						"borderWidth"		=> 2,
-						"pointRadius"		=> 0, // ❌ pas de points
-						"pointHoverRadius"	=> 0, // ❌ même au survol
-						"tension"			=> 0.3, // ✅ lissage (0 → lignes droites)
-						"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
-					];
-				$i ++;
+						"x"		=> $min_x,
+						"y"		=> $min_y,
+						"label" => "min",
+						"color"	=> "orange",
+					],
+					[
+						"x"		=> $max_x,
+						"y"		=> $max_y,
+						"label"	=> "max",
+						"color" => "yellow",
+					]
+				];
+			}
+	
+			$datasets = 
+			[
+				[
+					"label"						=> 'ETHEUR',
+					"data"						=> $klines_data,
+					"borderColor" 				=> "#55F",
+					"backgroundColor" 			=> "#55F",
+					"borderWidth" 				=> 2,
+					"pointRadius"				=> 0, // ❌ pas de points
+					"pointHoverRadius" 			=> 0, // ❌ même au survol
+					"tension" 					=> 0.3, // ✅ lissage (0 → lignes droites)
+					"cubicInterpolationMode" 	=> 'monotone' // ✅ lissage propre (finance-friendly)
+				],
+				[
+					"label" 					=> 'Points clés',
+					"data" 						=> $keyPoints,
+					"type" 						=> 'scatter', // important pour avoir seulement des points
+					"pointRadius" 				=> 6, // taille des points
+					"pointBackgroundColor" 		=> 'red',
+					"showLine" 					=> false, // pas de ligne
+				],
+			];
+			
+			// stats
+			$nb_stats = count (IndexCtrl::$stats);
+			$i = 0;
+			foreach (IndexCtrl::$stats as $stat_name => $stat_conf) {
+				$sql = "
+					SELECT	open_time, open
+					FROM	" . Stat::table . "
+					WHERE	symbol = ?
+					AND		candle_size = ?
+					AND		open_time >= ?
+					AND 	open_time <= ?
+					AND 	UNIX_TIMESTAMP(open_time) % ? = 0
+					AND		name = ?
+				";
+				$params = [
+					$symbol,
+					$candle_name,
+					$start_sql,
+					$end_sql,
+					$candle_duration,
+					$stat_conf ["name"],
+				];
+				$stats = $db->exec ($sql, $params);
+				if (! empty ($stats)) {
+					$stats_data [$stat_name] = [];
+					foreach ($stats as $stat) {
+						$stats_data [$stat_name] [] = [
+							"x" => new DateTime ($stat ["open_time"])->getTimestamp() * 1000,
+							"y" => $stat ["open"],
+						];
+					}
+				
+					$alpha = 1 - ($i * (1 / $nb_stats));
+					$datasets [] =
+						[
+							"label"				=> $stat_name,
+							"data"				=> $stats_data [$stat_name],
+							"hidden"			=> ($stat_name !== static::$sma_name),
+							"borderColor"		=> "rgba(0, 175, 0, {$alpha})",
+							"backgroundColor" 	=> "rgba(0, 175, 0, {$alpha})",
+							"borderWidth"		=> 2,
+							"pointRadius"		=> 0, // ❌ pas de points
+							"pointHoverRadius"	=> 0, // ❌ même au survol
+							"tension"			=> 0.3, // ✅ lissage (0 → lignes droites)
+							"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
+						];
+					$i ++;
+				}
 			}
 		}
 		
