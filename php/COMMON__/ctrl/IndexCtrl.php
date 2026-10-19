@@ -148,48 +148,49 @@ class IndexCtrl extends PrivateCtrl
 		// https://data.binance.vision/?prefix=data/spot/monthly/klines/ETHEUR/15m/
 		$base_path = "https://data.binance.vision/data/spot/monthly/klines/ETHEUR/15m/";
 		$start_year = 2020; #TODO list file on server and detect a valid start period ?
-		$date = new DateTime("first day of January {$start_year}", new DateTimeZone("Europe/Paris"));
-		$max = new DateTime("last day of previous month", new DateTimeZone("Europe/Paris"));
+		$start_dt = new DateTime ("first day of January {$start_year}", new DateTimeZone ("Europe/Paris"));
+		$end_dt = new DateTime ("last day of previous month", new DateTimeZone ("Europe/Paris"));
 		
-		while (!$date->diff($max)->invert) {
-			$month = $date->format("Y-m");
-			$filename = static::$symbol."-".static::$small_candle_size."-{$month}";
-			$url = "$base_path$filename.zip";
+		while (!$start_dt->diff ($end_dt)->invert) {
+			$month = $start_dt->format ("Y-m");
+			$filename = static::$symbol."-".static::$small_candle_size."-{$month}"; //TODO .zip
+			$url = "{$base_path}{$filename}.zip";
 			$dest = static::$binance_data_directory . $filename; #TODO test var refacto
 			
-			if (!file_exists("$dest.csv")) {
-				if (!file_exists("$dest.zip")) {
+			if (!file_exists ("{$dest}.csv")) {
+				if (!file_exists ("{$dest}.zip")) {
 					try {
-						echo "downloading $url <br/>" . PHP_EOL;
-						Stuff::download_to_disk ($url, "$dest.zip");
+						echo "downloading {$url} <br/>" . PHP_EOL;
+						Stuff::download_to_disk ($url, "{$dest}.zip");
 					}
 					catch (Exception $ex) {
 						echo "download failed : " . $ex->getMessage() . " <br/>" . PHP_EOL;
 						# clean near zero byte badly downloaded files
-						@unlink("$dest.zip");
+						@unlink ("{$dest}.zip");
 					}
 				}
 				
-				if (file_exists("$dest.zip")) {
+				if (file_exists ("{$dest}.zip")) {
 					#TODO verify CHECKSUM
-					echo "extracting $filename <br/>" . PHP_EOL;
-					exec("cd " . escapeshellarg(static::$binance_data_directory) . "; unzip " . escapeshellarg("$dest.zip") . " 2>&1", $output, $result_code);
+					echo "extracting {$filename}.zip <br/>" . PHP_EOL;
+					exec("cd " . escapeshellarg (static::$binance_data_directory) . "; unzip " . escapeshellarg ("{$dest}.zip") . " 2>&1", $output, $result_code);
 					// var_dump($result_code, $output); die;
 					if ($result_code !== 0) {
 						echo "extract failed : <br/>" . PHP_EOL;
-						var_dump($output);
-						@unlink("$dest.csv");
+						var_dump ($output);
+						@unlink ("{$dest}.csv");
 					}
 					else {
 						# remove zip file
-						@unlink("$dest.zip");
+						@unlink ("{$dest}.zip");
 					}
 				}
 			}
 			
-			$date->modify("+1 month");
+			$start_dt->modify ("+1 month");
 		}
 		
+		echo "end. <br>" . PHP_EOL;
 		exit;
 	}
 	
@@ -197,44 +198,47 @@ class IndexCtrl extends PrivateCtrl
 	public static function importGET (Base $f3, $url, $controler)
 	{
 		# init
-		set_time_limit(0);
-		$db = $f3->get("db"); /** @var SQL $db */
+		set_time_limit (0);
+		$db = $f3->get ("db"); /** @var SQL $db */
 		
 		# lookup for CSV files
 		$files = glob (static::$binance_data_directory . "/*.csv");
-		asort($files);
+		asort ($files);
 
-		$start_dt = new DateTime(static::$start_sql);
-		$end_dt = new DateTime(static::$end_sql);
+		$start_dt = new DateTime (static::$start_sql);
+		$end_dt = new DateTime (static::$end_sql);
 		
 		foreach ($files as $file) {
-			// $start_time = microtime(true);
+			$start_time = microtime (true);
 			
 			# extract infos from filename
-			$filebase = basename($file);
-			echo "{$filebase} <br/>" . PHP_EOL;
+			$filebase = basename ($file);
 			$regex = '/([[:alpha:]]+)-([[:digit:]]+[[:alpha:]])-([[:digit:]]{4})-([[:digit:]]{2})\.csv/'; // ETHEUR-15m-2020-01.csv
 			$res = preg_match ($regex, $filebase, $matches);
 			if ($res !== 1) {
 				echo "import filename regex match error <br/>" . PHP_EOL;
 				continue;
 			}
-			list(,$symbol, $candle_size, $year, $month) = $matches;
+			list (,$symbol, $candle_size, $year, $month) = $matches;
 
 			# check date is in range
 			$file_dt = new DateTime("{$year}-{$month}-01 00:00:00");
 			if (($file_dt->getTimestamp() - $start_dt->getTimestamp()) < 0 || ($end_dt->getTimestamp() - $file_dt->getTimestamp()) < 0) {
-				echo "file is out of date range <br/>" . PHP_EOL;
+				// echo "file is out of date range <br/>" . PHP_EOL;
 				continue;
 			};
+			
+			//TODO check data not already loaded
 
 			# open CSV file
-			$fh = fopen($file, "r");
+			echo "{$filebase} <br/>" . PHP_EOL;
+			$fh = fopen ($file, "r");
 			
 			# read CSV rows
+			$cpt = 0;
 			$db->begin();
 			while (false !== ($row = fgetcsv($fh, null, ",", '"', '\\'))) {
-				$row = array_combine(Binance::kline_format, $row);
+				$row = array_combine (Binance::kline_format, $row);
 				
 				# write into DB
 				$kline = new Kline;
@@ -249,57 +253,57 @@ class IndexCtrl extends PrivateCtrl
 				catch (Throwable $t) {
 					echo $t->getMessage() . "<br/>" . PHP_EOL;
 				}
+				$cpt ++;
 			}
 			$db->commit();
 
-			// $end_time = microtime(true);
-			// $duration = ($end_time - $start_time) * 1000;
-			// echo number_format($duration, 2, ",", " ") . " ms <br/>" . PHP_EOL;
+			$end_time = microtime (true);
+			$duration = ($end_time - $start_time) * 1000;
+			$duration_txt = number_format ($duration, 2, ",", " ");
+			$rate = $cpt / $duration * 1000;
+			$rate_txt = number_format ($rate, 2, ",", " ");
+			echo "{$cpt} rows in {$duration_txt} ms ({$rate_txt} / s) <br/>" . PHP_EOL;
+			echo "<br/>" . PHP_EOL;
 		}
-		
 		exit;
 	}
 	
 	
 	public static function candlesGET (Base $f3, $url, $controler)
 	{
-		ini_set('max_execution_time', 0);
+		ini_set ('max_execution_time', 0);
 
-		$candles_available = self::candles_available (static::$symbol, static::$start_sql, static::$end_sql);
-		
 		foreach (Binance::candles as $big_candle_size => $big_candle_duration) {
-			echo "<b>$big_candle_size = $big_candle_duration</b> <br/>" . PHP_EOL;
-			if (in_array($big_candle_size, $candles_available)) {
+			echo "<b>{$big_candle_size} = {$big_candle_duration}s</b> <br/>" . PHP_EOL;
+			$candles_available = self::candles_available (static::$symbol, static::$start_sql, static::$end_sql);
+			if (in_array ($big_candle_size, $candles_available)) {
 				echo "candle already available <br/>" . PHP_EOL;
-				echo "<br/>" . PHP_EOL;
-				continue;
-			}
-			
-			# choose biggest compatible candle
-			$small_candle_size = null;
-			$big_candle_duration = Binance::candles [$big_candle_size];;
-			foreach ($candles_available as $candle) {
-				if ($big_candle_size === $candle) {
-					echo "$candle $candle_duration is same <br/>" . PHP_EOL;
-					continue; // don't try to recalculate ourself
-				}
-				$candle_duration = Binance::candles [$candle];
-				$quotient = $big_candle_duration / $candle_duration;
-				$reste = $big_candle_duration % $candle_duration;
-				// echo "$candle $candle_duration $quotient $reste <br/>" . PHP_EOL;
-				if ($quotient > 1 && $reste === 0) {
-					$small_candle_size = $candle;
-				}
-			}
-			
-			if (empty($small_candle_size)) {
-				echo "ERROR : no candle suitable for calculation of " . static::$symbol . " {$big_candle_size} <br/>" . PHP_EOL;
 			}
 			else {
-				self::candle_calculate (static::$symbol, static::$start_sql, static::$end_sql, $small_candle_size, $big_candle_size);
-				$candles_available = self::candles_available(static::$symbol, static::$start_sql, static::$end_sql);
+				# choose biggest compatible candle
+				$small_candle_size = null;
+				$big_candle_duration = Binance::candles [$big_candle_size];;
+				foreach ($candles_available as $candle) {
+					if ($big_candle_size === $candle) { //TODO shouldn't come here, ERROR !
+						echo "$candle $candle_duration is same <br/>" . PHP_EOL;
+						continue; // don't try to recalculate ourself
+					}
+					$candle_duration = Binance::candles [$candle];
+					$quotient = $big_candle_duration / $candle_duration;
+					$reste = $big_candle_duration % $candle_duration;
+					// echo "$candle $candle_duration $quotient $reste <br/>" . PHP_EOL;
+					if ($quotient > 1 && $reste === 0) {
+						$small_candle_size = $candle;
+					}
+				}
+				
+				if (empty($small_candle_size)) {
+					echo "ERROR : no candle suitable for calculation of " . static::$symbol . " {$big_candle_size} <br/>" . PHP_EOL;
+				}
+				else {
+					self::candle_calculate (static::$symbol, static::$start_sql, static::$end_sql, $small_candle_size, $big_candle_size);
+				}
 			}
-			
 			echo "<br/>" . PHP_EOL;
 		}
 		exit;
@@ -310,13 +314,14 @@ class IndexCtrl extends PrivateCtrl
 		$f3 = Base::instance();
 		$db = $f3->get("db"); /** @var SQL $db */
 
-		echo "computing {$symbol} candles from {$small_candle_size} to {$big_candle_size} ... <br/>" . PHP_EOL;
-		
 		# start reading data
+		echo "computing {$symbol} candles from {$small_candle_size} to {$big_candle_size} ... <br/>" . PHP_EOL;
 		$candle_seconds = Binance::candles [$big_candle_size];
 		$offset = 0;
 		$kline_wrapper = new Kline;
 
+		$cpt_small_candle = $cpt_big_candle = 0;
+		$start_time = microtime (true);
 		while ($kline_wrapper->load(
 			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, $start, $end],
 			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
@@ -345,8 +350,10 @@ class IndexCtrl extends PrivateCtrl
 							echo $t->getMessage() . " <br/>" . PHP_EOL;
 						}
 						$big_candle = null;
+						$cpt_big_candle ++;
 					}
 				}
+				$cpt_small_candle ++;
 			}
 			while ($kline_wrapper->next());
 			$db->commit();
@@ -354,7 +361,14 @@ class IndexCtrl extends PrivateCtrl
 			$offset += static::$sql_read_limit;
 			$kline_wrapper->reset();
 		}
-		echo " OK. <br/>" . PHP_EOL;
+		
+		$end_time = microtime (true);
+		$duration = ($end_time - $start_time) * 1000;
+		$duration_txt = number_format ($duration, 2, ",", " ");
+		$rate = $cpt_big_candle / $duration * 1000;
+		$rate_txt = number_format ($rate, 2, ",", " ");
+		echo "{$cpt_big_candle} rows in {$duration_txt} ms ({$rate_txt} / s) <br/>" . PHP_EOL;
+		echo "<br/>" . PHP_EOL;
 	}
 
 	public static function candles_available (string $symbol, string $start, string $end) : array

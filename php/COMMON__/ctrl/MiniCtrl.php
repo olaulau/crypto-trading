@@ -47,7 +47,7 @@ abstract class MiniCtrl
 		$f3->set ("f3", $f3);
 		
 		// initialise logger
-		$log = new Log('logs.log');
+		$log = new Log ('logs.log');
 		$f3->set ("log", $log);
 		
 		// connect DB
@@ -59,19 +59,19 @@ abstract class MiniCtrl
 					PDO::ATTR_PERSISTENT => true,
 				]
 			);
-			$db->log (true); //TODO config ?
+			$db->log (false); //TODO config ?
 			
 			// all dates are UTC
 			$db->exec ("SET time_zone = '+00:00';");
-			ini_set("date.timezone", "UTC");
-			date_default_timezone_set("UTC");
+			ini_set ("date.timezone", "UTC");
+			date_default_timezone_set ("UTC");
 			
 			$f3->set("db", $db);
 		}
 		
 		// initialise session (ignores suspect session : change in IP / useragent)
 		$session = new Session(
-			function(Session $session, $id) // onsuspeect
+			function (Session $session, $id) // onsuspeect
 			{
 				return true;
 			}

@@ -73,8 +73,13 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 - textalk/websocket
 
 
+## bugs
+intégration fichiers CSV ultra lents (sur NAS), processus PHP fpm 8.4 à 100%, environ 100 lignes par secondes
+chart qui ne semble pas marcher avec simulation_id=0
+
 
 ## TODO
+réécrire toute la partie simulation en fixant bien "base" = ETH et quote = EUR, quelque soit le sens de la transaction
 - simulate
 	- intermediate form to enter simulation params
 		- also input date range
