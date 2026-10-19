@@ -429,7 +429,9 @@ class SimulCtrl extends PrivateCtrl
 		];
 		
 		// stats
-		foreach (IndexCtrl::$stats as $stat_conf) {
+		$nb_stats = count (IndexCtrl::$stats);
+		$i = 0;
+		foreach (IndexCtrl::$stats as $stat_name => $stat_conf) {
 			$sql = "
 				SELECT	open_time, open
 				FROM	" . Stat::table . "
@@ -449,37 +451,31 @@ class SimulCtrl extends PrivateCtrl
 				$stat_conf ["name"],
 			];
 			$stats = $db->exec ($sql, $params);
-			if (empty ($stats)) {
-				throw new ErrorException("no stat retrieved for {$stat_conf["name"]} with candle {$candle_name}");
-			}
+			if (! empty ($stats)) {
+				$stats_data [$stat_name] = [];
+				foreach ($stats as $stat) {
+					$stats_data [$stat_name] [] = [
+						"x" => new DateTime ($stat ["open_time"])->getTimestamp() * 1000,
+						"y" => $stat ["open"],
+					];
+				}
 			
-			$stats_data [$stat_conf ["name"]] = [];
-			foreach ($stats as $stat) {
-				$stats_data [$stat_conf ["name"]] [] = [
-					"x" => new DateTime ($stat ["open_time"])->getTimestamp() * 1000,
-					"y" => $stat ["open"],
-				];
+				$alpha = 1 - ($i * (1 / $nb_stats));
+				$datasets [] =
+					[
+						"label"				=> $stat_name,
+						"data"				=> $stats_data [$stat_name],
+						"hidden"			=> ($stat_name !== static::$sma_name),
+						"borderColor"		=> "rgba(0, 175, 0, {$alpha})",
+						"backgroundColor" 	=> "rgba(0, 175, 0, {$alpha})",
+						"borderWidth"		=> 2,
+						"pointRadius"		=> 0, // ❌ pas de points
+						"pointHoverRadius"	=> 0, // ❌ même au survol
+						"tension"			=> 0.3, // ✅ lissage (0 → lignes droites)
+						"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
+					];
+				$i ++;
 			}
-		}
-		
-		$i = 0;
-		foreach (IndexCtrl::$stats as $stat_name => $stat_conf) {
-			$nb_stats = count (IndexCtrl::$stats);
-			$alpha = 1 - ($i * (1 / $nb_stats));
-			$datasets [] =
-				[
-					"label"				=> $stat_name,
-					"data"				=> $stats_data [$stat_name],
-					"hidden"			=> ($stat_name !== static::$sma_name),
-					"borderColor"		=> "rgba(0, 175, 0, {$alpha})",
-					"backgroundColor" 	=> "rgba(0, 175, 0, {$alpha})",
-					"borderWidth"		=> 2,
-					"pointRadius"		=> 0, // ❌ pas de points
-					"pointHoverRadius"	=> 0, // ❌ même au survol
-					"tension"			=> 0.3, // ✅ lissage (0 → lignes droites)
-					"cubicInterpolationMode" => 'monotone' // ✅ lissage propre (finance-friendly)
-				];
-			$i ++;
 		}
 		
 		// simulation
