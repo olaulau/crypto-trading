@@ -35,8 +35,8 @@ class IndexCtrl extends PrivateCtrl
 	public final static $small_candle_size = "15m";
 	public final static $sql_read_limit = 10000;
 	public final static $start_sql = "2025-01-01 00:00:00";
-	// public final static $end_sql = "2025-01-31 23:59:59";
-	public final static $end_sql = "2025-12-31 23:59:59";
+	public final static $end_sql = "2025-01-31 23:59:59";
+	// public final static $end_sql = "2025-12-31 23:59:59";
 
 	public final static $stats = [
 		//TODO use index in code, and remove "name" property

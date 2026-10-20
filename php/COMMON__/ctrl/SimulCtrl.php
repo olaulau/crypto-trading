@@ -56,10 +56,10 @@ class SimulCtrl extends PrivateCtrl
 	
 	public static function simulateGET (Base $f3, $url, $controler)
 	{
-		SimulCtrl::simulation_run (0, 1000, static::$sma_name, 2, 1, 2, 1);
+		SimulCtrl::simulation_run (0, 1000, static::$sma_name, 2, 1, 0, 2, 1, 0);
 	}
 	
-	private static function simulation_run (float $start_base_amount, float $start_quote_amount, string $sma_name, $sell_min_margin , $sell_floor_margin, $buy_min_margin, $buy_floor_margin) : void
+	private static function simulation_run (float $start_base_amount, float $start_quote_amount, string $sma_name, float $sell_min_margin , float $sell_floor_margin, float $stop_loss_margin, float $buy_min_margin, float $buy_floor_margin, float $re_entry_margin) : void
 	{
 		# init
 		set_time_limit (0);
@@ -75,8 +75,8 @@ class SimulCtrl extends PrivateCtrl
 			simple margin algorithm
 			candle size = " . IndexCtrl::$small_candle_size . "
 			smoothing stat = {$sma_name}
-			sell min margin : {$sell_min_margin}% ({$sell_floor_margin}% floor)
-			buy min margin : {$buy_min_margin}% ({$buy_floor_margin}% floor)
+			sell min margin : {$sell_min_margin}% ({$sell_floor_margin}% floor), SL {$stop_loss_margin}%
+			buy min margin : {$buy_min_margin}% ({$buy_floor_margin}% floor), re entry {$re_entry_margin}%
 		"));
 		$simulation->save ();
 
@@ -97,6 +97,12 @@ class SimulCtrl extends PrivateCtrl
 		";
 		$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
 		$simulation_steps = []; //todo use !
+		
+		$csv_filename = __DIR__ . "/../../../" . "/data/simu.csv";
+		$csv_handle = fopen ($csv_filename, "w");
+		$csv_row_data = ["open_time", "ETH", "EUR", "price", "price_smoothed", "reference_price", "high", "low"];
+		fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////////////////////
+		
 		while ($klines = $db->exec ($sql, $params)) {
 			foreach ($klines as $kline) {
 				$price = $kline ["open"];
@@ -105,13 +111,16 @@ class SimulCtrl extends PrivateCtrl
 				$simulation_step->simulation_id = $simulation;
 				$simulation_step->kline_id = $kline ["id"];
 				
+				$SMA_price = $kline [$sma_name];
+				$price_smoothed = $SMA_price; # we use SMA as smoothed price
+				
 				if ($offset === 0) { # start variables
 					$ETH = $start_base_amount;
 					$EUR = $start_quote_amount;
 					
-					$reference_price = $price; # value of my last crypto movement #TODO remove and use $simulation_steps
-					$high = $price; # highest value since last action
-					$low = $price; # lowest value since last action
+					$reference_price = $price_smoothed; # value of my last crypto movement #TODO remove and use $simulation_steps
+					$high = $price_smoothed; # highest value since last action
+					$low = $price_smoothed; # lowest value since last action
 					
 					$simulation_step->type =					"start";
 					if ($ETH > 0) {
@@ -134,14 +143,11 @@ class SimulCtrl extends PrivateCtrl
 					$simulation_steps [] = $simulation_step;
 				}
 				else {
-					$SMA_price = $kline [$sma_name];
-					$price_smoothed = $SMA_price; # we use SMA as smoothed price
-					
 					$high = max ($price_smoothed, $high);
 					$low = min ($price_smoothed, $low);
 					
 					if ($ETH > 0) { # I own crypto
-						if ($price_smoothed > ($reference_price * (1 + $sell_min_margin/100))) { # price raised a lot
+						if ($high > ($reference_price * (1 + $sell_min_margin / 100))) { # price raised a lot
 							if ($price_smoothed < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
 								$EUR = $ETH * $price;
 								$EUR_formated = Stuff::format_float_significative ($EUR, 6);
@@ -154,13 +160,28 @@ class SimulCtrl extends PrivateCtrl
 								$simulation_steps [] = $simulation_step;
 								
 								$ETH = 0;
-								$low = $high = $reference_price = $price;
+								$low = $high = $reference_price = $price_smoothed;
 							}
+						}
+						elseif ($stop_loss_margin > 0.0 && $price_smoothed < ($reference_price * (1 - $stop_loss_margin / 100))) { # we are loosing money
+							# stop loss
+							$EUR = $ETH * $price;
+							$EUR_formated = Stuff::format_float_significative ($EUR, 6);
+							
+							$simulation_step->type =				"sell"; //TODO add a reason (stop loss) field ?
+							$simulation_step->base_amount =			$ETH;
+							$simulation_step->quote_amount =		$EUR;
+							$simulation_step->description =			"({$price_formated}) stop loss --> {$EUR_formated} €";
+							$simulation_step->save ();
+							$simulation_steps [] = $simulation_step;
+							
+							$ETH = 0;
+							$low = $high = $reference_price = $price_smoothed;
 						}
 					}
 					
-					if ($EUR > 0) { # I own euros
-						if ($price_smoothed < ($reference_price * (1 - $buy_min_margin / 100))) { # value dropped a lot
+					else { # I own euros
+						if ($low < ($reference_price * (1 - $buy_min_margin / 100))) { # value dropped a lot
 							if ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
 								$ETH = $EUR / $price;
 								$ETH_formated = Stuff::format_float_significative ($ETH, 6);
@@ -173,11 +194,34 @@ class SimulCtrl extends PrivateCtrl
 								$simulation_steps [] = $simulation_step;
 								
 								$EUR = 0;
-								$low = $high = $reference_price = $price;
+								$low = $high = $reference_price = $price_smoothed;
 							}
 						}
+						elseif ($re_entry_margin > 0.0 && $price_smoothed > ($reference_price * (1 + $re_entry_margin / 100))) { # we are loosing opportunities
+							# re entry
+							$ETH = $EUR / $price;
+							$ETH_formated = Stuff::format_float_significative ($ETH, 6);
+							
+							$simulation_step->type =				"buy"; //TODO add a reason (re entry) field ?
+							$simulation_step->base_amount =			$ETH;
+							$simulation_step->quote_amount =		$EUR;
+							$simulation_step->description =			"({$price_formated}) re entry --> {$ETH_formated} ETH";
+							$simulation_step->save ();
+							$simulation_steps [] = $simulation_step;
+							
+							$EUR = 0;
+							$low = $high = $reference_price = $price_smoothed;
+						}
 					}
+					
+					$csv_row_data = [
+						$kline ["open_time"], $ETH, $EUR, $price, $price_smoothed, $reference_price, $high, $low, 
+						// ($price_smoothed < ($reference_price * (1 - $buy_min_margin / 100))), 
+						// ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))), 
+					];
+					fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); ///////////////////////
 				}
+				
 				$offset ++;
 				$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
 			}
@@ -465,12 +509,23 @@ class SimulCtrl extends PrivateCtrl
 			$simulation_steps = $simulation_step_wrapper->find(["simulation_id = ?", $simulation_id], ["order" => "id ASC"]);
 			foreach ($simulation_steps as $simulation_step) {
 				$kline = $simulation_step->kline_id;
+				$color = "black";
+				switch ($simulation_step->type) {
+					case "buy":
+						$color = "#00AA55";
+						break;
+					case "sell":
+						$color = "#DD0000";
+						break;
+					default:
+						
+				}
 				$simulation_data [] = 
 					[
 						"x"		=> $simulation_step->kline_id->open_time->getTimestamp() * 1000,
 						"y"		=> $kline->open,
 						"label" => $simulation_step->description,
-						"color"	=> $simulation_step->type === "buy" ? "#00AA55" : "#DD0000",
+						"color"	=> $color,
 					]
 				;
 			}

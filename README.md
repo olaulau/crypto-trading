@@ -78,7 +78,6 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## TODO
-réécrire toute la partie simulation en fixant bien "base" = ETH et quote = EUR, quelque soit le sens de la transaction
 - simulate
 	- intermediate form to enter simulation params
 		- also input date range

@@ -66,7 +66,7 @@ class Simulation extends Mdl
 	public function RoI () : float
 	{
 		$simulation_steps = $this->simulation_steps;
-		if ($simulation_steps->count () === 0) {
+		if (empty($simulation_steps) || $simulation_steps->count () === 0) {
 			throw new ErrorException ("simulation has no step");
 		}
 

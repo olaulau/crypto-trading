@@ -25,10 +25,10 @@ use COMMON__\svc\Stuff;
 					?>
 					<tr>
 						<td><?= $simulation_step->kline_id->open_time->format(Stuff::datetime_french_format) ?></td>
-						<td><?= $simulation_step->kline_id->open ?></td>
+						<td><?= Stuff::format_EUR($simulation_step->kline_id->open) ?></td>
 						<td><?= $simulation_step->type ?></td>
-						<td><?= $simulation_step->base_amount ?></td>
-						<td><?= $simulation_step->quote_amount ?></td>
+						<td><?= Stuff::format_crypto($simulation_step->base_amount) ?></td>
+						<td><?= Stuff::format_EUR($simulation_step->quote_amount) ?></td>
 						<td><?= $simulation_step->description ?></td>
 						<td class="<?= $simulation_step->type === "buy" ? "text-secondary" : ""?>"><?= ($i !== 0) ? Stuff::format_percent($simulation_step->margin() * 100) : "" ?></td>
 					</tr>
@@ -42,9 +42,9 @@ use COMMON__\svc\Stuff;
 					<th>&nbsp;</th>
 					<th>&nbsp;</th>
 					<th>&nbsp;</th>
-					<th>volume =  <?= $simulation->volume() ?></th>
+					<th>volume = <?= Stuff::format_EUR($simulation->volume()) ?></th>
 					<th>&nbsp;</th>
-					<th>RoI = <?= $simulation->RoI () * 100 ?> %</th>
+					<th>RoI = <?= Stuff::format_percent($simulation->RoI () * 100) ?></th>
 				</tr>
 			</tfoot>
 		</table>
