@@ -50,13 +50,28 @@ class SimulCtrl extends PrivateCtrl
 			"title"		=>	"Simulations",
 			"breadcrumbs" => static::breadcrumbs(),
 		];
-		static::renderPage($page);
+		static::renderPage ($page);
 	}
 	
 	
 	public static function simulateGET (Base $f3, $url, $controler)
 	{
-		SimulCtrl::simulation_run (0, 1000, static::$sma_name, 2, 1, 0, 2, 1, 0);
+		$page = [
+			"module"	=>	"COMMON__",
+			"layout"	=>	"default",
+			"name"		=>	"simulate",
+			"title"		=>	"Simulate",
+			"breadcrumbs" => static::breadcrumbs(),
+		];
+		static::renderPage ($page);
+	}
+	
+	public static function simulatePOST (Base $f3, $url, $controler)
+	{
+		$post = $f3->get("POST");
+		SimulCtrl::simulation_run ($post ["start_base_amount"], $post ["start_quote_amount"], $post ["sma_name"],
+			$post ["sell_min_margin"], $post ["sell_floor_margin"], $post ["stop_loss_margin"],
+			$post ["buy_min_margin"], $post ["buy_floor_margin"], $post ["re_entry_margin"]);
 	}
 	
 	private static function simulation_run (float $start_base_amount, float $start_quote_amount, string $sma_name, float $sell_min_margin , float $sell_floor_margin, float $stop_loss_margin, float $buy_min_margin, float $buy_floor_margin, float $re_entry_margin) : void
@@ -98,7 +113,7 @@ class SimulCtrl extends PrivateCtrl
 		$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
 		$simulation_steps = []; //todo use !
 		
-		$csv_filename = __DIR__ . "/../../../" . "/data/simu.csv";
+		$csv_filename = __DIR__ . "/../../../" . "/tmp/simu.csv";
 		$csv_handle = fopen ($csv_filename, "w");
 		$csv_row_data = ["open_time", "ETH", "EUR", "price", "price_smoothed", "reference_price", "high", "low"];
 		fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////////////////////
