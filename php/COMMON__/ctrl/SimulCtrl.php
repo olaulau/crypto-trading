@@ -69,9 +69,40 @@ class SimulCtrl extends PrivateCtrl
 	public static function simulatePOST (Base $f3, $url, $controler)
 	{
 		$post = $f3->get("POST");
-		SimulCtrl::simulation_run ($post ["start_base_amount"], $post ["start_quote_amount"], $post ["sma_name"],
-			$post ["sell_min_margin"], $post ["sell_floor_margin"], $post ["stop_loss_margin"],
-			$post ["buy_min_margin"], $post ["buy_floor_margin"], $post ["re_entry_margin"]);
+		// var_dump($post); die;
+		
+		if (
+			(!empty ($post ["sell_min_margin_MAX"]) && $post ["sell_min_margin_STEPS"] < 2)
+			|| (empty ($post ["sell_min_margin_MAX"]) && $post ["sell_min_margin_STEPS"] >= 2)
+			|| (!empty ($post ["sell_min_margin_MAX"]) && $post ["sell_min_margin_MAX"] <= $post ["sell_min_margin"])
+		) {
+			throw new ErrorException("sell_min_margin error");
+		}
+		if (empty ($post ["sell_min_margin_MAX"]) && empty($post ["sell_min_margin_STEPS"])) {
+			$post ["sell_min_margin_MAX"] = $post ["sell_min_margin"];
+			$post ["sell_min_margin_STEPS"] = 1;
+		}
+		//TODO générifier pour chaque champ à l'aide de récursion
+		
+		
+		echo "<pre>";
+		
+		$sma_names = explode (" ", $post ["sma_names"]);
+		foreach ($sma_names as $sma_name) {
+			for ($sell_min_margin_CPT=0; $sell_min_margin_CPT < $post ["sell_min_margin_STEPS"]; $sell_min_margin_CPT ++) {
+				$sell_min_margin = $post ["sell_min_margin"];
+				if ($post ["sell_min_margin_STEPS"] > 1) {
+					$sell_min_margin += $sell_min_margin_CPT * ($post ["sell_min_margin_MAX"] - $post ["sell_min_margin"]) / ($post ["sell_min_margin_STEPS"]-1);
+				}
+				
+				echo "{$post ["start_base_amount"]} \t {$post ["start_quote_amount"]} \t {$sma_name} \t {$sell_min_margin} \t {$post ["sell_floor_margin"]} \t {$post ["stop_loss_margin"]} \t {$post ["buy_min_margin"]} \ {$post ["buy_floor_margin"]}  \t {$post ["re_entry_margin"]} <br/>" . PHP_EOL;
+				// SimulCtrl::simulation_run ($post ["start_base_amount"], $post ["start_quote_amount"], $sma_name,
+				// 	$sell_min_margin, $post ["sell_floor_margin"], $post ["stop_loss_margin"],
+				// 	$post ["buy_min_margin"], $post ["buy_floor_margin"], $post ["re_entry_margin"]);
+			}
+		}
+		
+		echo "</pre>";
 	}
 	
 	private static function simulation_run (float $start_base_amount, float $start_quote_amount, string $sma_name, float $sell_min_margin , float $sell_floor_margin, float $stop_loss_margin, float $buy_min_margin, float $buy_floor_margin, float $re_entry_margin) : void

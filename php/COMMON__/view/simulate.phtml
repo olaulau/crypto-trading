@@ -2,60 +2,69 @@
 ?>
 
 		<div class="d-flex justify-content-between">
-			<h1><?= $page["title"] ?></h1>
+			<h1><?= $page ["title"] ?></h1>
 		</div>
 			
 		<form class="" id="" method="post" action="">
 			<table class="table table-borderless m-0">
 				<tr>
 					<th class="text-end">field</th>
-					<th class="text-center">value</th>
-					<th>help</th>
+					<th class="text-center">min value</th>
+					<th class="text-center">max value</th>
+					<th class="text-center">steps</th>
 				</tr>
 				<tr>
 					<td class="text-end"><label for="start_base_amount" class="col-form-label">start base amount</label></td>
-					<td><input type="number" step="0.000001" id="start_base_amount" name="start_base_amount" class="form-control" placeholder="" value="0" required></td>
-					<td><span id="" class="form-text">start base amount</span></td>
+					<td><input type="number" step="0.000001" id="start_base_amount" name="start_base_amount" class="form-control" placeholder="" value="0" required autofocus></td>
+					<td><span id="" class="form-text">only one value</span></td>
+					<td>&nbsp;</td>
 				</tr>
 				<tr>
 					<td class="text-end"><label for="start_quote_amount" class="col-form-label">start quote amount</label></td>
 					<td><input type="number" step="0.01" id="start_quote_amount" name="start_quote_amount" class="form-control" placeholder="" value="1000" required></td>
-					<td><span id="" class="form-text">start quote amount</span></td>
+					<td><span id="" class="form-text">only one value</span></td>
+					<td>&nbsp;</td>
 				</tr>
 				<tr>
-					<td class="text-end"><label for="sma_name" class="col-form-label">sma name</label></td>
-					<td><input type="text" id="sma_name" name="sma_name" class="form-control" placeholder="" value="SMA4" required></td>
-					<td><span id="" class="form-text">sma name</span></td>
+					<td class="text-end"><label for="sma_names" class="col-form-label">sma names</label></td>
+					<td><input type="text" id="sma_names" name="sma_names" class="form-control" placeholder="" value="SMA4" required></td>
+					<td><span id="" class="form-text">values separated by a space</span></td>
 				</tr>
 				<tr>
 					<td class="text-end"><label for="sell_min_margin" class="col-form-label">sell min margin</label></td>
 					<td><input type="number" step="0.01" id="sell_min_margin" name="sell_min_margin" class="form-control" placeholder="" value="2" required></td>
-					<td><span id="" class="form-text">sell min margin</span></td>
+					<td><input type="number" step="0.01" id="sell_min_margin_MAX" name="sell_min_margin_MAX" class="form-control" placeholder="" value=""></td>
+					<td><input type="number" step="1" min="2" id="sell_min_margin_STEPS" name="sell_min_margin_STEPS" class="form-control" placeholder="" value=""></td>
 				</tr>
 				<tr>
 					<td class="text-end"><label for="sell_floor_margin" class="col-form-label">sell floor margin</label></td>
 					<td><input type="number" step="0.01" id="sell_floor_margin" name="sell_floor_margin" class="form-control" placeholder="" value="1" required></td>
-					<td><span id="" class="form-text">sell floor margin</span></td>
+					<td><input type="number" step="0.01" id="sell_floor_margin_MAX" name="sell_floor_margin_MAX" class="form-control" placeholder="" value=""></td>
+					<td><input type="number" step="1" min="2" id="sell_floor_margin_STEPS" name="sell_floor_margin_STEPS" class="form-control" placeholder="" value=""></td>
 				</tr>
 				<tr>
 					<td class="text-end"><label for="stop_loss_margin" class="col-form-label">stop loss margin</label></td>
 					<td><input type="number" step="0.01" id="stop_loss_margin" name="stop_loss_margin" class="form-control" placeholder="" value="0.5" required></td>
-					<td><span id="" class="form-text">stop loss margin</span></td>
+					<td><input type="number" step="0.01" id="stop_loss_margin_MAX" name="stop_loss_margin_MAX" class="form-control" placeholder="" value=""></td>
+					<td><input type="number" step="1" min="2" id="stop_loss_margin_STEPS" name="stop_loss_margin_STEPS" class="form-control" placeholder="" value=""></td>
 				</tr>
 				<tr>
 					<td class="text-end"><label for="buy_min_margin" class="col-form-label">buy min margin</label></td>
 					<td><input type="number" step="0.01" id="buy_min_margin" name="buy_min_margin" class="form-control" placeholder="" value="2" required></td>
-					<td><span id="" class="form-text">buy min margin</span></td>
+					<td><input type="number" step="0.01" id="buy_min_margin_MAX" name="buy_min_margin_MAX" class="form-control" placeholder="" value=""></td>
+					<td><input type="number" step="1" min="2" id="buy_min_margin_STEPS" name="buy_min_margin_STEPS" class="form-control" placeholder="" value=""></td>
 				</tr>
 				<tr>
 					<td class="text-end"><label for="buy_floor_margin" class="col-form-label">buy floor margin</label></td>
 					<td><input type="number" step="0.01" id="buy_floor_margin" name="buy_floor_margin" class="form-control" placeholder="" value="1" required></td>
-					<td><span id="" class="form-text">buy floor margin</span></td>
+					<td><input type="number" step="0.01" id="buy_floor_margin_MAX" name="buy_floor_margin_MAX" class="form-control" placeholder="" value=""></td>
+					<td><input type="number" step="1" min="2" id="buy_floor_margin_STEPS" name="buy_floor_margin_STEPS" class="form-control" placeholder="" value=""></td>
 				</tr>
 				<tr>
 					<td class="text-end"><label for="re_entry_margin" class="col-form-label">re entry margin</label></td>
 					<td><input type="number" step="0.01" id="re_entry_margin" name="re_entry_margin" class="form-control" placeholder="" value="0.5" required></td>
-					<td><span id="" class="form-text">re entry margin</span></td>
+					<td><input type="number" step="0.01" id="re_entry_margin_MAX" name="re_entry_margin_MAX" class="form-control" placeholder="" value=""></td>
+					<td><input type="number" step="1" min="2" id="re_entry_margin_STEPS" name="re_entry_margin_STEPS" class="form-control" placeholder="" value=""></td>
 				</tr>
 			</table>
 			
