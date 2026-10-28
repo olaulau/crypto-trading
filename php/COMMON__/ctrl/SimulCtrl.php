@@ -69,21 +69,11 @@ class SimulCtrl extends PrivateCtrl
 	public static function simulatePOST (Base $f3, $url, $controler)
 	{
 		$post = $f3->get("POST");
-		// var_dump($post); die;
-		
-		if (
-			(!empty ($post ["sell_min_margin_MAX"]) && $post ["sell_min_margin_STEPS"] < 2)
-			|| (empty ($post ["sell_min_margin_MAX"]) && $post ["sell_min_margin_STEPS"] >= 2)
-			|| (!empty ($post ["sell_min_margin_MAX"]) && $post ["sell_min_margin_MAX"] <= $post ["sell_min_margin"])
-		) {
-			throw new ErrorException("sell_min_margin error");
+
+		$fields = ["sell_min_margin", "sell_floor_margin", "stop_loss_margin", "buy_min_margin", "buy_floor_margin", "re_entry_margin"];
+		foreach ($fields as $field) {
+			static::simulate_check_field ($field, $post);
 		}
-		if (empty ($post ["sell_min_margin_MAX"]) && empty($post ["sell_min_margin_STEPS"])) {
-			$post ["sell_min_margin_MAX"] = $post ["sell_min_margin"];
-			$post ["sell_min_margin_STEPS"] = 1;
-		}
-		//TODO générifier pour chaque champ à l'aide de récursion
-		
 		
 		echo "<pre>";
 		
@@ -100,9 +90,25 @@ class SimulCtrl extends PrivateCtrl
 				// 	$sell_min_margin, $post ["sell_floor_margin"], $post ["stop_loss_margin"],
 				// 	$post ["buy_min_margin"], $post ["buy_floor_margin"], $post ["re_entry_margin"]);
 			}
+			//TODO générifier pour chaque champ à l'aide de récursion
 		}
 		
 		echo "</pre>";
+	}
+
+	private static function simulate_check_field (string $field, array &$post)
+	{
+		if (
+			(!empty ($post ["{$field}_MAX"]) && $post ["{$field}_STEPS"] < 2)
+			|| (empty ($post ["{$field}_MAX"]) && $post ["{$field}_STEPS"] >= 2)
+			|| (!empty ($post ["{$field}_MAX"]) && $post ["{$field}_MAX"] <= $post ["{$field}"])
+		) {
+			throw new ErrorException("{$field} error");
+		}
+		if (empty ($post ["{$field}_MAX"]) && empty($post ["{$field}_STEPS"])) {
+			$post ["{$field}_MAX"] = $post ["{$field}"];
+			$post ["{$field}_STEPS"] = 1;
+		}
 	}
 	
 	private static function simulation_run (float $start_base_amount, float $start_quote_amount, string $sma_name, float $sell_min_margin , float $sell_floor_margin, float $stop_loss_margin, float $buy_min_margin, float $buy_floor_margin, float $re_entry_margin) : void
