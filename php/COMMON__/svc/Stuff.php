@@ -85,13 +85,13 @@ class Stuff
 	}
 	
 	
-	public static function format_EUR ($value)
+	public static function format_EUR (float $value, bool $force_sign=true)
 	{
-		return self::number_format_french ($value, 2, true) . " €";
+		return self::number_format_french ($value, 2, $force_sign) . " €";
 	}
 	
 	
-	public static function download_to_disk ($url, $destination)
+	public static function download_to_disk (string $url, string $destination)
 	{
 		$ch = curl_init($url);
 		$fp = fopen($destination, 'w+');
@@ -113,7 +113,7 @@ class Stuff
 		});
 
 		curl_exec($ch);
-		if (curl_errno($ch)) {
+		if (curl_errno ($ch)) {
 			throw new ErrorException("download : curl error #" . curl_errno($ch) . " " . curl_error($ch));
 		}
 		// var_dump($headers); die;
