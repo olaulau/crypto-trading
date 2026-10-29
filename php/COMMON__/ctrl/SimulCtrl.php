@@ -68,20 +68,19 @@ class SimulCtrl extends PrivateCtrl
 	
 	public static function simulatePOST (Base $f3, $url, $controler)
 	{
-		$post = $f3->get("POST");
-
 		$fields = [
-			"start_base_amount", "start_quote_amount", "sma_names", 
+			"start_base_amount", "start_quote_amount", "sma_name", 
 			"sell_min_margin", "sell_floor_margin", "stop_loss_margin", 
 			"buy_min_margin", "buy_floor_margin", "re_entry_margin", 
 		];
+		
+		$post = $f3->get("POST");
 		foreach ($fields as $field) {
 			static::simulate_check_field ($field, $post);
 		}
 		
-		echo "<pre>"; /////////
 		static::simulate_recursive_loop ($fields, $post);
-		echo "</pre>";
+		$f3->reroute (["simulations"]);
 	}
 
 	private static function simulate_check_field (string $field, array &$post)
@@ -102,14 +101,10 @@ class SimulCtrl extends PrivateCtrl
 
 	private static function simulate_recursive_loop (array $fields, array $post, array $values=[]) : void
 	{
-		if (empty ($fields)) { //TODO $values
-			// var_dump($values);
-			echo "{$values ["start_base_amount"]} \t {$values ["start_quote_amount"]} \t {$values ["sma_names"]} \t {$values["sell_min_margin"]} \t {$values ["sell_floor_margin"]} \t {$values ["stop_loss_margin"]} \t {$values ["buy_min_margin"]} \t {$values ["buy_floor_margin"]} \t {$values ["re_entry_margin"]} <br/>" . PHP_EOL;
-
-			/////////
-			// SimulCtrl::simulation_run ($post ["start_base_amount"], $post ["start_quote_amount"], $sma_name,
-			// 	$post["sell_min_margin"], $post ["sell_floor_margin"], $post ["stop_loss_margin"],
-			// 	$post ["buy_min_margin"], $post ["buy_floor_margin"], $post ["re_entry_margin"]);
+		if (empty ($fields)) {
+			SimulCtrl::simulation_run ($values ["start_base_amount"], $values ["start_quote_amount"], $values ["sma_name"],
+				$values ["sell_min_margin"], $values ["sell_floor_margin"], $values ["stop_loss_margin"],
+				$values ["buy_min_margin"], $values ["buy_floor_margin"], $values ["re_entry_margin"]);
 			return;
 		}
 		$field = array_shift ($fields);
@@ -176,10 +171,10 @@ class SimulCtrl extends PrivateCtrl
 		$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
 		$simulation_steps = []; //todo use !
 		
-		$csv_filename = __DIR__ . "/../../../" . "/tmp/simu.csv";
-		$csv_handle = fopen ($csv_filename, "w");
-		$csv_row_data = ["open_time", "ETH", "EUR", "price", "price_smoothed", "reference_price", "high", "low"];
-		fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////////////////////
+		// $csv_filename = __DIR__ . "/../../../" . "/tmp/simu.csv";
+		// $csv_handle = fopen ($csv_filename, "w");
+		// $csv_row_data = ["open_time", "ETH", "EUR", "price", "price_smoothed", "reference_price", "high", "low"];
+		// fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////////////////////
 		
 		while ($klines = $db->exec ($sql, $params)) {
 			foreach ($klines as $kline) {
@@ -292,12 +287,12 @@ class SimulCtrl extends PrivateCtrl
 						}
 					}
 					
-					$csv_row_data = [
-						$kline ["open_time"], $ETH, $EUR, $price, $price_smoothed, $reference_price, $high, $low, 
-						// ($price_smoothed < ($reference_price * (1 - $buy_min_margin / 100))), 
-						// ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))), 
-					];
-					fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); ///////////////////////
+					// $csv_row_data = [
+					// 	$kline ["open_time"], $ETH, $EUR, $price, $price_smoothed, $reference_price, $high, $low, 
+					// 	// ($price_smoothed < ($reference_price * (1 - $buy_min_margin / 100))), 
+					// 	// ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))), 
+					// ];
+					// fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); ///////////////////////
 				}
 				
 				$offset ++;
@@ -330,8 +325,6 @@ class SimulCtrl extends PrivateCtrl
 		
 		$simulation_step->save ();
 		$simulation_steps [] = $simulation_step;
-		
-		$f3->reroute (["simulation", ["id" => $simulation->id]]);
 	}
 
 
