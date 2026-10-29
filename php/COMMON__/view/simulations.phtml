@@ -5,7 +5,10 @@ use COMMON__\svc\Stuff;
 
 		<div class="d-flex justify-content-between">
 			<h1><?= $page["title"] ?></h1>
-			<a class="btn btn-lg btn-success" href="<?= $BASE . $f3->alias("simulate") ?>"><i class="fa-solid fa-rocket"></i> run</a>
+			<div>
+				<a class="btn btn-lg btn-danger" href="<?= $BASE . $f3->alias("simulationsDelete") ?>"><i class="fa-solid fa-eraser"></i> clean</a>
+				<a class="btn btn-lg btn-success" href="<?= $BASE . $f3->alias("simulate") ?>"><i class="fa-solid fa-rocket"></i> run</a>
+			</div>
 		</div>
 		<table class="table table-striped table-bordered table-hover">
 			<thead>

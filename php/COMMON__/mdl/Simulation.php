@@ -96,4 +96,14 @@ class Simulation extends Mdl
 		return $res;
 	}
 	
+	
+	public function erase ($filter=null) : void
+	{
+		$simulation_step_wrapper = new SimulationStep;
+		$simulation_steps = $simulation_step_wrapper->find (["simulation_id = ?", $this->id], []);
+		foreach ($simulation_steps as $simulation_step) {
+			$simulation_step->erase ();
+		}
+		parent::erase();
+	}
 }

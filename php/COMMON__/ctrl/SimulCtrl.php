@@ -54,6 +54,16 @@ class SimulCtrl extends PrivateCtrl
 	}
 	
 	
+	public static function simulationsDeleteGET (Base $f3, $url, $controler)
+	{
+		$simulations = Simulation::getAll ();
+		foreach ($simulations as $simulation) {
+			$simulation->erase ();
+		}
+		$f3->reroute("simulations");
+	}
+	
+	
 	public static function simulateGET (Base $f3, $url, $controler)
 	{
 		$page = [
@@ -364,13 +374,7 @@ class SimulCtrl extends PrivateCtrl
 			throw new ErrorException ("couldn't find simulation #$id");
 		}
 
-		$simulation_step_wrapper = new SimulationStep;
-		$simulation_steps = $simulation_step_wrapper->find (["simulation_id = ?", $id], []);
-		foreach ($simulation_steps as $simulation_step) {
-			$simulation_step->erase ();
-		}
 		$simulation->erase();
-
 		$f3->reroute (["simulations"]);
 	}
 	
