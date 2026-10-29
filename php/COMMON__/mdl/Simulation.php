@@ -42,9 +42,11 @@ class Simulation extends Mdl
 			'type'		=> Schema::DT_TEXT,
 			'nullable'	=> false,
 		],
-
-		//TODO start money, end money, RoI
-		
+		'roi' => [
+			'type'		=> Schema::DT_DECIMAL,
+			'nullable'	=> true,
+		],
+		//TODO start money, end money
 	];
 	
 	
@@ -63,7 +65,7 @@ class Simulation extends Mdl
 	}
 
 
-	public function RoI () : float
+	public function get_roi () : float
 	{
 		$simulation_steps = $this->simulation_steps;
 		if (empty($simulation_steps) || $simulation_steps->count () === 0) {

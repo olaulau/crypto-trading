@@ -335,6 +335,9 @@ class SimulCtrl extends PrivateCtrl
 		
 		$simulation_step->save ();
 		$simulation_steps [] = $simulation_step;
+		
+		$simulation->roi = $simulation->get_roi();
+		$simulation->save ();
 	}
 
 
