@@ -33,7 +33,7 @@ abstract class Ctrl extends MiniCtrl
 			$alias = $f3->get("ALIAS");
 			if ($alias !== "dbSetup") {
 				if (empty($res [0] [1]) || $res [0] [1] !== 1) {
-					$f3->reroute("@dbSetup");
+					$f3->reroute(["dbSetup"]);
 					die;
 				}
 			}

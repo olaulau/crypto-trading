@@ -115,7 +115,7 @@ class IndexCtrl extends PrivateCtrl
 		SpotExchangeSymbol::drop_table();
 		SpotTrade::drop_table();
 		
-		echo "Ok.";
+		$f3->reroute (["dbSetup"]);
 	}
 
 	public static function dbSetupGET (Base $f3, $url, $controler)
@@ -136,7 +136,7 @@ class IndexCtrl extends PrivateCtrl
 		SpotTrade::setup();
 		Stat::setup();
 		
-		echo "Ok.";
+		$f3->reroute (["homepage"]);
 	}
 	
 	
