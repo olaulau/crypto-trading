@@ -151,8 +151,8 @@ class SimulCtrl extends PrivateCtrl
 
 		$simulation = new Simulation;
 		$simulation->symbol =			IndexCtrl::$symbol;
-		$simulation->open_time =		IndexCtrl::$start_sql;
-		$simulation->close_time =		IndexCtrl::$end_sql;
+		$simulation->open_time =		$f3->get("simulation.start_sql");
+		$simulation->close_time =		$f3->get("simulation.end_sql");
 		$simulation->execution_time =	(new DateTimeImmutable)->format (Stuff::datetime_sql_format);
 		$simulation->description =		str_replace ("\t", "", trim("
 			simple margin algorithm
@@ -178,7 +178,7 @@ class SimulCtrl extends PrivateCtrl
 			LIMIT	?
 			OFFSET	?
 		";
-		$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
+		$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"), $sma_name, IndexCtrl::$sql_read_limit, $offset];
 		$simulation_steps = []; //todo use !
 		
 		// $csv_filename = __DIR__ . "/../../../" . "/tmp/simu.csv";
@@ -306,7 +306,7 @@ class SimulCtrl extends PrivateCtrl
 				}
 				
 				$offset ++;
-				$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, IndexCtrl::$start_sql, IndexCtrl::$end_sql, $sma_name, IndexCtrl::$sql_read_limit, $offset];
+				$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"), $sma_name, IndexCtrl::$sql_read_limit, $offset];
 			}
 		}
 		

@@ -34,9 +34,6 @@ class IndexCtrl extends PrivateCtrl
 	public final static $symbol = "ETHEUR";
 	public final static $small_candle_size = "15m";
 	public final static $sql_read_limit = 10000;
-	public final static $start_sql = "2025-01-01 00:00:00";
-	public final static $end_sql = "2025-01-31 23:59:59";
-	// public final static $end_sql = "2025-12-31 23:59:59";
 
 	public final static $stats = [
 		//TODO use index in code, and remove "name" property
@@ -205,8 +202,8 @@ class IndexCtrl extends PrivateCtrl
 		$files = glob (static::$binance_data_directory . "/*.csv");
 		asort ($files);
 
-		$start_dt = new DateTime (static::$start_sql);
-		$end_dt = new DateTime (static::$end_sql);
+		$start_dt = new DateTime ($f3->get("simulation.start_sql"));
+		$end_dt = new DateTime ($f3->get("simulation.end_sql"));
 		
 		foreach ($files as $file) {
 			$start_time = microtime (true);
@@ -275,7 +272,7 @@ class IndexCtrl extends PrivateCtrl
 
 		foreach (Binance::candles as $big_candle_size => $big_candle_duration) {
 			echo "<b>{$big_candle_size} = {$big_candle_duration}s</b> <br/>" . PHP_EOL;
-			$candles_available = self::candles_available (static::$symbol, static::$start_sql, static::$end_sql);
+			$candles_available = self::candles_available (static::$symbol, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"));
 			if (in_array ($big_candle_size, $candles_available)) {
 				echo "candle already available <br/>" . PHP_EOL;
 			}
@@ -301,7 +298,7 @@ class IndexCtrl extends PrivateCtrl
 					echo "ERROR : no candle suitable for calculation of " . static::$symbol . " {$big_candle_size} <br/>" . PHP_EOL;
 				}
 				else {
-					self::candle_calculate (static::$symbol, static::$start_sql, static::$end_sql, $small_candle_size, $big_candle_size);
+					self::candle_calculate (static::$symbol, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"), $small_candle_size, $big_candle_size);
 				}
 			}
 			echo "<br/>" . PHP_EOL;
@@ -444,7 +441,7 @@ class IndexCtrl extends PrivateCtrl
 		$params = [static::$symbol];
 		$res = $db->exec($sql, $params);
 
-		$candles_available = self::candles_available (static::$symbol, static::$start_sql, static::$end_sql);
+		$candles_available = self::candles_available (static::$symbol, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"));
 		if (empty ($candles_available)) {
 			throw new ErrorException ("no candles available");
 		}
@@ -459,7 +456,7 @@ class IndexCtrl extends PrivateCtrl
 		$cpt = 0;
 
 		while ($kline_wrapper->load (
-			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $small_candle, static::$start_sql, static::$end_sql],
+			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $small_candle, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql")],
 			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
 			$db->begin();
 			do {
@@ -506,7 +503,7 @@ class IndexCtrl extends PrivateCtrl
 			if ($big_candle === $small_candle) {
 				continue; # don't recalculate small candle
 			}
-			self::substat_calculate (static::$symbol, static::$start_sql, static::$end_sql, $small_candle, $big_candle);
+			self::substat_calculate (static::$symbol, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"), $small_candle, $big_candle);
 		}
 		exit;
 	}
@@ -587,8 +584,8 @@ class IndexCtrl extends PrivateCtrl
 		";
 		$args = [
 			static::$symbol,
-			static::$start_sql,
-			static::$end_sql,
+			$f3->get("simulation.start_sql"),
+			$f3->get("simulation.end_sql"),
 			$max_result,
 		];
 		$data = $db->exec($sql, $args);
@@ -608,8 +605,8 @@ class IndexCtrl extends PrivateCtrl
 			";
 			$args = [
 				static::$symbol,
-				static::$start_sql,
-				static::$end_sql,
+				$f3->get("simulation.start_sql"),
+				$f3->get("simulation.end_sql"),
 				$max_result,
 			];
 			$data = $db->exec($sql, $args);
@@ -632,8 +629,8 @@ class IndexCtrl extends PrivateCtrl
 		$args = [
 			static::$symbol,
 			$candle_size,
-			static::$start_sql,
-			static::$end_sql,
+			$f3->get("simulation.start_sql"),
+			$f3->get("simulation.end_sql"),
 		];
 		$data = $db->exec($sql, $args);
 		
@@ -645,26 +642,8 @@ class IndexCtrl extends PrivateCtrl
 
 	public static function testGET (Base $f3, $url, $controler)
 	{
-		# test if 15m candles are continous in DB (false as I suspected, due to mysql not storing timezone in datetime)
-		$close_dt = null;
-		$kline_wrapper = new Kline;
-		$kline_wrapper->load(
-			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", "ETHEUR", "15m", "2025-01-01 00:00:00", "2025-12-31 23:59:59"],
-			["order" => "open_time ASC"]);
-		do {
-			if (!empty($close_dt)) {
-				$open_dt = $kline_wrapper->open_time;
-				if ($close_dt->getTimestamp() + 1 !== $open_dt->getTimestamp()) {
-					echo "not contiguous : " . $close_dt->format(Stuff::datetime_sql_format) . " - " . $open_dt->format(Stuff::datetime_sql_format) .
-						" => " . $close_dt->getTimestamp() . " - " . $open_dt->getTimestamp() . "<br/>" . PHP_EOL;
-					$close_dt = null;
-					continue;
-				}
-			}
-			$close_dt = $kline_wrapper->close_time;
-		}
-		while ($kline_wrapper->next());
-
+		$test = $f3->get("simulation.fee");
+		var_dump($test);
 		die;
 
 		$page = [

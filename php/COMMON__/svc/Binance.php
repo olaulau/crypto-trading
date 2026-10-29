@@ -172,7 +172,7 @@ class Binance
 	}
 	
 	
-	public static function get_start_date () : DateTimeInterface
+	public static function get_start_date () : DateTimeInterface //TODO migrade to global start sql
 	{
 		$f3 = Base::instance();
 		return DateTime::createFromFormat(Stuff::datetime_sql_format, $f3->get("binance.start_date") . " 00:00:00");
