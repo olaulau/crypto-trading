@@ -46,6 +46,10 @@ class Simulation extends Mdl
 			'type'		=> Schema::DT_DECIMAL,
 			'nullable'	=> true,
 		],
+		'volume' => [
+			'type'		=> Schema::DT_DECIMAL,
+			'nullable'	=> true,
+		],
 		//TODO start money, end money
 	];
 	
@@ -82,7 +86,7 @@ class Simulation extends Mdl
 	}
 	
 	
-	public function volume () : float
+	public function get_volume () : float
 	{
 		$simulation_steps = $this->simulation_steps;
 		if ($simulation_steps->count () === 0) {

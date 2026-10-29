@@ -20,6 +20,7 @@ use COMMON__\svc\Stuff;
 					<th>close_time</th>
 					<th>description</th>
 					<th>RoI</th>
+					<th>volume</th>
 					<th>actions</th>
 				</tr>
 			</thead>
@@ -42,7 +43,8 @@ use COMMON__\svc\Stuff;
 						<td><?= $simulation->open_time->format (Stuff::datetime_french_format) ?></td>
 						<td><?= $simulation->close_time->format (Stuff::datetime_french_format) ?></td>
 						<td><?= nl2br ($simulation->description) ?></td>
-						<td><?= (!empty($steps)) ? $simulation->roi * 100 : "" ?> %</td>
+						<td><?= (!empty($steps)) ? Stuff::format_percent($simulation->roi * 100) : "" ?></td>
+						<td><?= (!empty($steps)) ? Stuff::format_EUR($simulation->volume) : "" ?></td>
 						<td class="fs-5">
 							<a href="<?= $BASE . $f3->alias ("simulationDelete", ["id" => $simulation->id]) ?>">
 								<i class="fa-solid fa-trash"></i>
