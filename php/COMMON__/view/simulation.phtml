@@ -3,10 +3,23 @@ use COMMON__\mdl\SimulationStep;
 use COMMON__\svc\Stuff;
 ?>
 
-		<div class="d-flex justify-content-between">
-			<h1><?= $page["title"] ?></h1>
-			<a class="btn btn-lg btn-info" href="<?= $BASE . $f3->alias("chart", [], ["simulation_id" => $simulation->id]) ?>"><i class="fa-solid fa-chart-line"></i> chart</a>
+		<div class="row">
+			<div class="col">
+				<h1><?= $page["title"] ?></h1>
+				<a class="fs-3" href="<?= $BASE . $f3->alias ("simulations") ?>"><i class="fa-solid fa-arrow-left"></i></a>
+			</div>
+			<div class="col d-flex justify-content-between">
+				<div></div>
+				<span class="">
+					<?= nl2br ($simulation->description) ?>
+				</span>
+				<div></div>
+			</div>
+			<div class="col text-end">
+				<a class="btn btn-lg btn-info" href="<?= $BASE . $f3->alias("chart", [], ["simulation_id" => $simulation->id]) ?>"><i class="fa-solid fa-chart-line"></i> chart</a>
+			</div>
 		</div>
+		
 		<table class="table table-striped table-bordered table-hover">
 			<thead>
 				<tr>
@@ -24,13 +37,13 @@ use COMMON__\svc\Stuff;
 				foreach ($simulation->simulation_steps as $i => $simulation_step) { /** @var SimulationStep $simulation_step */
 					?>
 					<tr>
-						<td><?= $simulation_step->kline_id->open_time->format(Stuff::datetime_french_format) ?></td>
-						<td><?= Stuff::format_EUR($simulation_step->kline_id->open) ?></td>
+						<td><?= $simulation_step->kline_id->open_time->format (Stuff::datetime_french_format) ?></td>
+						<td><?= Stuff::format_EUR ($simulation_step->kline_id->open) ?></td>
 						<td><?= $simulation_step->type ?></td>
-						<td><?= Stuff::format_crypto($simulation_step->base_amount) ?></td>
-						<td><?= Stuff::format_EUR($simulation_step->quote_amount) ?></td>
+						<td><?= Stuff::format_crypto ($simulation_step->base_amount) ?></td>
+						<td><?= Stuff::format_EUR ($simulation_step->quote_amount) ?></td>
 						<td><?= $simulation_step->description ?></td>
-						<td class="<?= $simulation_step->type === "buy" ? "text-secondary" : ""?>"><?= ($i !== 0) ? Stuff::format_percent($simulation_step->margin() * 100) : "" ?></td>
+						<td class="<?= $simulation_step->type === "buy" ? "text-secondary" : ""?>"><?= ($i !== 0) ? Stuff::format_percent ($simulation_step->margin () * 100) : "" ?></td>
 					</tr>
 					<?php
 				}
@@ -42,9 +55,9 @@ use COMMON__\svc\Stuff;
 					<th>&nbsp;</th>
 					<th>&nbsp;</th>
 					<th>&nbsp;</th>
-					<th>volume = <?= Stuff::format_EUR($simulation->volume()) ?></th>
+					<th>volume = <?= Stuff::format_EUR ($simulation->volume()) ?></th>
 					<th>&nbsp;</th>
-					<th>RoI = <?= Stuff::format_percent($simulation->RoI () * 100) ?></th>
+					<th>RoI = <?= Stuff::format_percent ($simulation->RoI () * 100) ?></th>
 				</tr>
 			</tfoot>
 		</table>
