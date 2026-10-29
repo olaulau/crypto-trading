@@ -78,14 +78,21 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## TODO
+- simulate multithread ?
+- chart : enable only the used SMA
+	- store sim params in generic table
+- calculer les dérivées de stats (pente ...)
+	- intéger à l'algo
+- simulations :
+	- optimize big fetches (create a BigQuery class as an iterator)
+	- paginate ?
+
 - simulate
 	- intermediate form to enter simulation params
 		- also input date range
 		- pre-calculate default values, based on context
 		- try to remove static const from code
-	- simulation bulk : ability to make each param variable -> generate many simulations
-	- implement stop loss
-	- better algo initiate (abiliti to buy earlier)
+	- better algo initiate (ability to buy earlier)
 	- store reason of buy / sell (last min / max, threshold reached ...) with point on graph ?
 - code refacto
 	- generalize simulation

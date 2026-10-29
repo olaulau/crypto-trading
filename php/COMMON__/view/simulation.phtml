@@ -43,7 +43,9 @@ use COMMON__\svc\Stuff;
 						<td><?= Stuff::format_crypto ($simulation_step->base_amount) ?></td>
 						<td><?= Stuff::format_EUR ($simulation_step->quote_amount, false) ?></td>
 						<td><?= $simulation_step->description ?></td>
-						<td class="<?= $simulation_step->type === "buy" ? "text-secondary" : ""?>"><?= ($i !== 0) ? Stuff::format_percent ($simulation_step->margin () * 100) : "" ?></td>
+						<td class="<?= $simulation_step->type === "buy" ? "text-secondary" : ""?>">
+							<?= ($i !== 0) ? Stuff::format_percent ($simulation_step->margin () * 100) : "" ?>
+						</td>
 					</tr>
 					<?php
 				}

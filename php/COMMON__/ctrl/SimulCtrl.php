@@ -40,7 +40,14 @@ class SimulCtrl extends PrivateCtrl
 	
 	public static function simulationsGET (Base $f3, $url, $controler)
 	{
-		$simulations = Simulation::getAll ("execution_time", "DESC");
+		$order_field = "execution_time";
+		$order_direction = "DESC";
+		if (!empty ($f3->get("GET.order_field"))) {
+			$order_field = $f3->get("GET.order_field");
+			$order_direction = $f3->get("GET.order_direction");
+		}
+		
+		$simulations = Simulation::getAll ($order_field, $order_direction);
 		$f3->set ("simulations", $simulations);
 		
 		$page = [
