@@ -70,34 +70,27 @@ class SimulCtrl extends PrivateCtrl
 	{
 		$post = $f3->get("POST");
 
-		$fields = ["sell_min_margin", "sell_floor_margin", "stop_loss_margin", "buy_min_margin", "buy_floor_margin", "re_entry_margin"];
+		$fields = [
+			"start_base_amount", "start_quote_amount", "sma_names", 
+			"sell_min_margin", "sell_floor_margin", "stop_loss_margin", 
+			"buy_min_margin", "buy_floor_margin", "re_entry_margin", 
+		];
 		foreach ($fields as $field) {
 			static::simulate_check_field ($field, $post);
 		}
 		
-		echo "<pre>";
-		
-		$sma_names = explode (" ", $post ["sma_names"]);
-		foreach ($sma_names as $sma_name) {
-			for ($sell_min_margin_CPT=0; $sell_min_margin_CPT < $post ["sell_min_margin_STEPS"]; $sell_min_margin_CPT ++) {
-				$sell_min_margin = $post ["sell_min_margin"];
-				if ($post ["sell_min_margin_STEPS"] > 1) {
-					$sell_min_margin += $sell_min_margin_CPT * ($post ["sell_min_margin_MAX"] - $post ["sell_min_margin"]) / ($post ["sell_min_margin_STEPS"]-1);
-				}
-				
-				echo "{$post ["start_base_amount"]} \t {$post ["start_quote_amount"]} \t {$sma_name} \t {$sell_min_margin} \t {$post ["sell_floor_margin"]} \t {$post ["stop_loss_margin"]} \t {$post ["buy_min_margin"]} \ {$post ["buy_floor_margin"]}  \t {$post ["re_entry_margin"]} <br/>" . PHP_EOL;
-				// SimulCtrl::simulation_run ($post ["start_base_amount"], $post ["start_quote_amount"], $sma_name,
-				// 	$sell_min_margin, $post ["sell_floor_margin"], $post ["stop_loss_margin"],
-				// 	$post ["buy_min_margin"], $post ["buy_floor_margin"], $post ["re_entry_margin"]);
-			}
-			//TODO générifier pour chaque champ à l'aide de récursion
-		}
-		
+		echo "<pre>"; /////////
+		static::simulate_recursive_loop ($fields, $post);
 		echo "</pre>";
 	}
 
 	private static function simulate_check_field (string $field, array &$post)
 	{
+		if (empty ($post ["{$field}_MAX"]) && empty($post ["{$field}_STEPS"])) {
+			$post ["{$field}_MAX"] = $post ["{$field}"];
+			$post ["{$field}_STEPS"] = 1;
+			return;
+		}
 		if (
 			(!empty ($post ["{$field}_MAX"]) && $post ["{$field}_STEPS"] < 2)
 			|| (empty ($post ["{$field}_MAX"]) && $post ["{$field}_STEPS"] >= 2)
@@ -105,9 +98,42 @@ class SimulCtrl extends PrivateCtrl
 		) {
 			throw new ErrorException("{$field} error");
 		}
-		if (empty ($post ["{$field}_MAX"]) && empty($post ["{$field}_STEPS"])) {
-			$post ["{$field}_MAX"] = $post ["{$field}"];
-			$post ["{$field}_STEPS"] = 1;
+	}
+
+	private static function simulate_recursive_loop (array $fields, array $post, array $values=[]) : void
+	{
+		if (empty ($fields)) { //TODO $values
+			// var_dump($values);
+			echo "{$values ["start_base_amount"]} \t {$values ["start_quote_amount"]} \t {$values ["sma_names"]} \t {$values["sell_min_margin"]} \t {$values ["sell_floor_margin"]} \t {$values ["stop_loss_margin"]} \t {$values ["buy_min_margin"]} \t {$values ["buy_floor_margin"]} \t {$values ["re_entry_margin"]} <br/>" . PHP_EOL;
+
+			/////////
+			// SimulCtrl::simulation_run ($post ["start_base_amount"], $post ["start_quote_amount"], $sma_name,
+			// 	$post["sell_min_margin"], $post ["sell_floor_margin"], $post ["stop_loss_margin"],
+			// 	$post ["buy_min_margin"], $post ["buy_floor_margin"], $post ["re_entry_margin"]);
+			return;
+		}
+		$field = array_shift ($fields);
+
+		if ($post ["{$field}_STEPS"] > 1) {
+			for (${$field."_CPT"} = 0; ${$field."_CPT"} < $post ["{$field}_STEPS"]; ${$field."_CPT"} ++) {
+				${$field."_VAL"} = $post [$field];
+				${$field."_VAL"} += ${$field."_CPT"} * ($post ["{$field}_MAX"] - $post [$field]) / ($post ["{$field}_STEPS"]-1);
+				$values [$field] = ${$field."_VAL"};
+				static::simulate_recursive_loop ($fields, $post, $values);
+			}
+		}
+		else {
+			$field_values = explode (" ", $post [$field]);
+			if (count ($field_values) > 1) {
+				foreach ($field_values as $field_value) {
+					$values [$field] = $field_value;
+					static::simulate_recursive_loop ($fields, $post, $values);
+				}
+			}
+			else {
+				$values [$field] = $post [$field];
+				static::simulate_recursive_loop ($fields, $post, $values);
+			}
 		}
 	}
 	
