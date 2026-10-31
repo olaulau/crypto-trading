@@ -82,7 +82,7 @@ class BinanceWsAPI
 						'timeout' => 5 * 60,
 					]
 				); # timeout court pour check keep-alive
-				////////////////////////////////
+				//////////
 
 				while (1 === 1) {
 					#  keep-alive

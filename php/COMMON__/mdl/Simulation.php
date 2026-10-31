@@ -50,6 +50,10 @@ class Simulation extends Mdl
 			'type'		=> Schema::DT_DECIMAL,
 			'nullable'	=> true,
 		],
+		'fees' => [
+			'type'		=> Schema::DT_DECIMAL,
+			'nullable'	=> true,
+		],
 		//TODO start money, end money
 	];
 	
@@ -97,6 +101,23 @@ class Simulation extends Mdl
 		foreach ($simulation_steps as $simulation_step) {
 			if ($simulation_step->is_transaction()) {
 				$res += $simulation_step->quote_amount;
+			}
+		}
+		return $res;
+	}
+	
+	
+	public function get_fees () : float
+	{
+		$simulation_steps = $this->simulation_steps;
+		if ($simulation_steps->count () === 0) {
+			throw new ErrorException ("simulation has no step");
+		}
+
+		$res = 0.0;
+		foreach ($simulation_steps as $simulation_step) {
+			if ($simulation_step->is_transaction()) {
+				$res += $simulation_step->fee_amount;
 			}
 		}
 		return $res;

@@ -36,7 +36,7 @@ abstract class Mdl extends Cortex
 	}
 	
 	
-	// this method can lead to fatal error when the data is not foud, combining F3 with cortex ORM
+	// this method can lead to fatal error when the data is not found, combining F3 with cortex ORM
 	public function findone ($filter = null, ?array $options = null, $ttl = 0)
 	{
 		throw new ErrorException("findone() method should not be used (class : " . get_called_class() . ")");

@@ -30,6 +30,7 @@ use COMMON__\svc\Stuff;
 					<th>quote</th>
 					<th>description</th>
 					<th>margin</th>
+					<th>fee</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -46,6 +47,7 @@ use COMMON__\svc\Stuff;
 						<td class="<?= $simulation_step->type === "buy" ? "text-secondary" : ""?>">
 							<?= ($i !== 0) ? Stuff::format_percent ($simulation_step->margin () * 100) : "" ?>
 						</td>
+						<td><?= Stuff::format_EUR ($simulation_step->fee_amount, false) ?></td>
 					</tr>
 					<?php
 				}
@@ -60,6 +62,7 @@ use COMMON__\svc\Stuff;
 					<th>volume = <?= Stuff::format_EUR ($simulation->volume, false) ?></th>
 					<th>&nbsp;</th>
 					<th>RoI = <?= Stuff::format_percent ($simulation->roi * 100) ?></th>
+					<th><?= Stuff::format_EUR ($simulation->fees, false) ?></th>
 				</tr>
 			</tfoot>
 		</table>

@@ -36,6 +36,11 @@ class SimulationStep extends Mdl
 			'nullable'	=> false,
 			'default'	=> 0,
 		],
+		'fee_amount' => [
+			'type'		=> Schema::DT_FLOAT,
+			'nullable'	=> false,
+			'default'	=> 0,
+		],
 		'description' => [
 			'type'		=> Schema::DT_TEXT,
 		],

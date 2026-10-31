@@ -339,7 +339,7 @@ class IndexCtrl extends PrivateCtrl
 
 					$close_time = $kline_wrapper->close_time; /** @var DateTime $close_time */
 					$close_ts = $close_time->getTimestamp();
-					if ((($close_ts+1) % $candle_seconds) === 0) { ////////////////////////////////
+					if ((($close_ts+1) % $candle_seconds) === 0) { //////////
 						try {
 							$big_candle->save();
 						}

@@ -96,8 +96,20 @@ class SimulCtrl extends PrivateCtrl
 			static::simulate_check_field ($field, $post);
 		}
 		
-		static::simulate_recursive_loop ($fields, $post);
-		$f3->reroute (["simulations"]);
+		$cpt = static::simulate_recursive_loop ($fields, $post);
+		if ($cpt === 1) {
+			# redirect to the simlation if only one generated
+			$simulation_wrapper = new Simulation;
+			$simulations = $simulation_wrapper->find([""], ["order" => "execution_time DESC", "limit" => 1]);
+			if (count ($simulations) !== 1) {
+				throw new ErrorException ("simulation count is not as expected : " . count ($simulations));
+			}
+			$simulation = $simulations [0];
+			$f3->reroute(["simulation", ["id" => $simulation->id]]);
+		}
+		else {
+			$f3->reroute (["simulations"]);
+		}
 	}
 
 	private static function simulate_check_field (string $field, array &$post)
@@ -116,35 +128,39 @@ class SimulCtrl extends PrivateCtrl
 		}
 	}
 
-	private static function simulate_recursive_loop (array $fields, array $post, array $values=[]) : void
+	private static function simulate_recursive_loop (array $fields, array $post, array $values=[]) : int
 	{
 		if (empty ($fields)) {
-			SimulCtrl::simulation_run ($values ["start_base_amount"], $values ["start_quote_amount"], $values ["sma_name"],
+			static::simulation_run ($values ["start_base_amount"], $values ["start_quote_amount"], $values ["sma_name"],
 				$values ["sell_min_margin"], $values ["sell_floor_margin"], $values ["stop_loss_margin"],
 				$values ["buy_min_margin"], $values ["buy_floor_margin"], $values ["re_entry_margin"]);
-			return;
+			return 1;
 		}
 		$field = array_shift ($fields);
 
 		if ($post ["{$field}_STEPS"] > 1) {
+			$cpt = 0;
 			for (${$field."_CPT"} = 0; ${$field."_CPT"} < $post ["{$field}_STEPS"]; ${$field."_CPT"} ++) {
 				${$field."_VAL"} = $post [$field];
 				${$field."_VAL"} += ${$field."_CPT"} * ($post ["{$field}_MAX"] - $post [$field]) / ($post ["{$field}_STEPS"]-1);
 				$values [$field] = ${$field."_VAL"};
-				static::simulate_recursive_loop ($fields, $post, $values);
+				$cpt += static::simulate_recursive_loop ($fields, $post, $values);
 			}
+			return $cpt;
 		}
 		else {
 			$field_values = explode (" ", $post [$field]);
 			if (count ($field_values) > 1) {
+				$cpt = 0;
 				foreach ($field_values as $field_value) {
 					$values [$field] = $field_value;
-					static::simulate_recursive_loop ($fields, $post, $values);
+					$cpt += static::simulate_recursive_loop ($fields, $post, $values);
 				}
+				return $cpt;
 			}
 			else {
 				$values [$field] = $post [$field];
-				static::simulate_recursive_loop ($fields, $post, $values);
+				return static::simulate_recursive_loop ($fields, $post, $values);
 			}
 		}
 	}
@@ -155,6 +171,7 @@ class SimulCtrl extends PrivateCtrl
 		set_time_limit (0);
 		$f3 = Base::instance ();
 		$db = $f3->get ("db"); /** @var SQL $db */
+		$fee = $f3->get("simulation.fee");
 
 		$simulation = new Simulation;
 		$simulation->symbol =			IndexCtrl::$symbol;
@@ -167,6 +184,7 @@ class SimulCtrl extends PrivateCtrl
 			smoothing stat = {$sma_name}
 			sell min margin : {$sell_min_margin}% ({$sell_floor_margin}% floor), SL {$stop_loss_margin}%
 			buy min margin : {$buy_min_margin}% ({$buy_floor_margin}% floor), re entry {$re_entry_margin}%
+			fee rate = " . Stuff::format_percent($fee * 100, false) . "
 		"));
 		$simulation->save ();
 
@@ -191,7 +209,7 @@ class SimulCtrl extends PrivateCtrl
 		// $csv_filename = __DIR__ . "/../../../" . "/tmp/simu.csv";
 		// $csv_handle = fopen ($csv_filename, "w");
 		// $csv_row_data = ["open_time", "ETH", "EUR", "price", "price_smoothed", "reference_price", "high", "low"];
-		// fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////////////////////
+		// fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////
 		
 		while ($klines = $db->exec ($sql, $params)) {
 			foreach ($klines as $kline) {
@@ -229,6 +247,7 @@ class SimulCtrl extends PrivateCtrl
 						$simulation_step->quote_amount =		$EUR;
 						$simulation_step->description =			"simulation start : {$EUR} € = {$EUR_converted_formated} ETH";
 					}
+					$simulation_step->fee_amount =				0.0;
 					$simulation_step->save ();
 					$simulation_steps [] = $simulation_step;
 				}
@@ -240,12 +259,16 @@ class SimulCtrl extends PrivateCtrl
 						if ($high > ($reference_price * (1 + $sell_min_margin / 100))) { # price raised a lot
 							if ($price_smoothed < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
 								$EUR = $ETH * $price;
+								$fee_amount = $EUR * $fee;
+								$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
+								$EUR -= $fee_amount;
 								$EUR_formated = Stuff::format_float_significative ($EUR, 6);
 								
 								$simulation_step->type =				"sell";
 								$simulation_step->base_amount =			$ETH;
 								$simulation_step->quote_amount =		$EUR;
-								$simulation_step->description =			"({$price_formated}) selling --> {$EUR_formated} €";
+								$simulation_step->fee_amount =			$fee_amount;
+								$simulation_step->description =			"({$price_formated}) selling --> {$EUR_formated} € ({$fee_formated} € fee)";
 								$simulation_step->save ();
 								$simulation_steps [] = $simulation_step;
 								
@@ -256,12 +279,16 @@ class SimulCtrl extends PrivateCtrl
 						elseif ($stop_loss_margin > 0.0 && $price_smoothed < ($reference_price * (1 - $stop_loss_margin / 100))) { # we are loosing money
 							# stop loss
 							$EUR = $ETH * $price;
+							$fee_amount = $EUR * $fee;
+							$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
+							$EUR -= $fee_amount;
 							$EUR_formated = Stuff::format_float_significative ($EUR, 6);
 							
 							$simulation_step->type =				"sell"; //TODO add a reason (stop loss) field ?
 							$simulation_step->base_amount =			$ETH;
 							$simulation_step->quote_amount =		$EUR;
-							$simulation_step->description =			"({$price_formated}) stop loss --> {$EUR_formated} €";
+							$simulation_step->fee_amount =			$fee_amount;
+							$simulation_step->description =			"({$price_formated}) stop loss --> {$EUR_formated} € ({$fee_formated} € fee)";
 							$simulation_step->save ();
 							$simulation_steps [] = $simulation_step;
 							
@@ -270,16 +297,20 @@ class SimulCtrl extends PrivateCtrl
 						}
 					}
 					
-					else { # I own euros
+					elseif ($EUR > 0) { # I own euros
 						if ($low < ($reference_price * (1 - $buy_min_margin / 100))) { # value dropped a lot
 							if ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
 								$ETH = $EUR / $price;
+								$fee_amount = $EUR * $fee;
+								$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
+								$ETH *= 1.0 - $fee;
 								$ETH_formated = Stuff::format_float_significative ($ETH, 6);
 								
 								$simulation_step->type =				"buy";
 								$simulation_step->base_amount =			$ETH;
 								$simulation_step->quote_amount =		$EUR;
-								$simulation_step->description =			"({$price_formated}) buying --> {$ETH_formated} ETH";
+								$simulation_step->fee_amount =			$fee_amount;
+								$simulation_step->description =			"({$price_formated}) buying --> {$ETH_formated} ETH ({$fee_formated} € fee)";
 								$simulation_step->save ();
 								$simulation_steps [] = $simulation_step;
 								
@@ -290,12 +321,16 @@ class SimulCtrl extends PrivateCtrl
 						elseif ($re_entry_margin > 0.0 && $price_smoothed > ($reference_price * (1 + $re_entry_margin / 100))) { # we are loosing opportunities
 							# re entry
 							$ETH = $EUR / $price;
+							$fee_amount = $EUR * $fee;
+							$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
+							$ETH *= 1 - $fee;
 							$ETH_formated = Stuff::format_float_significative ($ETH, 6);
 							
 							$simulation_step->type =				"buy"; //TODO add a reason (re entry) field ?
 							$simulation_step->base_amount =			$ETH;
 							$simulation_step->quote_amount =		$EUR;
-							$simulation_step->description =			"({$price_formated}) re entry --> {$ETH_formated} ETH";
+							$simulation_step->fee_amount =			$fee_amount;
+							$simulation_step->description =			"({$price_formated}) re entry --> {$ETH_formated} ETH ({$fee_formated} € fee)";
 							$simulation_step->save ();
 							$simulation_steps [] = $simulation_step;
 							
@@ -309,7 +344,7 @@ class SimulCtrl extends PrivateCtrl
 					// 	// ($price_smoothed < ($reference_price * (1 - $buy_min_margin / 100))), 
 					// 	// ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))), 
 					// ];
-					// fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); ///////////////////////
+					// fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////
 				}
 				
 				$offset ++;
@@ -324,6 +359,7 @@ class SimulCtrl extends PrivateCtrl
 		$simulation_step->type =				"end";
 		$simulation_step->base_amount =			$ETH;
 		$simulation_step->quote_amount =		$EUR;
+		$simulation_step->fee_amount =			0.0;
 		
 		if ($ETH > 0) {
 			$ETH_formated = Stuff::format_float_significative ($ETH, 6);
@@ -346,6 +382,7 @@ class SimulCtrl extends PrivateCtrl
 		# calculate and store simulation stats
 		$simulation->roi = $simulation->get_roi ();
 		$simulation->volume = $simulation->get_volume ();
+		$simulation->fees = $simulation->get_fees ();
 		$simulation->save ();
 	}
 
