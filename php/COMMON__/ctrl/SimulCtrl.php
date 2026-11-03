@@ -6,6 +6,7 @@ use COMMON__\mdl\Kline;
 use COMMON__\mdl\Simulation;
 use COMMON__\mdl\SimulationStep;
 use COMMON__\mdl\Stat;
+use COMMON__\svc\BigQuery;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Stuff;
 use DateTime;
@@ -40,15 +41,12 @@ class SimulCtrl extends PrivateCtrl
 	
 	public static function simulationsGET (Base $f3, $url, $controler)
 	{
-		$order_field = "execution_time";
-		$order_direction = "DESC";
+		$order = "exection_time DESC";
 		if (!empty ($f3->get("GET.order_field"))) {
-			$order_field = $f3->get("GET.order_field");
-			$order_direction = $f3->get("GET.order_direction");
+			$order = $f3->get("GET.order_field") . " " . $f3->get("GET.order_direction");
 		}
-		
-		$simulations = Simulation::getAll ($order_field, $order_direction);
-		$f3->set ("simulations", $simulations);
+		$bq = new BigQuery (Simulation::class, [], ["order" => $order]);
+		$f3->set ("bq", $bq);
 		
 		$page = [
 			"module"	=>	"COMMON__",

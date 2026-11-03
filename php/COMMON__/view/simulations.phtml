@@ -1,5 +1,6 @@
 <?php
 use COMMON__\mdl\Simulation;
+use COMMON__\svc\BigQuery;
 use COMMON__\svc\Stuff;
 ?>
 
@@ -27,7 +28,9 @@ use COMMON__\svc\Stuff;
 			</thead>
 			<tbody>
 				<?php
-				foreach ($simulations as $simulation) { /** @var Simulation $simulation */
+				$cpt = 0;
+				/** @var BigQuery $bq */
+				while ($simulation = $bq->next()) { /** @var Simulation $simulation */
 				$steps = $simulation->simulation_steps;
 					?>
 					<tr>
@@ -54,12 +57,13 @@ use COMMON__\svc\Stuff;
 						</td>
 					</tr>
 					<?php
+					$cpt ++;
 				}
 				?>
 			</tbody>
 			<tfoot>
 				<tr>
-					<th><?= count ($simulations) ?></th>
+					<th><?= $cpt ?></th>
 				</tr>
 			</tfoot>
 		</table>
