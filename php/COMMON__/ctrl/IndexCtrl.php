@@ -16,7 +16,7 @@ use COMMON__\mdl\SimulationStep;
 use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
 use COMMON__\mdl\Stat;
-use COMMON__\svc\BigQuery;
+use COMMON__\svc\BigOrmQuery;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
 use COMMON__\svc\Stuff;
@@ -320,7 +320,7 @@ class IndexCtrl extends PrivateCtrl
 		$start_time = microtime (true);
 		$filter = ["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, $start, $end];
 		$options = ["order" => "open_time ASC"];
-		$bq = new BigQuery (Kline::class, $filter, $options);
+		$bq = new BigOrmQuery (Kline::class, $filter, $options);
 		
 		while ($kline_wrapper = $bq->next()) {
 			if (empty ($big_candle)) { # first candle
@@ -448,7 +448,7 @@ class IndexCtrl extends PrivateCtrl
 		
 		$filter = ["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $small_candle, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql")];
 		$options = ["order" => "open_time ASC"];
-		$bq = new BigQuery(Kline::class, $filter, $options);
+		$bq = new BigOrmQuery(Kline::class, $filter, $options);
 		
 		while ($kline = $bq->next()) {
 			foreach (self::$stats as $stat_conf) {
@@ -507,7 +507,7 @@ class IndexCtrl extends PrivateCtrl
 		
 		$filter = ["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, $start, $end];
 		$options = ["order" => "open_time ASC"];
-		$bq = new BigQuery(Stat::class, $filter, $options);
+		$bq = new BigOrmQuery(Stat::class, $filter, $options);
 
 		while ($stat = $bq->next()) {
 			$stat_casted = $stat->cast();

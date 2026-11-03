@@ -4,7 +4,7 @@ namespace COMMON__\svc;
 use COMMON__\mdl\Mdl;
 
 
-class BigQuery
+class BigOrmQuery
 {
 	const max = 1000;
 	

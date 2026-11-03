@@ -1,6 +1,6 @@
 <?php
 use COMMON__\mdl\Simulation;
-use COMMON__\svc\BigQuery;
+use COMMON__\svc\BigOrmQuery;
 use COMMON__\svc\Stuff;
 ?>
 
@@ -29,7 +29,7 @@ use COMMON__\svc\Stuff;
 			<tbody>
 				<?php
 				$cpt = 0;
-				/** @var BigQuery $bq */
+				/** @var BigOrmQuery $bq */
 				while ($simulation = $bq->next()) { /** @var Simulation $simulation */
 				$steps = $simulation->simulation_steps;
 					?>

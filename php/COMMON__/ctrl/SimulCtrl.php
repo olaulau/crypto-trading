@@ -6,7 +6,8 @@ use COMMON__\mdl\Kline;
 use COMMON__\mdl\Simulation;
 use COMMON__\mdl\SimulationStep;
 use COMMON__\mdl\Stat;
-use COMMON__\svc\BigQuery;
+use COMMON__\svc\BigOrmQuery;
+use COMMON__\svc\BigSqlQuery;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Stuff;
 use DateTime;
@@ -41,11 +42,11 @@ class SimulCtrl extends PrivateCtrl
 	
 	public static function simulationsGET (Base $f3, $url, $controler)
 	{
-		$order = "exection_time DESC";
+		$order = "execution_time DESC";
 		if (!empty ($f3->get("GET.order_field"))) {
 			$order = $f3->get("GET.order_field") . " " . $f3->get("GET.order_direction");
 		}
-		$bq = new BigQuery (Simulation::class, [], ["order" => $order]);
+		$bq = new BigOrmQuery (Simulation::class, [], ["order" => $order]);
 		$f3->set ("bq", $bq);
 		
 		$page = [
@@ -187,7 +188,6 @@ class SimulCtrl extends PrivateCtrl
 		$simulation->save ();
 
 		# start reading data
-		$offset = 0;
 		$kline = new Kline;
 		$sql = "
 			SELECT	k.*, s.open as $sma_name
@@ -198,10 +198,8 @@ class SimulCtrl extends PrivateCtrl
 			AND		? <= k.open_time AND k.open_time <= ?
 			AND		s.name = ?
 			ORDER BY id ASC
-			LIMIT	?
-			OFFSET	?
 		";
-		$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"), $sma_name, IndexCtrl::$sql_read_limit, $offset];
+		$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"), $sma_name];
 		$simulation_steps = []; //todo use !
 		
 		// $csv_filename = __DIR__ . "/../../../" . "/tmp/simu.csv";
@@ -209,151 +207,158 @@ class SimulCtrl extends PrivateCtrl
 		// $csv_row_data = ["open_time", "ETH", "EUR", "price", "price_smoothed", "reference_price", "high", "low"];
 		// fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////
 		
-		while ($klines = $db->exec ($sql, $params)) {
-			foreach ($klines as $kline) {
-				$price = $kline ["open"];
-				$price_formated = Stuff::format_float_significative ($price, 6);
-				$simulation_step = new SimulationStep;
-				$simulation_step->simulation_id = $simulation;
-				$simulation_step->kline_id = $kline ["id"];
-				
-				$SMA_price = $kline [$sma_name];
-				$price_smoothed = $SMA_price; # we use SMA as smoothed price
-				
-				if ($offset === 0) { # start variables
-					$ETH = $start_base_amount;
-					$EUR = $start_quote_amount;
-					
-					$reference_price = $price_smoothed; # value of my last crypto movement #TODO remove and use $simulation_steps
-					$high = $price_smoothed; # highest value since last action
-					$low = $price_smoothed; # lowest value since last action
-					
-					$simulation_step->type =					"start";
-					if ($ETH > 0) {
-						$ETH_converted = $ETH * $price;
-						$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
+		$bq = new BigSqlQuery ($sql, $params);
+		
+		# start variables
+		$kline = $bq->next();
+		$price = $kline ["open"];
+		$price_formated = Stuff::format_float_significative ($price, 6);
+		$simulation_step = new SimulationStep;
+		$simulation_step->simulation_id = $simulation;
+		$simulation_step->kline_id = $kline ["id"];
+		
+		$SMA_price = $kline [$sma_name];
+		$price_smoothed = $SMA_price; # we use SMA as smoothed price
+		
+		$ETH = $start_base_amount;
+		$EUR = $start_quote_amount;
+		
+		$reference_price = $price_smoothed; # value of my last crypto movement #TODO remove and use $simulation_steps
+		$high = $price_smoothed; # highest value since last action
+		$low = $price_smoothed; # lowest value since last action
+		
+		$simulation_step->type =					"start";
+		if ($ETH > 0) {
+			$ETH_converted = $ETH * $price;
+			$ETH_converted_formated = Stuff::format_float_significative ($ETH_converted, 6);
 
+			$simulation_step->base_amount =			$ETH;
+			$simulation_step->quote_amount =		$ETH_converted;
+			$simulation_step->description =			"simulation start : {$ETH} ETH = {$ETH_converted_formated} €";
+		}
+		if ($EUR > 0) {
+			$EUR_converted = $EUR / $price;
+			$EUR_converted_formated = Stuff::format_float_significative ($EUR_converted, 6);
+
+			$simulation_step->base_amount =			$EUR_converted;
+			$simulation_step->quote_amount =		$EUR;
+			$simulation_step->description =			"simulation start : {$EUR} € = {$EUR_converted_formated} ETH";
+		}
+		$simulation_step->fee_amount =				0.0;
+		$simulation_step->save ();
+		$simulation_steps [] = $simulation_step;
+		
+		while ($kline = $bq->next()) {
+			$price = $kline ["open"];
+			$price_formated = Stuff::format_float_significative ($price, 6);
+			$simulation_step = new SimulationStep;
+			$simulation_step->simulation_id = $simulation;
+			$simulation_step->kline_id = $kline ["id"];
+			
+			$SMA_price = $kline [$sma_name];
+			$price_smoothed = $SMA_price; # we use SMA as smoothed price
+			
+			$high = max ($price_smoothed, $high);
+			$low = min ($price_smoothed, $low);
+			
+			if ($ETH > 0) { # I own crypto
+				if ($high > ($reference_price * (1 + $sell_min_margin / 100))) { # price raised a lot
+					if ($price_smoothed < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
+						$EUR = $ETH * $price;
+						$fee_amount = $EUR * $fee;
+						$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
+						$EUR -= $fee_amount;
+						$EUR_formated = Stuff::format_float_significative ($EUR, 6);
+						
+						$simulation_step->type =				"sell";
 						$simulation_step->base_amount =			$ETH;
-						$simulation_step->quote_amount =		$ETH_converted;
-						$simulation_step->description =			"simulation start : {$ETH} ETH = {$ETH_converted_formated} €";
-					}
-					if ($EUR > 0) {
-						$EUR_converted = $EUR / $price;
-						$EUR_converted_formated = Stuff::format_float_significative ($EUR_converted, 6);
-
-						$simulation_step->base_amount =			$EUR_converted;
 						$simulation_step->quote_amount =		$EUR;
-						$simulation_step->description =			"simulation start : {$EUR} € = {$EUR_converted_formated} ETH";
+						$simulation_step->fee_amount =			$fee_amount;
+						$simulation_step->description =			"({$price_formated}) selling --> {$EUR_formated} € ({$fee_formated} € fee)";
+						$simulation_step->save ();
+						$simulation_steps [] = $simulation_step;
+						
+						$ETH = 0;
+						$low = $high = $reference_price = $price_smoothed;
 					}
-					$simulation_step->fee_amount =				0.0;
+				}
+				elseif ($stop_loss_margin > 0.0 && $price_smoothed < ($reference_price * (1 - $stop_loss_margin / 100))) { # we are loosing money
+					# stop loss
+					$EUR = $ETH * $price;
+					$fee_amount = $EUR * $fee;
+					$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
+					$EUR -= $fee_amount;
+					$EUR_formated = Stuff::format_float_significative ($EUR, 6);
+					
+					$simulation_step->type =				"sell"; //TODO add a reason (stop loss) field ?
+					$simulation_step->base_amount =			$ETH;
+					$simulation_step->quote_amount =		$EUR;
+					$simulation_step->fee_amount =			$fee_amount;
+					$simulation_step->description =			"({$price_formated}) stop loss --> {$EUR_formated} € ({$fee_formated} € fee)";
 					$simulation_step->save ();
 					$simulation_steps [] = $simulation_step;
+					
+					$ETH = 0;
+					$low = $high = $reference_price = $price_smoothed;
 				}
-				else {
-					$high = max ($price_smoothed, $high);
-					$low = min ($price_smoothed, $low);
-					
-					if ($ETH > 0) { # I own crypto
-						if ($high > ($reference_price * (1 + $sell_min_margin / 100))) { # price raised a lot
-							if ($price_smoothed < ($high * (1 - $sell_floor_margin / 100))) { # seems like we floored
-								$EUR = $ETH * $price;
-								$fee_amount = $EUR * $fee;
-								$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
-								$EUR -= $fee_amount;
-								$EUR_formated = Stuff::format_float_significative ($EUR, 6);
-								
-								$simulation_step->type =				"sell";
-								$simulation_step->base_amount =			$ETH;
-								$simulation_step->quote_amount =		$EUR;
-								$simulation_step->fee_amount =			$fee_amount;
-								$simulation_step->description =			"({$price_formated}) selling --> {$EUR_formated} € ({$fee_formated} € fee)";
-								$simulation_step->save ();
-								$simulation_steps [] = $simulation_step;
-								
-								$ETH = 0;
-								$low = $high = $reference_price = $price_smoothed;
-							}
-						}
-						elseif ($stop_loss_margin > 0.0 && $price_smoothed < ($reference_price * (1 - $stop_loss_margin / 100))) { # we are loosing money
-							# stop loss
-							$EUR = $ETH * $price;
-							$fee_amount = $EUR * $fee;
-							$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
-							$EUR -= $fee_amount;
-							$EUR_formated = Stuff::format_float_significative ($EUR, 6);
-							
-							$simulation_step->type =				"sell"; //TODO add a reason (stop loss) field ?
-							$simulation_step->base_amount =			$ETH;
-							$simulation_step->quote_amount =		$EUR;
-							$simulation_step->fee_amount =			$fee_amount;
-							$simulation_step->description =			"({$price_formated}) stop loss --> {$EUR_formated} € ({$fee_formated} € fee)";
-							$simulation_step->save ();
-							$simulation_steps [] = $simulation_step;
-							
-							$ETH = 0;
-							$low = $high = $reference_price = $price_smoothed;
-						}
-					}
-					
-					elseif ($EUR > 0) { # I own euros
-						if ($low < ($reference_price * (1 - $buy_min_margin / 100))) { # value dropped a lot
-							if ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
-								$ETH = $EUR / $price;
-								$fee_amount = $EUR * $fee;
-								$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
-								$ETH *= 1.0 - $fee;
-								$ETH_formated = Stuff::format_float_significative ($ETH, 6);
-								
-								$simulation_step->type =				"buy";
-								$simulation_step->base_amount =			$ETH;
-								$simulation_step->quote_amount =		$EUR;
-								$simulation_step->fee_amount =			$fee_amount;
-								$simulation_step->description =			"({$price_formated}) buying --> {$ETH_formated} ETH ({$fee_formated} € fee)";
-								$simulation_step->save ();
-								$simulation_steps [] = $simulation_step;
-								
-								$EUR = 0;
-								$low = $high = $reference_price = $price_smoothed;
-							}
-						}
-						elseif ($re_entry_margin > 0.0 && $price_smoothed > ($reference_price * (1 + $re_entry_margin / 100))) { # we are loosing opportunities
-							# re entry
-							$ETH = $EUR / $price;
-							$fee_amount = $EUR * $fee;
-							$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
-							$ETH *= 1 - $fee;
-							$ETH_formated = Stuff::format_float_significative ($ETH, 6);
-							
-							$simulation_step->type =				"buy"; //TODO add a reason (re entry) field ?
-							$simulation_step->base_amount =			$ETH;
-							$simulation_step->quote_amount =		$EUR;
-							$simulation_step->fee_amount =			$fee_amount;
-							$simulation_step->description =			"({$price_formated}) re entry --> {$ETH_formated} ETH ({$fee_formated} € fee)";
-							$simulation_step->save ();
-							$simulation_steps [] = $simulation_step;
-							
-							$EUR = 0;
-							$low = $high = $reference_price = $price_smoothed;
-						}
-					}
-					
-					// $csv_row_data = [
-					// 	$kline ["open_time"], $ETH, $EUR, $price, $price_smoothed, $reference_price, $high, $low, 
-					// 	// ($price_smoothed < ($reference_price * (1 - $buy_min_margin / 100))), 
-					// 	// ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))), 
-					// ];
-					// fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////
-				}
-				
-				$offset ++;
-				$params = [IndexCtrl::$symbol, IndexCtrl::$small_candle_size, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"), $sma_name, IndexCtrl::$sql_read_limit, $offset];
 			}
+			
+			elseif ($EUR > 0) { # I own euros
+				if ($low < ($reference_price * (1 - $buy_min_margin / 100))) { # value dropped a lot
+					if ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))) { # seems like we floored
+						$ETH = $EUR / $price;
+						$fee_amount = $EUR * $fee;
+						$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
+						$ETH *= 1.0 - $fee;
+						$ETH_formated = Stuff::format_float_significative ($ETH, 6);
+						
+						$simulation_step->type =				"buy";
+						$simulation_step->base_amount =			$ETH;
+						$simulation_step->quote_amount =		$EUR;
+						$simulation_step->fee_amount =			$fee_amount;
+						$simulation_step->description =			"({$price_formated}) buying --> {$ETH_formated} ETH ({$fee_formated} € fee)";
+						$simulation_step->save ();
+						$simulation_steps [] = $simulation_step;
+						
+						$EUR = 0;
+						$low = $high = $reference_price = $price_smoothed;
+					}
+				}
+				elseif ($re_entry_margin > 0.0 && $price_smoothed > ($reference_price * (1 + $re_entry_margin / 100))) { # we are loosing opportunities
+					# re entry
+					$ETH = $EUR / $price;
+					$fee_amount = $EUR * $fee;
+					$fee_formated = Stuff::format_float_significative ($fee_amount, 6);
+					$ETH *= 1 - $fee;
+					$ETH_formated = Stuff::format_float_significative ($ETH, 6);
+					
+					$simulation_step->type =				"buy"; //TODO add a reason (re entry) field ?
+					$simulation_step->base_amount =			$ETH;
+					$simulation_step->quote_amount =		$EUR;
+					$simulation_step->fee_amount =			$fee_amount;
+					$simulation_step->description =			"({$price_formated}) re entry --> {$ETH_formated} ETH ({$fee_formated} € fee)";
+					$simulation_step->save ();
+					$simulation_steps [] = $simulation_step;
+					
+					$EUR = 0;
+					$low = $high = $reference_price = $price_smoothed;
+				}
+			}
+			
+			// $csv_row_data = [
+			// 	$kline ["open_time"], $ETH, $EUR, $price, $price_smoothed, $reference_price, $high, $low, 
+			// 	// ($price_smoothed < ($reference_price * (1 - $buy_min_margin / 100))), 
+			// 	// ($price_smoothed > ($low * (1 + $buy_floor_margin / 100))), 
+			// ];
+			// fputcsv ($csv_handle, $csv_row_data, ",", "\"", "\\", PHP_EOL); //////////
+			
+			$kline_last = $kline;
 		}
 		
 		// end of simulation state
 		$simulation_step = new SimulationStep;
 		$simulation_step->simulation_id =		$simulation;
-		$simulation_step->kline_id =			$kline ["id"];
+		$simulation_step->kline_id =			$kline_last ["id"];
 		$simulation_step->type =				"end";
 		$simulation_step->base_amount =			$ETH;
 		$simulation_step->quote_amount =		$EUR;
