@@ -16,6 +16,7 @@ use COMMON__\mdl\SimulationStep;
 use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
 use COMMON__\mdl\Stat;
+use COMMON__\svc\BigQuery;
 use COMMON__\svc\Binance;
 use COMMON__\svc\Buffer;
 use COMMON__\svc\Stuff;
@@ -314,49 +315,40 @@ class IndexCtrl extends PrivateCtrl
 		# start reading data
 		echo "computing {$symbol} candles from {$small_candle_size} to {$big_candle_size} ... <br/>" . PHP_EOL;
 		$candle_seconds = Binance::candles [$big_candle_size];
-		$offset = 0;
-		$kline_wrapper = new Kline;
 
-		$cpt_small_candle = $cpt_big_candle = 0;
+		$cpt_big_candle = 0;
 		$start_time = microtime (true);
-		while ($kline_wrapper->load(
-			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, $start, $end],
-			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
-			$db->begin();
-			do {
-				if (empty ($big_candle)) { # first candle
-					# clone first candle
-					$big_candle = new Kline();
-					$kline_casted = $kline_wrapper->cast();
-					$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
-					$kline_casted ["close_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["close_time"]->getTimestamp()));
-					unset ($kline_casted ["_id"]);
-					$big_candle->copyfrom ($kline_casted);
-					$big_candle->candle_size = $big_candle_size;
-				}
-				else { # Nth candle
-					$big_candle->aggregateWith ($kline_wrapper);
-
-					$close_time = $kline_wrapper->close_time; /** @var DateTime $close_time */
-					$close_ts = $close_time->getTimestamp();
-					if ((($close_ts+1) % $candle_seconds) === 0) { //////////
-						try {
-							$big_candle->save();
-						}
-						catch (Throwable $t) {
-							echo $t->getMessage() . " <br/>" . PHP_EOL;
-						}
-						$big_candle = null;
-						$cpt_big_candle ++;
-					}
-				}
-				$cpt_small_candle ++;
+		$filter = ["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, $start, $end];
+		$options = ["order" => "open_time ASC"];
+		$bq = new BigQuery (Kline::class, $filter, $options);
+		
+		while ($kline_wrapper = $bq->next()) {
+			if (empty ($big_candle)) { # first candle
+				# clone first candle
+				$big_candle = new Kline();
+				$kline_casted = $kline_wrapper->cast();
+				$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
+				$kline_casted ["close_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["close_time"]->getTimestamp()));
+				unset ($kline_casted ["_id"]);
+				$big_candle->copyfrom ($kline_casted);
+				$big_candle->candle_size = $big_candle_size;
 			}
-			while ($kline_wrapper->next());
-			$db->commit();
-			
-			$offset += static::$sql_read_limit;
-			$kline_wrapper->reset();
+			else { # Nth candle
+				$big_candle->aggregateWith ($kline_wrapper);
+
+				$close_time = $kline_wrapper->close_time; /** @var DateTime $close_time */
+				$close_ts = $close_time->getTimestamp();
+				if ((($close_ts+1) % $candle_seconds) === 0) { //////////
+					try {
+						$big_candle->save();
+					}
+					catch (Throwable $t) {
+						echo $t->getMessage() . " <br/>" . PHP_EOL;
+					}
+					$big_candle = null;
+					$cpt_big_candle ++;
+				}
+			}
 		}
 		
 		$end_time = microtime (true);
@@ -449,45 +441,39 @@ class IndexCtrl extends PrivateCtrl
 		# calculate stat for smallest candle
 		$small_candle = $candles_available [0];
 		echo "calculating " . static::$symbol . " statistics from {$small_candle} candles ...<br/>" . PHP_EOL;
-		$offset = 0;
-		$kline_wrapper = new Kline;
+		$kline = new Kline;
 		$stats_windows = [];
 		$start_time = microtime (true);
 		$cpt = 0;
-
-		while ($kline_wrapper->load (
-			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $small_candle, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql")],
-			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
-			$db->begin();
-			do {
-				foreach (self::$stats as $stat_conf) {
-					if (empty ($stats_windows [$stat_conf ["name"]])) {
-						$stats_windows [$stat_conf ["name"]] = [];
-					}
-					$stat_window = &$stats_windows [$stat_conf ["name"]];
-					
-					if (count ($stat_window) >= $stat_conf ["size"]) {
-						array_shift($stat_window);
-					}
-					array_push ($stat_window, $kline_wrapper ["open"]);
-					$stat_value = array_sum ($stat_window) / count ($stat_window);
-	
-					$kline_casted = $kline_wrapper->cast();
-					$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
-					unset ($kline_casted ["_id"]);
-					$stat = new Stat;
-					$stat->copyfrom ($kline_casted);
-					$stat->name = $stat_conf ["name"];
-					$stat->open = $stat_value;
-					$stat->save();
-					$cpt ++;
+		
+		$filter = ["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $small_candle, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql")];
+		$options = ["order" => "open_time ASC"];
+		$bq = new BigQuery(Kline::class, $filter, $options);
+		
+		while ($kline = $bq->next()) {
+			foreach (self::$stats as $stat_conf) {
+				if (empty ($stats_windows [$stat_conf ["name"]])) {
+					$stats_windows [$stat_conf ["name"]] = [];
 				}
+				$stat_window = &$stats_windows [$stat_conf ["name"]];
+				
+				if (count ($stat_window) >= $stat_conf ["size"]) {
+					array_shift($stat_window);
+				}
+				array_push ($stat_window, $kline ["open"]);
+				$stat_value = array_sum ($stat_window) / count ($stat_window);
+
+				$kline_casted = $kline->cast();
+				$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
+				unset ($kline_casted ["_id"]);
+				$stat = new Stat;
+				$stat->copyfrom ($kline_casted);
+				$stat->name = $stat_conf ["name"];
+				$stat->open = $stat_value;
+				$stat->save();
+				$cpt ++;
 			}
-			while ($kline_wrapper->next());
-			$db->commit();
 			
-			$offset += static::$sql_read_limit;
-			$kline_wrapper->reset();
 		}
 		
 		$end_time = microtime (true);
@@ -516,39 +502,31 @@ class IndexCtrl extends PrivateCtrl
 		# start reading data
 		echo "derivating {$symbol} stats from {$small_candle_size} to {$big_candle_size} ... <br/>" . PHP_EOL;
 		$big_candle_duration = Binance::candles [$big_candle_size];
-		$offset = 0;
-		$stat_wrapper = new Stat;
 		$start_time = microtime (true);
 		$cpt = 0;
+		
+		$filter = ["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, $start, $end];
+		$options = ["order" => "open_time ASC"];
+		$bq = new BigQuery(Stat::class, $filter, $options);
 
-		while ($stat_wrapper->load(
-			["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", $symbol, $small_candle_size, $start, $end],
-			["order" => "open_time ASC", "limit" => static::$sql_read_limit, "offset" => $offset])) {
-			$db->begin();
-			do {
-				$stat_casted = $stat_wrapper->cast();
-				if ($stat_casted ["open_time"]->getTimestamp() % $big_candle_duration === 0) { # only on big candle timing
-					# clone candle
-					$big_candle = new Stat();
-					$stat_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($stat_casted ["open_time"]->getTimestamp())); // UTC
-					unset ($stat_casted ["_id"]);
-					$big_candle->copyfrom ($stat_casted);
-					$big_candle->candle_size = $big_candle_size;
-					
-					try {
-						$big_candle->save();
-					}
-					catch (Throwable $t) {
-						echo $t->getMessage() . " <br/>" . PHP_EOL;
-					}
-					$cpt ++;
+		while ($stat = $bq->next()) {
+			$stat_casted = $stat->cast();
+			if ($stat_casted ["open_time"]->getTimestamp() % $big_candle_duration === 0) { # only on big candle timing
+				# clone candle
+				$big_candle = new Stat();
+				$stat_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($stat_casted ["open_time"]->getTimestamp())); // UTC
+				unset ($stat_casted ["_id"]);
+				$big_candle->copyfrom ($stat_casted);
+				$big_candle->candle_size = $big_candle_size;
+				
+				try {
+					$big_candle->save();
 				}
+				catch (Throwable $t) {
+					echo $t->getMessage() . " <br/>" . PHP_EOL;
+				}
+				$cpt ++;
 			}
-			while ($stat_wrapper->next());
-			$db->commit();
-			
-			$offset += static::$sql_read_limit;
-			$stat_wrapper->reset();
 		}
 		
 		$end_time = microtime (true);
