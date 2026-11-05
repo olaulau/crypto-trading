@@ -431,7 +431,8 @@ class IndexCtrl extends PrivateCtrl
 			WHERE	symbol = ?
 		";
 		$params = [static::$symbol];
-		$res = $db->exec($sql, $params);
+		$res = $db->exec ($sql, $params);
+		echo "<br/>" . PHP_EOL;
 
 		$candles_available = self::candles_available (static::$symbol, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql"));
 		if (empty ($candles_available)) {
@@ -445,37 +446,41 @@ class IndexCtrl extends PrivateCtrl
 		$stats_windows = [];
 		$start_time = microtime (true);
 		$cpt = 0;
+		$db->begin();
 		
 		$filter = ["symbol = ? AND candle_size = ? AND ? <= open_time AND open_time <= ?", static::$symbol, $small_candle, $f3->get("simulation.start_sql"), $f3->get("simulation.end_sql")];
 		$options = ["order" => "open_time ASC"];
-		$bq = new BigOrmQuery(Kline::class, $filter, $options);
+		$bq = new BigOrmQuery (Kline::class, $filter, $options);
 		
-		while ($kline = $bq->next()) {
+		while ($kline = $bq->next ()) {
+			$kline_casted = $kline->cast();
+			$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
+			unset ($kline_casted ["_id"]);
+
 			foreach (self::$stats as $stat_conf) {
 				if (empty ($stats_windows [$stat_conf ["name"]])) {
 					$stats_windows [$stat_conf ["name"]] = [];
 				}
-				$stat_window = &$stats_windows [$stat_conf ["name"]];
 				
-				if (count ($stat_window) >= $stat_conf ["size"]) {
-					array_shift($stat_window);
+				if (count ($stats_windows [$stat_conf ["name"]]) >= $stat_conf ["size"]) {
+					array_shift ($stats_windows [$stat_conf ["name"]]);
 				}
-				array_push ($stat_window, $kline ["open"]);
-				$stat_value = array_sum ($stat_window) / count ($stat_window);
+				array_push ($stats_windows [$stat_conf ["name"]], $kline ["open"]);
+				$stat_value = array_sum ($stats_windows [$stat_conf ["name"]]) / count ($stats_windows [$stat_conf ["name"]]);
 
-				$kline_casted = $kline->cast();
-				$kline_casted ["open_time"] = gmdate ('Y-m-d H:i:s', floor ($kline_casted ["open_time"]->getTimestamp())); // UTC
-				unset ($kline_casted ["_id"]);
 				$stat = new Stat;
 				$stat->copyfrom ($kline_casted);
 				$stat->name = $stat_conf ["name"];
 				$stat->open = $stat_value;
 				$stat->save();
 				$cpt ++;
+				if ($cpt % 1000 === 0) {
+					$db->commit();
+				}
 			}
-			
 		}
-		
+		$db->commit();
+
 		$end_time = microtime (true);
 		$duration = ($end_time - $start_time) * 1000;
 		$duration_txt = number_format ($duration, 2, ",", " ");

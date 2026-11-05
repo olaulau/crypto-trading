@@ -473,6 +473,7 @@ class SimulCtrl extends PrivateCtrl
 		$candles_available = IndexCtrl::candles_available ($symbol, $start_sql, $end_sql);
 		
 		$klines_data = [];
+		$datasets = [];
 		if (!empty ($candles_available)) {
 			foreach ($candles_available as $candle_name) {
 				$candle_duration = Binance::candles [$candle_name];
