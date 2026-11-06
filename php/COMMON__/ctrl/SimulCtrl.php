@@ -383,9 +383,9 @@ class SimulCtrl extends PrivateCtrl
 		$simulation_steps [] = $simulation_step;
 		
 		# calculate and store simulation stats
-		$simulation->roi = $simulation->get_roi ();
-		$simulation->volume = $simulation->get_volume ();
-		$simulation->fees = $simulation->get_fees ();
+		$simulation->roi = $simulation->calculate_roi ();
+		$simulation->volume = $simulation->calculate_volume ();
+		$simulation->fees = $simulation->calculate_fees ();
 		$simulation->save ();
 	}
 

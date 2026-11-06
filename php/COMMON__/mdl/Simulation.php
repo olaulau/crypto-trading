@@ -73,7 +73,7 @@ class Simulation extends Mdl
 	}
 
 
-	public function get_roi () : float
+	public function calculate_roi () : float
 	{
 		$simulation_steps = $this->simulation_steps;
 		if (empty($simulation_steps) || $simulation_steps->count () === 0) {
@@ -90,7 +90,7 @@ class Simulation extends Mdl
 	}
 	
 	
-	public function get_volume () : float
+	public function calculate_volume () : float
 	{
 		$simulation_steps = $this->simulation_steps;
 		if ($simulation_steps->count () === 0) {
@@ -107,7 +107,7 @@ class Simulation extends Mdl
 	}
 	
 	
-	public function get_fees () : float
+	public function calculate_fees () : float
 	{
 		$simulation_steps = $this->simulation_steps;
 		if ($simulation_steps->count () === 0) {
