@@ -27,8 +27,6 @@ use COMMON__\svc\Stuff;
 			</thead>
 			<tbody>
 				<?php
-				$simulations = $paginate ["subset"];
-				unset($paginate ["subset"]);
 				foreach ($simulations as $simulation) { /** @var Simulation $simulation */
 					?>
 					<tr>

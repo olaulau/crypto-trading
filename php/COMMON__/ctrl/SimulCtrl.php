@@ -54,7 +54,10 @@ class SimulCtrl extends PrivateCtrl
 
 		$simulation_wrapper = new Simulation;
 		$limit = 50;
-		$paginate = $simulation_wrapper->paginate ($page_num - 1, $limit, [], ["order" => $order, "limit" => 100]);
+		$paginate = $simulation_wrapper->paginate ($page_num - 1, $limit, [], ["order" => $order]);
+		$simulations = $paginate ["subset"];
+		$f3->set ("simulations", $simulations);
+		unset($paginate ["subset"]);
 		$f3->set ("paginate", $paginate);
 		
 		$page = [
@@ -410,6 +413,19 @@ class SimulCtrl extends PrivateCtrl
 			throw new ErrorException ("couldn't find simulation #$id");
 		}
 		$f3->set("simulation", $simulation);
+
+		$page_num = 1;
+		if (!empty ($f3->get("GET.page_num"))) {
+			$page_num = $f3->get("GET.page_num");
+		}
+
+		$simulation_step_wrapper = new SimulationStep();
+		$limit = 50;
+		$paginate = $simulation_step_wrapper->paginate ($page_num - 1, $limit, ["simulation_id = ?", $id], []);
+		$simulation_steps = $paginate ["subset"];
+		$f3->set ("simulation_steps", $simulation_steps);
+		unset($paginate ["subset"]);
+		$f3->set ("paginate", $paginate);
 		
 		$page = [
 			"module"	=>	"COMMON__",
