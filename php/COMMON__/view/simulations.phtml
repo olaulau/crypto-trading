@@ -21,8 +21,8 @@ use COMMON__\svc\Stuff;
 					<th>close_time</th>
 					<th>description</th>
 					<th><a href="<?= $BASE . $f3->alias("simulations", [], ["order_field" => "roi", "order_direction" => "DESC"]) ?>">RoI</a></th>
-					<th>volume</th>
-					<th>fees</th>
+					<th><a href="<?= $BASE . $f3->alias("simulations", [], ["order_field" => "volume", "order_direction" => "ASC"]) ?>">volume</a></th>
+					<th><a href="<?= $BASE . $f3->alias("simulations", [], ["order_field" => "fees", "order_direction" => "ASC"]) ?>">fees</a></th>
 					<th>actions</th>
 				</tr>
 			</thead>
