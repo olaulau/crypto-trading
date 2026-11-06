@@ -46,8 +46,16 @@ class SimulCtrl extends PrivateCtrl
 		if (!empty ($f3->get("GET.order_field"))) {
 			$order = $f3->get("GET.order_field") . " " . $f3->get("GET.order_direction");
 		}
-		$bq = new BigOrmQuery (Simulation::class, [], ["order" => $order]);
-		$f3->set ("bq", $bq);
+
+		$page_num = 1;
+		if (!empty ($f3->get("GET.page_num"))) {
+			$page_num = $f3->get("GET.page_num");
+		}
+
+		$simulation_wrapper = new Simulation;
+		$limit = 50;
+		$paginate = $simulation_wrapper->paginate ($page_num - 1, $limit, [], ["order" => $order, "limit" => 100]);
+		$f3->set ("paginate", $paginate);
 		
 		$page = [
 			"module"	=>	"COMMON__",

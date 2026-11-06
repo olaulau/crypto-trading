@@ -84,7 +84,6 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 - calculer les dérivées de stats (pente ...)
 	- intéger à l'algo
 - simulations :
-	- optimize big fetches (create a BigQuery class as an iterator)
 	- paginate ?
 
 - simulate
