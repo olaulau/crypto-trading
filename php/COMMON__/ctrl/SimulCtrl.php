@@ -73,10 +73,8 @@ class SimulCtrl extends PrivateCtrl
 	
 	public static function simulationsDeleteGET (Base $f3, $url, $controler)
 	{
-		$simulations = Simulation::getAll ();
-		foreach ($simulations as $simulation) {
-			$simulation->erase ();
-		}
+		SimulationStep::delete_all();
+		Simulation::delete_all();
 		$f3->reroute("simulations");
 	}
 	

@@ -366,12 +366,13 @@ abstract class Mdl extends Cortex
 		$db->exec("DROP TABLE IF EXISTS `" . static::table . "`");
 	}
 	
-	public static function delete_table () : void
+	public static function delete_all () : void
 	{
 		$f3 = Base::instance();
 		$db = $f3->get("db"); /** @var SQL $db */
 		$db->exec("DELETE FROM `" . static::table . "`");
 	}
+	//TODO truncate ?
 
 
 	public static function dropForeignKeyIfExists (string $fk): void
