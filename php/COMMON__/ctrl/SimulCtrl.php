@@ -489,6 +489,7 @@ class SimulCtrl extends PrivateCtrl
 		$end_dt = DateTime::createFromTimestamp (Binance::to_real_timestamp ((int)$end_ts));
 		$end_tsms = $end_dt->getTimestamp() * 1000;
 		$simulation_id = $f3->get("GET.simulation_id") ?? 0;
+		$simulation = Simulation::findOneBy ("id", $simulation_id);
 
 		// margin
 		$margin_tx = 0.2; // add 20% margin on start and end side
@@ -612,6 +613,7 @@ class SimulCtrl extends PrivateCtrl
 			// stats
 			$nb_stats = count (IndexCtrl::$stats);
 			$i = 0;
+			$smoothing_stat = $simulation->get_param ("smoothing_stat");
 			foreach (IndexCtrl::$stats as $stat_name => $stat_conf) {
 				$sql = "
 					SELECT	open_time, open
@@ -646,7 +648,7 @@ class SimulCtrl extends PrivateCtrl
 						[
 							"label"				=> $stat_name,
 							"data"				=> $stats_data [$stat_name],
-							"hidden"			=> ($stat_name !== static::$sma_name),
+							"hidden"			=> ($stat_name !== $smoothing_stat),
 							"borderColor"		=> "rgba(0, 175, 0, {$alpha})",
 							"backgroundColor" 	=> "rgba(0, 175, 0, {$alpha})",
 							"borderWidth"		=> 2,

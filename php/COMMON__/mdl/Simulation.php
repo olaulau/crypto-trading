@@ -154,4 +154,20 @@ class Simulation extends Mdl
 		$this->save();
 	}
 	
+	
+	public function get_params_assoc () : array
+	{
+		$res = [];
+		foreach ($this->params as $param) {
+			$res [$param->name] = $param->val;
+		}
+		return $res;
+	}
+	
+	public function get_param (string $name) : ?string
+	{
+		$params = $this->get_params_assoc();
+		return $params [$name] ?? null;
+	}
+	
 }
