@@ -83,6 +83,8 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 	- store sim params in generic table
 - calculer les dérivées de stats (pente ...)
 	- intéger à l'algo
+- simulations :
+	- restore bulk commit (candle, stat, sim)
 
 - simulate
 	- intermediate form to enter simulation params
