@@ -4,6 +4,7 @@ namespace COMMON__\ctrl;
 use Base;
 use COMMON__\mdl\Kline;
 use COMMON__\mdl\Simulation;
+use COMMON__\mdl\SimulationParam;
 use COMMON__\mdl\SimulationStep;
 use COMMON__\mdl\Stat;
 use COMMON__\svc\BigOrmQuery;
@@ -74,6 +75,7 @@ class SimulCtrl extends PrivateCtrl
 	public static function simulationsDeleteGET (Base $f3, $url, $controler)
 	{
 		SimulationStep::delete_all();
+		SimulationParam::delete_all();
 		Simulation::delete_all();
 		$f3->reroute("simulations");
 	}
@@ -186,15 +188,22 @@ class SimulCtrl extends PrivateCtrl
 		$simulation->open_time =		$f3->get("simulation.start_sql");
 		$simulation->close_time =		$f3->get("simulation.end_sql");
 		$simulation->execution_time =	(new DateTimeImmutable)->format (Stuff::datetime_sql_format);
-		$simulation->description =		str_replace ("\t", "", trim("
-			simple margin algorithm
-			candle size = " . IndexCtrl::$small_candle_size . "
-			smoothing stat = {$sma_name}
-			sell min margin : {$sell_min_margin}% ({$sell_floor_margin}% floor), SL {$stop_loss_margin}%
-			buy min margin : {$buy_min_margin}% ({$buy_floor_margin}% floor), re entry {$re_entry_margin}%
-			fee rate = " . Stuff::format_percent($fee * 100, false) . "
-		"));
+		$simulation->description =		"";
 		$simulation->save ();
+		
+		$simulation_params = [
+			"algorythm"			=>	"simple margin, with stop loss and re entry",
+			"candle_size"		=>	IndexCtrl::$small_candle_size,
+			"smoothing_stat"	=>	$sma_name,
+			"sell_min_margin"	=>	$sell_min_margin,
+			"sell_floor_margin"	=>	$sell_floor_margin,
+			"stop_loss_margin"	=>	$stop_loss_margin,
+			"buy_min_margin"	=>	$buy_min_margin,
+			"buy_floor_margin"	=>	$buy_floor_margin,
+			"re_entry_margin"	=>	$re_entry_margin,
+			"fee_rate"			=>	$fee,
+		];
+		$simulation->set_params ($simulation_params);
 
 		# start reading data
 		$kline = new Kline;

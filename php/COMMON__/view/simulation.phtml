@@ -11,6 +11,15 @@ use COMMON__\svc\Stuff;
 			<div class="col d-flex justify-content-between">
 				<div></div>
 				<span class="">
+					<?php
+					foreach ($simulation->params as $param) {
+						?>
+						<?= $param->name ?> = <?= $param->val ?> <br/>
+						<?php
+					}
+					?>
+				</span>
+				<span class="">
 					<?= nl2br ($simulation->description) ?>
 				</span>
 				<div></div>

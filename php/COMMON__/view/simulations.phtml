@@ -18,6 +18,7 @@ use COMMON__\svc\Stuff;
 					<th>symbol</th>
 					<th>open_time</th>
 					<th>close_time</th>
+					<th>params</th>
 					<th>description</th>
 					<th><a href="<?= $BASE . $f3->alias ("simulations", [], ["order_field" => "roi", "order_direction" => "DESC"]) ?>">RoI</a></th>
 					<th><a href="<?= $BASE . $f3->alias ("simulations", [], ["order_field" => "volume", "order_direction" => "ASC"]) ?>">volume</a></th>
@@ -42,6 +43,15 @@ use COMMON__\svc\Stuff;
 						<td><?= $simulation->symbol ?></td>
 						<td><?= $simulation->open_time->format (Stuff::datetime_french_format) ?></td>
 						<td><?= $simulation->close_time->format (Stuff::datetime_french_format) ?></td>
+						<td>
+							<?php
+							foreach ($simulation->params as $param) {
+								?>
+								<?= $param->name ?> = <?= $param->val ?> <br/>
+								<?php
+							}
+							?>
+						</td>
 						<td><?= nl2br ($simulation->description) ?></td>
 						<td><?= (!empty ($simulation->roi)) ? Stuff::format_percent ($simulation->roi * 100) : "" ?></td>
 						<td><?= (!empty ($simulation->volume)) ? Stuff::format_EUR ($simulation->volume, false) : "" ?></td>

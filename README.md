@@ -78,9 +78,9 @@ default password is ```admin```, don't forget to change it (see ```user[.dist].i
 
 
 ## TODO
-- simulate multithread ?
-- chart : enable only the used SMA
-	- store sim params in generic table
+- store sim params in generic table
+	- chart : enable only the used SMA
+	- simulate multithread (create all simulations to do without execution time, then each thread consumes them)
 - calculer les dérivées de stats (pente ...)
 	- intéger à l'algo
 - simulations :

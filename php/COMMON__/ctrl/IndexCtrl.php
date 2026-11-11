@@ -12,6 +12,7 @@ use COMMON__\mdl\Kline;
 use COMMON__\mdl\Order;
 use COMMON__\mdl\OrderList;
 use COMMON__\mdl\Simulation;
+use COMMON__\mdl\SimulationParam;
 use COMMON__\mdl\SimulationStep;
 use COMMON__\mdl\SpotExchangeSymbol;
 use COMMON__\mdl\SpotTrade;
@@ -132,6 +133,7 @@ class IndexCtrl extends PrivateCtrl
 		Order::setup();
 		OrderList::setup();
 		Simulation::setup();
+		SimulationParam::setup();
 		SimulationStep::setup();
 		SpotExchangeSymbol::setup();
 		SpotTrade::setup();

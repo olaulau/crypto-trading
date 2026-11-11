@@ -2,6 +2,7 @@
 namespace COMMON__\mdl;
 
 use Base;
+use DB\CortexCollection;
 use DB\SQL;
 use DB\SQL\Schema;
 use ErrorException;
@@ -15,6 +16,9 @@ class Simulation extends Mdl
 	protected $fieldConf = [
 		'simulation_steps' => [
 			'has-many'	=> [SimulationStep::class, 'simulation_id']
+		],
+		'params' => [
+			'has-many'	=> [SimulationParam::class, 'simulation_id']
 		],
 
 		'symbol' => [
@@ -133,4 +137,21 @@ class Simulation extends Mdl
 		}
 		parent::erase();
 	}
+	
+	
+	public function set_params (array $params)
+	{
+		$col = new CortexCollection();
+		foreach ($params as $name => $val) {
+			$simulation_param = new SimulationParam;
+			$simulation_param->simulation_id 	= $this->id;
+			$simulation_param->name 			= $name;
+			$simulation_param->val 				= $val;
+			$simulation_param->save();
+			$col->add($simulation_param);
+		}
+		$this->simulation_params = $col;
+		$this->save();
+	}
+	
 }
